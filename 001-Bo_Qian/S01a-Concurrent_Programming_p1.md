@@ -108,3 +108,30 @@ We're still not able to rejoin with our child thread, but at least our program w
 
 
 # Section 02 - Thread Management
+Last time we've take about that a thread should be either join or detach only once. But if a thread is neither join nor detach, the thread will be destroyed before join or detach, then our program will terminate. So we have make a decision whether you want to join the thread or detach the thread before it go out of scope:
+```
+int main() {
+    std::thread t1(hi);
+}
+```
+
+Let's say we want to join the thread:
+```
+int main() {
+    std::thread t1(hi);
+    t1.join();
+}
+```
+In the main thread, after created the `t1` thread and before join with `t1`, it must do some work, otherwise, we're not getting any benefit of threading. 
+
+Say the main thread start counting:
+```
+int main() {
+    std::thread t1(hi);
+
+    for(int i = 0; i < 100; i++) 
+        std::cout << "from main: " << i << std::endl;
+
+    t1.join();
+}
+```
