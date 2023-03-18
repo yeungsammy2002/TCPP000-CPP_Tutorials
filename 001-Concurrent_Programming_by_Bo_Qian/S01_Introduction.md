@@ -75,4 +75,31 @@ By doing that, we have separated the connection between the main thread and `t1`
 
 If we run the program, it'll not going to print out `hi`. It is because the main thread has run so fast that it actually finished before `t1` prints out of the message. So `t1` didn't get the chance to deliver its message to the `std::cout`. This is very characteristic of concurrent programming. If you have two threads running independently, it is typically not deterministic which thread will run faster unless we put in some **synchronization mechanism**.
 
+In our particalur case, it is actually more deterministic because the main thread after creating `t1`, it almost does nothing and then finish. So the main thread should finish very quickly, but `t1` is a new thread that needs to be created. As we said, a thread is a lighter weight than a process, but it still takes time and effort to create a thread. So in our case, that main thread will almost always finish faster than the child thread.
 
+So if two threads are sharing certain resource, in this case, a `std::cout`, then the thread that owns that resource, in this case, the main thread, should live as long as the other thread is accessing that resource.
+
+
+- ### Detached Thread Cannot Join Again
+You can join or detach a thread only once. For example, now we have detached our child thread `t1` and some time later we want to join with our child again. We cannot treat our child like that. Once detached, forever detached.
+```
+int main() {
+    std::thread t1(hi);     // t1 starts running
+    t1.detach();            // t1 will run freely on its own -- daemon process
+    ...
+    t1.join();              // error, will crash your program
+}
+```
+
+- ### Checking Thread is Joinable - `.joinable()`
+There is a way for us to test if a thread is joinable by using `.joinable()` member function. In this case, if `t1` is joinable, we call the function `.join()`.
+```
+int main() {
+    std::thread t1(hi);     // t1 starts running
+    t1.detach();            // t1 will run freely on its own -- daemon process
+
+    if(t1.joinable())
+        t1.join();
+}
+```
+We're still not able to rejoin with our child thread, but at least our program will not crash.
