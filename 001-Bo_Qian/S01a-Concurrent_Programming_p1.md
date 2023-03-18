@@ -103,3 +103,8 @@ int main() {
 }
 ```
 We're still not able to rejoin with our child thread, but at least our program will not crash.
+
+
+
+
+# Section 02 - Thread Management
