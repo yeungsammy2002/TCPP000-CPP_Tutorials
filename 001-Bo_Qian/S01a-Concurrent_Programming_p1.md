@@ -124,14 +124,87 @@ int main() {
 ```
 In the main thread, after created the `t1` thread and before join with `t1`, it must do some work, otherwise, we're not getting any benefit of threading. 
 
-Say the main thread start counting:
+Say the main thread start counting. While the parent thread is doing its work, it flows that exception, the thread object `t1` will be destroyed before it is joined. So we need to wrap up at the parent threads work with a `try`-`catch` block:
 ```
 int main() {
     std::thread t1(hi);
 
-    for(int i = 0; i < 100; i++) 
-        std::cout << "from main: " << i << std::endl;
+    try {
+        for(int i = 0; i < 100; i++) {
+            std::cout << "from main: " << i << std::endl;
+            // throw exception if something went wrong
+        }
+    } catch(...) {
+        t1.join();      // join before throw to let outside to handle
+        throw;
+    }
 
     t1.join();
 }
+```
+This will make sure `t1` will be joined with or without exception.
+
+An alterntive approach is using ***Resource Aquisition Is Initialization* (RAII)** approach. We can create a wrapper class that wraps around the `t1`, and in the **destructor** of the wrapper class will call that `t1.join()`. So whenever `w` goes out of scope, it will automatically join the thread.
+```
+int main() {
+    std::thread t1(hi);
+    Wrapper w(t1);          // using RAII
+}
+```
+
+A thread object can be constructed not only with a regular function like `hi`, but also with **any callable object**, such as ***functor*** or ***lambda* function**.
+
+Suppose we have a functor `Fctor`, and this functor will also do counting. In the `main()` function, we can instantiate `Fctor` object:
+```
+class Fctor {
+public:
+    void operator()() {
+        for(int i = 0; i > -100; --i) {
+            std::cout << "from t1 " << i << stdl::endl;
+        }
+    }
+}
+
+int main() {
+    Fctor fct;
+    std::thread t1(fct);        // t1 starts running
+
+    try {
+        for(int i = 0; i < 100; i++) {
+            std::cout << "from main: " << i << std::endl;
+        }
+    } catch(...) {
+        t1.join();
+        throw;
+    }
+
+    t1.join();
+}
+```
+If we run the program, both main thread and the `t1` thread prints out numbers into the `std::cout`, and it creates a gigantic mess:
+```
+...
+from main: 0
+from main: 1
+from main: 2
+...
+from main: 81
+
+from t1 -41
+from main: 82
+from t1 -42
+from main: 83
+from main: 84from t1 -43
+
+from t1 -44from main:85
+
+from t1 -45
+from: 86
+from t1 -46
+from main: 87
+from t1 -47
+from main: 88
+from t1 -48
+from main: 89
+...
 ```
