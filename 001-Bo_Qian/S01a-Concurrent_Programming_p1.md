@@ -208,3 +208,36 @@ from t1 -48
 from main: 89
 ...
 ```
+
+Some people may want to save a line of code. Instead of creating the `fct` and pass it up to the thread, we can just create the `Fctor` object on the fly. This will not work as you expected and it won't even compile:
+```
+class Fctor {
+public:
+    void operator()() {
+        for(int i = 0; i > -100; --i) {
+            std::cout << "from t1 " << i << stdl::endl;
+        }
+    }
+}
+
+std::thread t1(Fctor());        // it won't compile
+```
+What do we're done over here is not creating a thread of `t1`. Instead, we're declaring a function with the function name `t1`. Under this function takes a single parameter, which is **a pointer to another function**, and this function takes no parameter and return a `Fctor`. And then the function `t1` returns a thread. This is known as the most vexing syntax in **C++**, because the **C++ standard** says whenever a statement can be interpreted as a function declaration. It will be treated as function declaration.
+
+The solution is to add aonther pair of parenthese to make it explicitly that this is constructing a functor and pass it as parameter to the constructor of `t1`:
+```
+std::thread t1((Fctor()));
+```
+
+
+So far, our threads has been functions or functors that takes no parameter. Now let's say we want to pass a parameter to the thread, say `Fctor` object takes a parameter of string `msg`, and in the `Fctor`, prints out that `msg`:
+```
+class Fctor {
+public:
+    void operator()(string msg) {
+        std::cout << "t1 says: " << msg << std::endl;
+    }
+}
+```
+
+# 2 - 6:14
