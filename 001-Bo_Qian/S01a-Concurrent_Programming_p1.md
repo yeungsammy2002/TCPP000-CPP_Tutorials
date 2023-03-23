@@ -230,14 +230,77 @@ std::thread t1((Fctor()));
 ```
 
 
-So far, our threads has been functions or functors that takes no parameter. Now let's say we want to pass a parameter to the thread, say `Fctor` object takes a parameter of string `msg`, and in the `Fctor`, prints out that `msg`:
+So far, our threads has been functions or functors that takes no parameter. Now let's say we want to pass a parameter to the thread, say `Fctor` object takes a parameter of string `msg`, and in the `Fctor`, prints out that `msg`. The way to pass the string `s` to the thread is take `s` as this additional parameter of the thread's constructor:
 ```
 class Fctor {
 public:
-    void operator()(string msg) {
-        std::cout << "t1 says: " << msg << std::endl;
+    void operator()(std::string msg) {
+        std::cout << "from t1: " << msg;
     }
+};
+
+int main() {
+    std::string s = "Where there is no trust, there is no love\n";
+    std::thread t1((Fctor()), s);
+
+    try {
+        std::cout << "from main: " << s;
+    } catch(...) {
+        t1.join();
+        throw;
+    }
+
+    t1.join();
 }
 ```
+Let's say in the main thread, we also print out the message `s`. So if we run the program, both `t1` and main thread are printing the same message.
+```
+from main: Where there is no trust, there is no love
+from t1: Where there is no trust, there is no love
+```
 
-# 2 - 6:14
+Since the parameter is a stream, we want to pass it over by reference instead of by value so we can save a lot of copy. So we change the functor parameter to be passing by reference. But now the string `s` will be pass it over to the thread by value instead of by reference, because a parameter to a thread is always passed by value. To prove that, let's say we change the message to `"Trust is the mother of deceit."`:
+```
+class Fctor {
+public:
+    void operator()(std::string& msg) {                 // pass by reference
+        std::cout << "from t1: " << msg;
+        msg = "Trust is the mother of deceit\n";
+    }
+};
+
+int main() {
+    std::string s = "Where there is no trust, there is no love\n";
+    std::thread t1((Fctor()), s);
+
+    t1.join();
+    std::cout << "from main: " << s << std::endl;
+}
+```
+First, we want to make sure that `t1` has finished its job by calling the `join()` function, and then print out `s`.
+
+Let's run the program:
+```
+from main: Where there is no trust, there is no love
+from t1: Where there is no trust, there is no love
+```
+So you see, the message `"Trust is the mother of deceit."` is not printed out to the screen.
+
+If you really want to pass the stream by reference to the thread, you have to use `std::ref()`. This create a reference wrapper for `s`:
+```
+int main() {
+    std::string s = "Where there is no trust, there is no love\n";
+    std::thread t1((Fctor()), std::ref(s));
+
+    t1.join();
+    std::cout << "from main: " << s << std::endl;
+}
+```
+Now let's run the program again:
+```
+from t1: Where there is no trust, there is no love
+from main: Trust is the mother of deceit
+```
+As you see, `"Trust is the mother of deceit"` is printed out by main thread.
+
+# 2 - 8:50
