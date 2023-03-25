@@ -1,6 +1,6 @@
 # Section 01 - Introduction to Concurrent Programming with C++ 11
-
 Generally speaking, there are two kinds of concurrent programming models: ***Multi-processing*** & ***Multi-threading***.
+
 
 
 ## Multi-processing
@@ -11,6 +11,8 @@ graph LR
     A(Process1) -- Interprocessing Communication--> B(Process2)
     B --> A
 ```
+
+
 
 ## Multi-threading
 For multi-threading, one process contains two or more threads, and all of threads communicate with each other through **share memory**.
@@ -42,6 +44,7 @@ Multi-threading program cannot be run on the distributed system, while a multi-p
 In practice, it is more likely that you will see a mixture of both multi-threading and multi-processing models. Within the same program, some processes are single threaded, and some processes are multi-threaded.
 
 We will mainly talk about multi-threading because that's what the C++ standard library provides.
+
 
 
 ## Using Multi-threading
@@ -91,7 +94,8 @@ int main() {
 }
 ```
 
-- ### Checking Thread is Joinable - `.joinable()`
+
+- ### Checking Thread is Joinable using `.joinable()`
 There is a way for us to test if a thread is joinable by using `.joinable()` member function. In this case, if `t1` is joinable, we call the function `.join()`.
 ```
 int main() {
@@ -301,6 +305,75 @@ Now let's run the program again:
 from t1: Where there is no trust, there is no love
 from main: Trust is the mother of deceit
 ```
-As you see, `"Trust is the mother of deceit"` is printed out by main thread.
+As you can see, `"Trust is the mother of deceit"` is printed out by main thread. Now we have create a situation where the child thread and the parent thread are sharing the same memory, which is the string `s`.
 
-# 2 - 8:50
+
+
+- ### Passing Argument by Pointer Using `std::move()`
+Suppose `s` is no longer used in the main thread, and we don't want to share the memory between the thread because the memory sharing creates database problem, and we don't like to pass `s` by value either because passing by value is inefficient.
+
+There is nother way to achieve the same thing is instead of passing `s` over by reference, we can pass it over by good old pointer using `std::move()` function.
+```
+class Fctor {
+public:
+    void operator()(std::string& msg) {
+        std::cout << "from t1: " << msg;
+        msg = "Trust is the mother of deceit\n";
+    }
+};
+
+int main() {
+    std::string s = "Where there is no trust, there is no love";
+    std::thread t1((Fctor()), std::move(s));                        // move pointer
+
+    t1.join();
+}
+```
+This will move the `s` from the main thread to the child thread. This is both safe and efficient.
+
+In C++ library, there are many things that can only be moved, and cannot be copied. As a matter of fact, the thread object itself can only be moved. So if we create another thread called `t2` and assign `t1` to this `t2`, this will **NOT** compile because thread cannot be copied:
+```
+    std::thread t1((Fctor()), std::move(s));
+    std::thread t2 = t1;                        // compiler error
+```
+If we really want to transfer the ownership of a thread from `t1` to `t2`, we have to use the `std::move()` function again:
+```
+    std::thread t1((Fctor()), std::move(s));
+    std::thread t2 = std::move(t1);             // transfer the thread from `t1` to `t2`
+    t2.join();
+```
+So now we have to call `t2.join()` because `t1` is empty now.
+
+
+- ### Getting Thread ID from Main Thread (Parent Thread)
+Each thread has an identification number assoicated with it. To print out that number of the parent thread **ID**, we can use `std::this_thread::get_id()` function:
+```
+    std::cout << std::this_thread::get_id() << std::endl;
+```
+
+
+- ### Getting Thread ID from Child Thread
+To print out the child thread **ID**, we can do `.get_id()` method of `std::thread` object. For example:
+```
+    std::thread t1((Fctor()), std::move(s));
+    std::cout << t1.get_id() << std::endl;
+```
+
+Or we can do the `std::this_thread::get_id()` inside the child thread. For example:
+```
+class Fctor {
+public:
+    void operator()(std::string& msg) {
+        std::cout << "from t1: " << msg;
+        std::cout << std::this_thread::get_id() << std::endl;       // get child thread's ID
+    }
+};
+
+int main() {
+    std::string s = "Where there is no trust, there is no love";
+    std::thread t1((Fctor()), std::move(s));
+
+    t1.join();
+}
+```
+
