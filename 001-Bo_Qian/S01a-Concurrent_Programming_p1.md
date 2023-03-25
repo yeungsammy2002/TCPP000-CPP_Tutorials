@@ -185,6 +185,7 @@ int main() {
     t1.join();
 }
 ```
+
 If we run the program, both main thread and the `t1` thread prints out numbers into the `std::cout`, and it creates a gigantic mess:
 ```
 ...
@@ -308,7 +309,6 @@ from main: Trust is the mother of deceit
 As you can see, `"Trust is the mother of deceit"` is printed out by main thread. Now we have create a situation where the child thread and the parent thread are sharing the same memory, which is the string `s`.
 
 
-
 - ### Passing Argument by Pointer Using `std::move()`
 Suppose `s` is no longer used in the main thread, and we don't want to share the memory between the thread because the memory sharing creates database problem, and we don't like to pass `s` by value either because passing by value is inefficient.
 
@@ -377,3 +377,141 @@ int main() {
 }
 ```
 
+
+- ### Getting Number of Thread of Computer
+Let's say we have a very complicated problem to solve, how many thread should we create to solve that problem. Ideally, we should create as many number of threads as the number of calls that we have. We don't want to run more threads than we can support. That's called ***oversubscription***. Oversubscription is bad, because when there are more threads running than available CPU cores, it create a lot of ***context switch***, too many of ***context switching*** will degrade our performance. That's why the C++ library provide a function called `std::thread::hardware_concurrency()`.
+```
+std::cout << std::thread::hardware_concurrency() << std::endl;      // 6 (for example)
+```
+This will give us an indication of how many threads can be truely running concurrently for our program. For example, it might give me the number of CPU cores. So this can be a useful guide for splitting tasks among the threads.
+
+
+
+
+# Section 03 - Data Race and Mutex
+We're going to talk about ***race condition***, particularly the ***data races*** and how to solve them with ***mutex***.
+
+
+- ### Race Condition
+Let's start with the example program. We have a function called `function_1()`, which counted from `0` downward to `-100`. In the `main()` function, we created a thread of `t1` with `function_1`, and then we count from `0` upward to `100`. And then we wait for `t1` to finish:
+```
+#include <thread>
+#include <string>
+
+void function_1() {
+    for(int i = 0; i > -100; i--)
+        std::cout << "From t1: " << i << std::endl;
+}
+
+int main() {
+    std::thread t1(function_1);
+
+    for(int i = 0; i < 100; i++)
+        std::cout << "From main: " << i << std::endl;
+    
+    t1.join();
+}
+```
+Let's us run the program. As you can see, the output from this program is pretty messed up:
+```
+...
+From t1: From main: 61
+-56
+From main: 62
+From main: 63
+From main: 64
+From t1: From main: 65
+-57
+From main: 66
+From t1: -58
+From main: From t1: -59
+67
+From t1: -60
+From t1: -61
+From t1: From main: 68
+-62
+...
+```
+The reason it happens this way is because we have two threads running, and both threads are racing for the common resource, the `std::cout`. A ***race condition*** is a condition where the outcome of a program depends on the relative execution order of one or more threads. And typically, race condition is not good for our program. We should try to avoid it.
+
+
+- ### Solving Race Condition using Mutex
+Note that is defined in `<mutex>` header.
+
+One way to solve the race condition is using ***mutex*** to synchronize the access of the common resource among a group of threads, in this case, `std::cout`.
+
+First, we need to create a `std::mutex` object. Then before we insert the message into the `std::cout`, we have to **lock the mutex at first**. So that while it's printing the message, other thread will not be able to print the message. **After it's printing, it will unlock the mutex**, so that the other thread can lock the mutex and print their message.
+```
+#include <thread>
+#include <string>
+#include <mutex>
+
+std::mutex mu;
+
+void shared_print(std::string msg, int id) {
+    mu.lock();
+    std::cout << msg << id << std::endl;
+    mu.unlock();
+}
+
+void function_1() {
+    for(int i = 0; i > -100; i--)
+        shared_print(std::string("From t1: "), i);
+}
+
+int main() {
+    std::thread t1(function_1);
+
+    for(int i = 0; i < 100; i++)
+        shared_print(std::string("From main: "), i);
+
+    t1.join();
+}
+```
+Now the access of the common resource `std::cout` is synchronized with the ***mutex* `mu`**, it should never happen that two threads are using `std::cout` at the same time. As long as they are use `shared_print()` function for printing.
+
+If we run the program, everything is printed out beautifully:
+```
+...
+From t1: -83
+From main: 84
+From t1: -84
+From main: 85
+From t1: -85
+From main: 86
+From t1: -86
+From main: 87
+From t1: -87
+From main: 88
+From t1: -88
+From main: 89
+From t1: -89
+From main: 90
+From t1: -90
+...
+```
+
+However, there is a problem with this, what if this line of code throws an exception. Then our mutex `mu` will end up being locked forever:
+```
+void shared_print(std::string msg, int id) {
+    mu.lock();
+    std::cout << msg << id << std::endl;        // throw exception
+    mu.unlock();
+}
+```
+So it is recommended not to use the mutex `.lock()` and `unlock()` function directly. Instead, we can use a `std::lock_guard<std::mutex>`. For example:
+```
+void shared_print(std::string msg, int id) {
+    std::lock_guard<std::mutex> guard(mu);      // RAII
+    std::cout << msg << id << std::endl;        // throw exception
+}
+```
+Here we are using ***Resource Acquisition Is Initialization* (RAII)** technique. Whenever the `guard` goes out of scope, the mutex `mu` will always be unlocked with or without exception.
+
+There is another problem with this program, the resource `std::cout` is not completely under the protection of the mutex `mu`, because `std::cout` is a global variable so other thread can still use `std::cout` directory without going through the `.lock()`.
+
+In order to protect the resource completely, a mutex must be bundled together with the resource, it is protecting. So a more realistic example is like this:
+```
+``` 
+
+# 3 - 5:21
