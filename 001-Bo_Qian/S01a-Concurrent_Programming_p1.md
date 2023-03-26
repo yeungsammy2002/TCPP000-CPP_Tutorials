@@ -510,8 +510,65 @@ Here we are using ***Resource Acquisition Is Initialization* (RAII)** technique.
 
 There is another problem with this program, the resource `std::cout` is not completely under the protection of the mutex `mu`, because `std::cout` is a global variable so other thread can still use `std::cout` directory without going through the `.lock()`.
 
-In order to protect the resource completely, a mutex must be bundled together with the resource, it is protecting. So a more realistic example is like this:
-```
-``` 
+In order to protect the resource completely, a mutex must be bundled together with the resource it is protecting. 
 
-# 3 - 5:21
+So a more realistic example is like this. We have a class `LogFile`, and `LogFile` have a ***mutex*** `m_mutex`. And ***ofstream*** `f`, which are protected by the ***mutex***. An its constructor opens up a ***log file*** `log.txt`, and let's ignore the destructor for now. And it also has a similar print function `shared_print()`, which use a ***lock guard*** and a ***mutex*** to protect the access of `f`:
+```
+class LogFile {
+    std::mutex m_mutex;
+    ofstream f;
+public:
+    LogFile() {
+        f.open("log.txt");
+    }   // Need destructor to close file
+    
+    void shared_print(std::string id, int value) {
+        std::lock_guard<mutex> locker(m_mutex);
+        f << "From " << id << ": " << value << std::endl;
+    }
+};
+
+void function_1(LogFile& log) {                     // take `LogFile` as reference
+    for(int i = 0; i > -100; i--)
+        log.shared_print(std::string("From t1: "), i);
+}
+
+int main() {
+    LogFile log;                                    // create log file
+    std::thread t1(function_1, std::ref(log));      // pass by reference
+
+    for(int i = 0; i < 100; i++)
+        log.shared_print(std::string("From main: "), i);
+    
+    t1.join();
+}
+```
+In the `main()` function, we need to create a log file `log`, and then pass it to the thread `t1` by reference. And `function_1()` will take `LogFile` reference. And inside `t1`, we will call `log.shared_print()`. And this `main()` function will also called `log.shared_print()`.
+
+Now the resource `f` is under the total protection of the mutex. Nobody can access `f` without going through the lock mechanism. However, you need to maintain this level of protection when you grow the class of log file.
+
+There are things that you should never do, for example, you should never return `f` to the outside world. For example, you should **never** have a function like this:
+```
+class LogFile {
+    ...
+    ofstream& getStream() { return f; }     // bad practice
+    void processf(void fun(ofstrea&)) {     // bad practice
+        fun(f);
+    }
+}
+```
+This is bad idea because user will have the opportunity to access `f` without going through the mutex. 
+
+And you should never pass `f` as an argument to user provided function, because once you do that, this user defined function `fun` can do all the bad thing to the resource `f`, it can print things to `f` without going through the lock, it can copy `f` to a global variable so that everybody else can access `f` freely, it can close `f` so that nobody else write to `f` anymore. So the resource `f` is out of control.
+
+Now let's assume we have used mutex to synchronize the access of our resource and we have followed all the good design guideline of not leaking the resource to the outside world. It still cannot guarantee that our program is thread safe.
+
+Let's conside a **STL container** example. Let's consider the class `stack`. As we know, the class `stack` provides among other **APIs** a `pop()` function, which pops off the item on top of the stack. And the `top()` function return the item on top. And then it provides some other things:
+```
+class stack {
+public:
+    void pop();     // pops off the item on top of the stack
+    int& top();     // returns the item on top
+    //...
+}
+```
