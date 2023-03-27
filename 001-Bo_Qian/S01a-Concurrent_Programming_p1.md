@@ -561,16 +561,68 @@ This is bad idea because user will have the opportunity to access `f` without go
 
 And you should never pass `f` as an argument to user provided function, because once you do that, this user defined function `fun` can do all the bad thing to the resource `f`, it can print things to `f` without going through the lock, it can copy `f` to a global variable so that everybody else can access `f` freely, it can close `f` so that nobody else write to `f` anymore. So the resource `f` is out of control.
 
-Now let's assume we have used mutex to synchronize the access of our resource and we have followed all the good design guideline of not leaking the resource to the outside world. It still cannot guarantee that our program is thread safe.
 
-Let's conside a **STL container** example. Let's consider the class `stack`. As we know, the class `stack` provides among other **APIs** a `pop()` function, which pops off the item on top of the stack. And the `top()` function return the item on top. And then it provides some other things:
+
+## Thread Safe on Stack
+Now let's assume we have used mutex to synchronize the access of our resource and we have followed all the good design guideline of not leaking the resource to the outside world. It still **cannot** guarantee that our program is thread safe.
+
+Let's conside a **STL container** example. Let's consider the class `stack`. As we know, the class `stack` provides among other **APIs** a `pop()` function, which pops off the item on top of the stack. And the `top()` function return the item on top. And then it provides some other things `...`. And let's assume stack use integer array to store the data, and use `std::mutex` to protect the data:
 ```
 class stack {
+    int* _data;
+    std::mutex _mu;
 public:
     void pop();     // pops off the item on top of the stack
     int& top();     // returns the item on top
-    //...
+    ...
+}
+```
+Let's assume both `pop()` and `top()` will access `_data` through the mutex, and then the `stack` doesn't do anything to leak data to the outside world. In `function_1()`, it will take `stack` reference called `st`. And in this `function_1`, it will do somthing like this:
+```
+void function_1(stack& st) {
+    int v = st.top();
+    st.pop();
+    process(v)
+}
+```
+This `function_1()` will be used to lunch a bunch of threads, and other threads will share the same data ***stack*** `st`. Now the question is: *"is this code thread safe?"*
+
+Let's consider the case that we have two threads: ***thread A*** and ***thread B***. And we have a **stack** that contains `6`, `8`, `3`, and `9`.
+
+| 6 |
+| - |
+| 8 |
+| 3 |
+| 9 |
+
+***Thread A*** executed first, so it calls the method `.top()` and returns the data `6`. Then ***thread B*** calling method `.top()` and return `6` also. Then ***thread A*** calling `.pop()`, so `6` is pop out of the stack. Then thread B calling `.pop()`, `8` is pop out of the stack. After that, the ***thread B*** calling the process function and then the ***thread A*** calling the process function.
+```
+Thread A                            Thread B
+
+int v = st.top();   // 6
+                                    int v = st.top();   // 6
+st.pop();           // 6 popped
+                                    st.pop();           // 8 popped
+                                    process(v);
+process(v);
+```
+As you can see, the number `6` was process twice, and the number `8` was never process. Number `8` was lose. Apparently, our code is **NOT** thread safe. But we already have used mutex to synchronize the access of the data, and we have not leak our data to the user.
+
+In this case, the culprit is actually the interface itself. The interface is designed in such a way that it is inherit not thread safe. **The operations `top()` and `pop()` should not be separated into two operations. They should be combined into one function**.
+
+So the simple function is to **let the `pop()` function returns integer data**, and the `function_1()` will call `pop()` instead of `top()` to gather the data:
+```
+class stack {
+    int* _data;
+    std::mutex _mu;
+public:
+    int& pop();             // not `void`
+    int& top();
+}
+
+void function_1(stack& st) {
+    int v = st.pop();
+    process(v);
 }
 ```
 
-# 3 - 9:12
