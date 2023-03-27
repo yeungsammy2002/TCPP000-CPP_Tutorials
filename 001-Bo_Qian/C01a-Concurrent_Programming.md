@@ -1,4 +1,9 @@
-# Section 01 - Introduction to Concurrent Programming with C++ 11
+# Course 01 - Concurrent Programming with C++ 11 - Part A
+
+
+
+
+# Section 01 - Introduction to Concurrent Programming
 Generally speaking, there are two kinds of concurrent programming models: ***Multi-processing*** & ***Multi-threading***.
 
 
@@ -392,7 +397,8 @@ This will give us an indication of how many threads can be truely running concur
 We're going to talk about ***race condition***, particularly the ***data races*** and how to solve them with ***mutex***.
 
 
-- ### Race Condition
+
+## Race Condition - Data Race
 Let's start with the example program. We have a function called `function_1()`, which counted from `0` downward to `-100`. In the `main()` function, we created a thread of `t1` with `function_1`, and then we count from `0` upward to `100`. And then we wait for `t1` to finish:
 ```
 #include <thread>
@@ -435,7 +441,8 @@ From t1: From main: 68
 The reason it happens this way is because we have two threads running, and both threads are racing for the common resource, the `std::cout`. A ***race condition*** is a condition where the outcome of a program depends on the relative execution order of one or more threads. And typically, race condition is not good for our program. We should try to avoid it.
 
 
-- ### Solving Race Condition using Mutex
+
+## Solving Race Condition using Mutex
 Note that is defined in `<mutex>` header.
 
 One way to solve the race condition is using ***mutex*** to synchronize the access of the common resource among a group of threads, in this case, `std::cout`.
@@ -610,7 +617,7 @@ As you can see, the number `6` was process twice, and the number `8` was never p
 
 In this case, the culprit is actually the interface itself. The interface is designed in such a way that it is inherit not thread safe. **The operations `top()` and `pop()` should not be separated into two operations. They should be combined into one function**.
 
-So the simple function is to **let the `pop()` function returns integer data**, and the `function_1()` will call `pop()` instead of `top()` to gather the data:
+So the simple function is to **let the `pop()` function returns integer data**, and the `function_1()` will call `pop()` instead of `top()` to gather the data. Now this code is thread safe:
 ```
 class stack {
     int* _data;
@@ -626,3 +633,12 @@ void function_1(stack& st) {
 }
 ```
 
+Beware that `.pop()` may not be exception safe. That's why the **STL stack container's `pop()` function** doesn't return a value.
+
+
+### Avoiding Data Race
+To avoid data race, there are a couple of things you can do:
+
+1. Use mutex to synchronize the data access
+2. Never leak a handle of the data to outside
+3. Design your interface properly
