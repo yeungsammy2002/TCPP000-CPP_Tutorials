@@ -178,7 +178,7 @@ From t1: -99
 ```
 
 
-### Avoiding Deadlock - 1. Prefer Locking Single Mutex at a time
+- ### Avoiding Deadlock - 1. Prefer Locking Single Mutex at a time
 Let's analyze what you can do to avoid deadlock. First of all, you need to evaluate the situation, do you really need to lock two or more mutexes at the same time. Sometimes you don't, if that is the case, you need to one mutex at the time. We lock the mutex `_mu` and then do a bunch of different things. And then we lock the mutex `_mu2` and do other things. 
 ```
 void shared_print2(std::string id, int value) {
@@ -195,7 +195,7 @@ void shared_print2(std::string id, int value) {
 So that's the first thing to avoid deadlock: 
 
 
-### Avoiding Deadlock - 2. Avoid Locking Mutex and then Calling User Provided Function
+- ### Avoiding Deadlock - 2. Avoid Locking a Mutex and then Calling a User Provided Function
 The second thing is try not to lock the mutex and then call some users function. Because then we'll never know what the user provided function will do, it might end up locking another mutex and then you have two mutex being locked:
 ```
 void shared_print2(std::string id, int value) {
@@ -211,3 +211,16 @@ void shared_print2(std::string id, int value) {
 }
 ```
 
+
+- ### Avoiding Deadlock - 3. Use `std::lock()` to Lock more than One Mutex
+If you really want to lock more than two mutexes at a time, then try to use the `std::lock()` function to lock them, because the `std::lock()` function provide some deadlock avoidance algorithm to lock the mutex. 
+
+
+- ### Avoiding Deadlock - 4. Lock the Mutex in Same Order
+Wometimes, using the `std::lock()` function is not possible, then you can try to lock the mutex in same order for all threads. Or you can provide the hierarchy of mutex, so that when a thread is holder a lower level of mutex, it is not allowed to lock a higher level of mutex.
+
+
+## Locking Granularity
+Generally speaking, the locking of resource should happen at an appropriate granularity. A ***fine-grained lock*** protects a small amount of data. A ***coarse-grained lock*** protects a big amount of data.
+
+If your locks are too fine-grained, then your programs will becomes tricky, and then you're more exposed to deadlocks. If your locks are too coarse-grained, then you're losing a big opportunity of parallel computing, because many threads will spend a lot of time waiting for the resources.
