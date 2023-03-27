@@ -308,7 +308,7 @@ public:
     LogFile() {
     }   // Need destructor to close file
     void shared_print(std::string id, int value) {
-        if(!_f.isopen()) {
+        if(!_f.is_open()) {
             std::unique_lock<mutex> locker2(_mu_open);
             _f.open("log.txt");
         }
@@ -318,6 +318,38 @@ public:
     }
 }
 ```
-But the program is still not thread safe. Let's say we have two threads running: ***thread A*** and ***thread B***.
+But the program is still not thread safe. Let's say we have two threads running: ***thread A*** and ***thread B***. First, ***thread A*** comes here `if(!_f.is_open()) {...}` and found that file is not open. So they're go ahead and lock mutex, and start opening file. Before it open the file, ***thread B*** also comes here `if(!_f.is_open()) {...}` and found that file is not open yet. So it also try to lock the mutex, and of course being blocked over here `std::unique_lock<mutex> locker2(_mu_open);`. Once ***thread A*** has opened at the file and exited the `if`-block, ***thread B*** will get the mutex and ***thread B*** will open the file again. So the file will be opened twice by two threads. So not only the `.open()` method needed to be synchronized, the `.is_open()` function also needs to be synchronized. So we will protect both operation with the same mutex:
+```
+class LogFile {
+    std::mutex _mu;
+    std::mutex _mu_open;
+    ofstream _f;
+public:
+    LogFile() {
+    }   // Need destructor to close file
+    void shared_print(std::string id, int value) {
+        {
+            std::unique_lock<mutex> locker2(_mu_open);
+            if(!_f.is_open()) {
+                _f.open("log.txt");
+            }
+        }
 
-# 5 - 6:17
+        std::unique_lock<mutex> locker(_mu, std::defer_lock);
+        _f << "From " << id << ": " << value << std::endl;
+    }
+}
+```
+Now this program is thread-safe. But it introduced another problem. The file only needs to be opened once but now every we call the `shared_print()` method, the program will lock the mutex, check if the file is opened, and then unlock the mutex, so all these locking and unlocking are purely wasting of computer cycles. And more importantly, those extra useless locking of mutex hinders the program from being run concurrently, which is bad.
+
+The standard library provides a solution specifically for this kind of problem. Instead of using another mutex, we're going to use `std::once_flag`
+```
+class LogFile {
+    std::mutex _mu;
+    std::once_flag _flag;
+    std::ofstream _f;
+    ...
+}
+```
+
+# 5 - 8:23
