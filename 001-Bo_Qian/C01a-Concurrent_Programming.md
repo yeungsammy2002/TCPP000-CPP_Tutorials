@@ -142,7 +142,6 @@ void count_ints() {
 
 void func_1() {
 	std::thread t1(count_ints);
-
 	for (int i = 10; i < 100; i++) {
 		std::cout << i << std::endl;
 		if (i == 99) throw 1;           // thread stopped here
