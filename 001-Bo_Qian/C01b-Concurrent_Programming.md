@@ -1,8 +1,3 @@
-# Course 01 - Concurrent Programming with C++ 11 - Part B
-
-
-
-
 # Section 04 - Deadlock
 Let's start with the example that we have last time. We have a class `LogFile` and the `LogFile` has a mutex and an ofstream. In the `.shared_print()`, we will lock the mutex and then print things to the `ofstream`. `function_1()` counts from `0` to `-100`. And then the `main()` function create the thread of `t1` with `function_1()` and then count from `0` to `100`:
 ```

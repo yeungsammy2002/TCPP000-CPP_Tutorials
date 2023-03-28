@@ -1,8 +1,3 @@
-# Course 01 - Concurrent Programming with C++ 11 - Part A
-
-
-
-
 # Section 01 - Introduction to Concurrent Programming
 Generally speaking, there are two kinds of concurrent programming models: ***Multi-processing*** & ***Multi-threading***.
 
