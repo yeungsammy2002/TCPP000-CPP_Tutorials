@@ -359,4 +359,48 @@ So comparing to what we have done before, our life becomes much easier. And our 
 
 
 # Section 06 - Condition Variables
+We have talked about how to use mutex to synchronize the access of common resource among the thread. Now you're going to talk about another synchronization issue, which using mutex alone cannot help us to solve the problem.
 
+Let's look at an example. The `main()` function is pretty simple, it creates two threads `t1` with `function_1` and `t2` with `function_2`, and then wait for two threads to finish. First, there is a global variable `q`, which is a ***deque of integer***. And there is also a ***mutex*** `mu`. The thread `t1` has a `while`-loop, it push number into the queue, and then sleep for a second, and then go to the next loop. The thread `t2` also has a `while`-loop, it gives checking if loop is empty. If it is not empty, it pops off the data, and then prints it out. Otherwise, it go to the next loop. So thread `t1` is the producer of the data, and the thread `t2` is the consumer of the data:
+```
+std::deque<int> q;
+std::mutex mu;
+
+void function_1() {
+    int count = 10;
+    while(count > 0) {
+        std::unique_lock<mutex> locker(mu);
+        q.push_front(count);
+        locker.unlock();
+        std::this_thread::sleep_for(chrono::seconds(1));
+        count--;
+    }
+}
+
+void function_2() {
+    int data = 0;
+    while(data != 1) {
+        std::unique_lock<mutex> locker(mu);
+        if(!q.empty()) {
+            data = q.back();
+            q.pop_back();
+            locker.unlock();
+            std::cout << "t2 got a value from t1: " << data << std::endl;
+        } else {
+            locker.unlock();
+        }
+    }
+}
+
+int main() {
+    std::thread t1(function_1);
+    std::thread t2(function_2);
+    t1.join();
+    t2.join();
+}
+```
+Before they go ahead and access `q`, they'll lock the mutex. This is good, because `q` is a shared memory between the thread `t1` and the thread `t2`, So if the access of `q` is not synchronized with a mutex, then there will a data race. However, there is another problem, the thread `t2` is in a busy waiting state. It keeps checking if `q` is empty, and if `q` is empty, it will unlock the lock and immediately go to the next loop. So it will keep looping.
+
+We all know busy waiting is very inefficient. One way to improve efficiency is that if the `q` is empty, we'll let the thread to take a nap, and then go to the next loop. This will largely reduce the number of looping. But the problem is how do we decide on the time duration of its nap. If the time is too short, then the thread will still end up spending a lot of time looping.
+
+# 6 - 2:48
