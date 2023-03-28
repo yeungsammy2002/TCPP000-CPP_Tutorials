@@ -4,7 +4,7 @@ Generally speaking, there are two kinds of concurrent programming models: ***Mul
 
 
 ## Multi-processing
-For multi-processing, each process has only one thread running, and other processes communicate to each other through the regular **interprocess communication channel** such as files, pipes, message queues...etc.
+For multi-processing, each process has only one thread running, and other processes communicate to each other through the regular **interprocess communication channel** such as ***files***, ***pipes***, ***message queues***...etc.
 
 ```mermaid
 graph LR
@@ -29,7 +29,7 @@ graph TB
 - ### Advantages of Multi-threading
 A thread is faster to start, it is usually slow and complicated to start a process, because the operating system needs to devote a bunch of internal resources to manage the process. A thread is considered as a **lightweight process**.
 
-Secondly a thread takes lower overhead in running, a process has more overhead. One example of that is the operating needs to provide a lot of protection. So that one process will not accidentally step onto another process.
+Secondly a thread takes lower overhead in running, a process has more overhead. One example of that is the operating needs to provide a lot of protection so that one process will not accidentally step onto another process.
 
 Communicating through shared memory is a lot faster than interprocess communication channels.
 
@@ -47,7 +47,9 @@ We will mainly talk about multi-threading because that's what the C++ standard l
 
 
 
-## Using Multi-threading
+## Implementing Multi-threading using `std::thread`
+`std::thread` is a class that is defined in `<thread>`. Each of `std::thread` object represents a single thread of execution. Threads allow multiple functions to execute concurrently.
+
 In this example, we're creating a standard thread `t1` and take a function reference `hi` as a parameter. Then we called `t1.join()`, this means the main thread waits for `t1` to finish:
 ```
 #include <iostream>
@@ -71,7 +73,7 @@ Now suppose `t1` is a long running thread, and my main thread doesn't want to wa
 ```
 int main() {
     std::thread t1(hi);     // t1 starts running
-    t1.detach();            // t1 will run freely on its own -- daemon process
+    t1.detach();            // run freely on its own -- daemon process
 }
 ```
 By doing that, we have separated the connection between the main thread and `t1`. `t1` will run freely on its own, which means `t1` becomes a **daemon process**. When `t1` is finished because the main thread is no longer connected to the child thread, so the C++ runtime library will be responsible to reclaim the resource of `t1`. Some demon processes will continue running until the system shut down.
