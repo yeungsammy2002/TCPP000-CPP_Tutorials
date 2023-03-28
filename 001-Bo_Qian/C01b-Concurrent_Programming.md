@@ -342,14 +342,26 @@ public:
 ```
 Now this program is thread-safe. But it introduced another problem. The file only needs to be opened once but now every we call the `shared_print()` method, the program will lock the mutex, check if the file is opened, and then unlock the mutex, so all these locking and unlocking are purely wasting of computer cycles. And more importantly, those extra useless locking of mutex hinders the program from being run concurrently, which is bad.
 
-The standard library provides a solution specifically for this kind of problem. Instead of using another mutex, we're going to use `std::once_flag`
+The standard library provides a solution specifically for this kind of problem. Instead of using another mutex, we're going to use `std::once_flag`, and don't need all this locking and file checking (`std::unique_lock` & `if(!_f.is_open())`). Instead, we only need to call this function `std::call_once()`, and with `_flag` and the lambda function, which opens the file. This will make sure this lambda function will be called only once, and only by one thread.
 ```
 class LogFile {
     std::mutex _mu;
     std::once_flag _flag;
     std::ofstream _f;
-    ...
+public:
+    LogFile() {
+    }
+    void shared_print(std::string id, int value) {
+        std::call_once(_flag, [&]() { _f.open("log.txt"); });   // file will be opened only once by 
+
+        std::unique_lock<mutex> locker(_mu, std::defer_lock);
+    }
 }
 ```
+So comparing to what we have done before, our life becomes much easier. And our program is both efficient and accurate.
 
-# 5 - 8:23
+
+
+
+# Section 06 - Condition Variables
+
