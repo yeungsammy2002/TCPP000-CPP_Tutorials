@@ -130,11 +130,37 @@ int main() {
 ```
 
 
-
 ### Thread Not Join if Exception Throw
 In the main thread, after created the `t1` thread and before join with `t1`, it must do some work, otherwise, we're not getting any benefit of threading. 
 
-Let's say the main thread start counting integer `i`. Now  while the parent thread is doing its work, it throws an exception. Then again, the thread object `t1` will be destroyed before it is joined.
+Let's say a thread start counting integer `i`. Now `func_1()` is just a regular function inside a deeper calling stack, while the parent thread is doing its work, it throws an exception `i == 99`. Then again, the thread object `t1` will be destroyed before it is joined:
+```
+void count_ints() {
+	for (int i = 0; i < 10; i++)
+		std::cout << i << std::endl;
+}
+
+void func_1() {
+	std::thread t1(count_ints);
+
+	for (int i = 10; i < 100; i++) {
+		std::cout << i << std::endl;
+		if (i == 99) throw 1;           // thread stopped here
+	}
+	t1.join();
+}
+
+int main() {
+	try {
+		func_1();
+	}
+	catch (...) {
+		std::cout << "99 error occur" << std::endl;
+	}
+}
+```
+
+So we need to wrap up at the parent threads work with a `try`-`catch` block. This will make sure `t1` will be joined with or without exception:
 ```
 void count_ints() {
 	for (int i = 0; i < 10; i++)
@@ -146,31 +172,29 @@ void func_1() {
 	try {
 		for (int i = 10; i < 100; i++) {
 			std::cout << i << std::endl;
-			if (i == 99) throw 1;
+			if (i == 99) throw 1;       // must has a value, i.e. `1`
 		}
 	}
 	catch (...) {
-		throw 1;
+		t1.join();                      // `t1` thread has to be joined at first
+		throw;                          // re-throw
 	}
 	t1.join();
 }
 
 int main() {
 	try {
-		function_1();
+		func_1();
 	}
 	catch (...) {
 		std::cout << "99 error occur" << std::endl;
 	}
 }
-
 ```
+**#Re-Throw** - You can throw an exception without specifying any arguments or expression within the throw statment. The is called ***re-throw***, where the current caught exception is throw again to propagate it further up the call stack. The re-throw statement must be within the `catch`-block, this will re-throw the original exception caught by the `catch`-block, allowing other appropriate `catch`-blocks higher in the call stack to handle it.
 
-So we need to wrap up at the parent threads work with a `try`-`catch` block:
-```
-```
-This will make sure `t1` will be joined with or without exception.
 
+### Wrapping Thread with RAII
 An alterntive approach is using ***Resource Aquisition Is Initialization* (RAII)** approach. We can create a wrapper class that wraps around the `t1`, and in the **destructor** of the wrapper class will call that `t1.join()`. So whenever `w` goes out of scope, it will automatically join the thread.
 ```
 int main() {
@@ -179,6 +203,8 @@ int main() {
 }
 ```
 
+
+### Constructing `std::thread` Object with Functor Object
 A thread object can be constructed not only with a regular function like `hi`, but also with **any callable object**, such as ***functor*** or ***lambda* function**.
 
 Suppose we have a functor `Fctor`, and this functor will also do counting. In the `main()` function, we can instantiate `Fctor` object:
@@ -209,34 +235,8 @@ int main() {
 }
 ```
 
-If we run the program, both main thread and the `t1` thread prints out numbers into the `std::cout`, and it creates a gigantic mess:
-```
-...
-from main: 0
-from main: 1
-from main: 2
-...
-from main: 81
 
-from t1 -41
-from main: 82
-from t1 -42
-from main: 83
-from main: 84from t1 -43
-
-from t1 -44from main:85
-
-from t1 -45
-from: 86
-from t1 -46
-from main: 87
-from t1 -47
-from main: 88
-from t1 -48
-from main: 89
-...
-```
-
+### Constructing `std::thread` Object with Functor Constructor
 Some people may want to save a line of code. Instead of creating the `fct` and pass it up to the thread, we can just create the `Fctor` object on the fly. This will not work as you expected and it won't even compile:
 ```
 class Fctor {
@@ -258,6 +258,7 @@ std::thread t1((Fctor()));
 ```
 
 
+### Constructing `std::thread` Object with Function that Takes Parameter
 So far, our threads has been functions or functors that takes no parameter. Now let's say we want to pass a parameter to the thread, say `Fctor` object takes a parameter of string `msg`, and in the `Fctor`, prints out that `msg`. The way to pass the string `s` to the thread is take `s` as this additional parameter of the thread's constructor:
 ```
 class Fctor {
@@ -287,6 +288,8 @@ from main: Where there is no trust, there is no love
 from t1: Where there is no trust, there is no love
 ```
 
+
+### Constructing `std::thread` Object with Function that Takes Reference
 Since the parameter is a stream, we want to pass it over by reference instead of by value so we can save a lot of copy. So we change the functor parameter to be passing by reference. But now the string `s` will be pass it over to the thread by value instead of by reference, because a parameter to a thread is always passed by value. To prove that, let's say we change the message to `"Trust is the mother of deceit."`:
 ```
 class Fctor {
