@@ -128,25 +128,46 @@ int main() {
     t1.join();
 }
 ```
+
+
+
+### Thread Not Join if Exception Throw
 In the main thread, after created the `t1` thread and before join with `t1`, it must do some work, otherwise, we're not getting any benefit of threading. 
 
-Say the main thread start counting. While the parent thread is doing its work, it flows that exception, the thread object `t1` will be destroyed before it is joined. So we need to wrap up at the parent threads work with a `try`-`catch` block:
+Let's say the main thread start counting integer `i`. Now  while the parent thread is doing its work, it throws an exception. Then again, the thread object `t1` will be destroyed before it is joined.
 ```
-int main() {
-    std::thread t1(hi);
-
-    try {
-        for(int i = 0; i < 100; i++) {
-            std::cout << "from main: " << i << std::endl;
-            // throw exception if something went wrong
-        }
-    } catch(...) {
-        t1.join();      // join before throw to let outside to handle
-        throw;
-    }
-
-    t1.join();
+void count_ints() {
+	for (int i = 0; i < 10; i++)
+		std::cout << i << std::endl;
 }
+
+void func_1() {
+	std::thread t1(count_ints);
+	try {
+		for (int i = 10; i < 100; i++) {
+			std::cout << i << std::endl;
+			if (i == 99) throw 1;
+		}
+	}
+	catch (...) {
+		throw 1;
+	}
+	t1.join();
+}
+
+int main() {
+	try {
+		function_1();
+	}
+	catch (...) {
+		std::cout << "99 error occur" << std::endl;
+	}
+}
+
+```
+
+So we need to wrap up at the parent threads work with a `try`-`catch` block:
+```
 ```
 This will make sure `t1` will be joined with or without exception.
 
