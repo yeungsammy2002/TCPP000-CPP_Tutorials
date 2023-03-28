@@ -221,15 +221,6 @@ int main() {
     Fctor fct;
     std::thread t1(fct);        // t1 starts running
 
-    try {
-        for(int i = 0; i < 100; i++) {
-            std::cout << "from main: " << i << std::endl;
-        }
-    } catch(...) {
-        t1.join();
-        throw;
-    }
-
     t1.join();
 }
 ```
