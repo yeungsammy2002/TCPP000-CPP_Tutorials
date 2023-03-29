@@ -105,6 +105,67 @@ Instead, we have to use the `std::bind()` function to bind the `factorial` funct
 ```
     std::packaged_task<int(int)> t(std::bind(factorial, 6));
 ```
-Note that this new constructed function object cannot take parameter anymore, because the parameter is already bundled with the `factorial` function. So this template argument also needs to remvoe the integer parameter, and 
+Note that this new constructed function object cannot take parameter anymore, because the parameter is already bundled with the `factorial` function. So this template argument also needs to remvoe the integer parameter, and when the task is executed, it cannot take a parameter. So a packaged task is created different from the way a thread is created:
+```
+int main() {
+    std::packaged_task<int()> t(std::bind(factorial, 6));
 
-# 9 - 3:30
+    // ...
+
+    t();
+}
+```
+It seems we can do all these things by just using the function object. Let's say `t` is just a function object, and at later point different thread, or even in a different thread, or different object, or different function, we can invoke `t`. So it seems like the function object can serve our purpose well, we don't need a `std::packaged_task`:
+```
+    auto t = std::bind(factorial, 6);
+```
+The main advantage of a `std::packaged_task` is that it can link a callable object to a future, and that is very important in a threading environment.
+
+Now let's say we have a `task_q`, which is a deque of `std::packaged_tasks`. And in the `main()` function, we don't want to execute the task `t` in the same function, which is not very helpful. Instead, after creating the task `t`, we'll push it into the `task_q`, hoping that somebody will pop off the task and execute it in an appropriate time. And this "somebody" would be a thread, and this `thred_1` will create a `std::packaged_task` `t`. And in the `main()` function, we will create the `thread_1`, and then later on before we exit, we will call `t1.join()`. So now, the main thread will create a task, and push it into task queue. And then the `thread_1` will pop off the task from the `task_q` and execute it:
+```
+void thread_1() {
+    std::packaged_task<int()> t;
+    t = std::move(task_q.front());
+    t();                            // task execute
+}
+
+int main() {
+    std::thread t1(thread_1);
+    std::packaged_task<int()> t(bind(factorial, 6));
+    std::future<int> fu = t.get_future();
+    task_q.push_back(t);
+
+    std::cout << fu.get();
+    t1.join();
+}
+```
+Note that the `factorial` function generates a return value. So when the task `t()` is executed. It generates a returned value. We can use the task `t` to create a future `t.get_future()`. And later on, when we need the return value, we can call `fu.get()`. So this is very convenient.
+
+The `task_q` is shared between the `thread_1` and the main thread, which means we have a **data race condition**. So we also need a mutex `mu`, and before we access the `task_q`, we need to lock the mutex, and same thing in the main thread. In the `thread_1`, we also need to pop off the task after the task is used. Note that the `front()` function under the `pop_front()` function needs to be combined with the same locker. Otherwise, the code is not thread safe:
+```
+std::deque<std::packaged_task<int()>> task_q;
+std::mutex mu;
+
+void thread_1() {
+    std::packaged_task<int()> t;
+    {
+        std::lock_guard<std::mutex> locker(mu);
+        t = std::move(task_q.front());
+        task_q.pop_front();
+    }
+    t();
+}
+
+int main() {
+    std::thread t1(thread_1);
+    std::packaged_task<int()> t(bind(factorial, 6));
+    std::future<int> fu = t.get_future();
+    {
+        std::lock_guard<std::mutex> locker(mu);
+        task_q.push_back(t);
+    }
+
+    std::cout << fu.get();
+}
+```
+There are one minor problem and one major problem.
