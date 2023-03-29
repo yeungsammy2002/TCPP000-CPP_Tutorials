@@ -68,7 +68,7 @@ So these are the different ways of using callable object, and you can use them f
 
 
 # Section 09 - Packaged Tasks
-Let's use our example of `factorial()` function, which computes the factorial of the integer `N`. In the `main()` function, we create a `std::packaged_task` called `t` with `factorial` function. So `t` is a task being packaged up to a package, and then this package can be passed along to different places, such as a different function, or a different object, or a different thread. So after this, many things could happen:
+Let's use our example of `factorial()` function, which computes the factorial of the integer `N`. In the `main()` function, we create a `std::packaged_task` called `t` with `factorial` function. So `t` is a task being packaged up to a package, and then this package can be passed along to different places, such as a different function, or a different object, or a different thread. So after this, many things could happen. And at the particular time of point, this task is executed, and can be executed in different context. Other than the place where it is created:
 ```
 int factorial(int N) {
     int res = 1;
@@ -82,6 +82,29 @@ int main() {
     std::packaged_task<int(int)> t(factorial);
 
     // ...
+
+    t(6);       // In a different context
+}
+```
+So this is the `std::packaged_task` mean, it is package of task that can be transported to different place in the program, and being executed over there. A package task is a template class that is parameterize with function signature of this task `factorial`. So `factorial()` takes an integer and return integer, so this is also a function that integer and return integer. And when the task is executed, it also needs to take an integer parameter. However, we cannot conveniently get the returned value from `t()`, because `t()` always return `void`. To get the return value, we have to do this `t.get_future().get()`, this will give us the return value from the `factorial()` function:
+```
+int main() {
+    std::packaged_task<int(int)> t(factorial);
+
+    t(6);
+    int x = t.get_future().get();
 }
 ```
 
+Noted that `std::packaged_task` is kind of unusual. When we create a thread `t1` with `factorial` function, we can pass an additional parameter to the constructor of the thread. And this parameter will be treated as the parameter of the `factorial` function. But we cannot do that for the `std::packaged_task`, we cannot pass additional parameter into the constructor:
+```
+    std::thread t1(factorial, 6);
+    std::packaged_task<int(int)> t(factorial, 6);       // compiler error
+```
+Instead, we have to use the `std::bind()` function to bind the `factorial` function with this parameter and create a function object. And this function object is then passed to the constructor of the package task to create a package task:
+```
+    std::packaged_task<int(int)> t(std::bind(factorial, 6));
+```
+Note that this new constructed function object cannot take parameter anymore, because the parameter is already bundled with the `factorial` function. So this template argument also needs to remvoe the integer parameter, and 
+
+# 9 - 3:30
