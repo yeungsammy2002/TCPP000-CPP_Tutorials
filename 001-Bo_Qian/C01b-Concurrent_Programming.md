@@ -598,9 +598,89 @@ int main() {
 ```
 By doing that, we're telling our child thread that we will send him a value, but we don't have that value yet. So we'll send it over in the future. That is our `std::promise`. At this moment, we just do whenever we can do and then wait for our package. And sometimes later, we will do something else, and may probably take a nap. And then, we will keep our promise `4`. So after we have set the value `4`, the child thread will get the value `4`. And let's print something to verify the program is good (last statement).
 
-Let's run it. So the `Result is: 24`, and `Get from child: 24` is printed out by parent. Our program is good:
+Let's run it. So the `Result is: 24` is printed by child, and `Get from child: 24` is printed out by parent. So our program is good:
 ```
 Result is: 24
 Get from child 24
 ```
+Note that both the `std::promise` and the `std::future` are template classes with the type of integer, because the value we're transmitting over is an integer `4`. And this future `fu` is also template class of integer, because the value we're getting back is also an integer.
 
+Suppose we don't need to get anything back from the child, and after we took a nap, we have totally forgot that we have promise to set our child thread a value. So we have broken our promise, what will happen `f.get()` method will get an exception with the error code `std::future_errc::broken_promise`:
+```
+int factorial(std::future<int>& f) {
+    int res = 1;
+
+    int N = f.get();        // exception: std::future_errc::broken_promise
+    for(int i = N; i > 1; i--)
+        res *= i;
+    
+    std::cout << "Result is: " << res << std::endl;
+    return res;
+}
+```
+So `std::future` is a promise, if we promise to send over a value, we have to send over a value. If we really cannot send a value, and we knwo we cannot send the value, then we can set exception by using `.std::set_exception()` method, and then create `std::make_exception_ptr` with `std::runtime_error` to `"To err is human"`:
+```
+int main() {
+    int x;
+    
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+
+    std::future<int> fu = std::async(std::async(std::launch::async, factorial, std::ref(f)));
+
+    // do something else
+    std::this_thread::sleep_for(chrono::milliseconds(20));
+    p.set_exception(std::make_exception_ptr(std::runtime_error("To err is human")));
+}
+```
+The child thread call the `.get()` function, it will get this exception of rumtime error. So instead of sending exception of sending over and exception of the infamous broken promise, we can come up with a fancy execute for breaking our promise, note that neither promise nor future can be copied, they can only be moved just like the thread and the `std::unique_lock`. So if we create `std::promise<int> p2 = p`, this will not compile, we have to do `std::move(p)`, and same thing for the `std::future`:
+```
+    std::promise<int> p;
+    std::promise<int> p2 = std::move(p);
+```
+
+Now suppose this `factorial()` function needs to be computed many times, so instead of just launching one thread to do the computation. We're going to launch many threads, maybe ten threads. Then we cannot pass the same future to all the threads because each future can call the `.get()` function only once:
+```
+int main() {
+    int x;
+
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+
+    std::future<int> fu = std::async(std::launch::async, factorial, std::ref(f));
+    std::future<int> fu2 = std::async(std::launch::async, factorial, std::ref(f));
+    std::future<int> fu3 = std::async(std::launch::async, factorial, std::ref(f));
+    // ... 10 threads
+
+    p.set_value(4);
+}
+```
+So if we have 10 threads, they will call the `.get()` method 10 times, which is not a good idea. To solve the problem, we can create 10 promises, and then create 10 future. So each thread will get its own future, but that is clumsy. The standard library provides a better solution, which is use `std::shared_future`. `std::shared_future` can be created by calling the `f.share()` method. And unlike a regular `std::future`, a `std::shared_future` can be copied, so we can just pass the `std::shared_future` to a thread by value, which is very handy. And the `factorial()` function needs to take a `std::shared_future` parameter and it doesn't need to be a reference:
+```
+int factorial(std::shared_future<int> f) {
+    int res = 1;
+    
+    int N = f.get();
+    for(int i = N; i > 1; i--)
+        res *= i;
+
+    std::cout << "Result is: " << res << std::endl;
+    return res;
+}
+
+int main() {
+    int x;
+
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    std::shared_future<int> sf = f.share();
+
+    std::future<int> fu = std::async(std::launch::async, factorial, sf);
+    std::future<int> fu2 = std::async(std::launch::async, factorial, sf);
+    std::future<int> fu3 = std::async(std::launch::async, factorial, sf);
+    // ... 10 threads
+
+    p.set_value(4);
+}
+```
+Now, when the parent set value of `4`, or the child thread will get the same value when they call the `.get()` method. So the `std::shared_future` is very convenient when you have a broadcast kind of communication model.
