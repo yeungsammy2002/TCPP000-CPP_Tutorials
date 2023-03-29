@@ -455,3 +455,107 @@ So if the thread `t2` woke up and found that the `q` is empty, it will go back t
 
 Another thing to know is there could be more than one thread that is waiting on the same condition. If that is the case, when you call `cond.notify_one()`, it only wakes up one thread. If you want to wake up all the threads that is waiting at the same time, we should call `cond.notify_all()`. That will wake up all the threads. So with `std::condition_variable`, we can make sure that threads are running in the fixed order for certain portion of their code. In this example, the thread `t1` will push the data into `q` first, and then notify the thread `t2` to running. And then the thread `t2` will pop off the data, process the data, and go to the next loop, and waiting for the next data to be available.
 
+
+
+
+# Section 07 - Future, Promise and `async()`
+Let's start with a simple example. We have a function `factorial()`, which computes a factorial of `N`. In the `main()` function, we create a thread `t1` to compute factorial of `4` and print the result to `std::cout`:
+```
+#include <future>
+
+void factorial(int N) {
+    int res = 1;
+    for(int i = N; i > 1; i--)
+        res *= i;
+    std::cout << "Result is: " << res << std::endl;
+}
+
+int main() {
+    std::thread t1(factorial, 4);
+
+    t1.join();
+}
+```
+Let's say we don't just want to print the result to the `std::cout`, we want to return the result from the child thread to the parent thread. So that we can do something with it. For example, we create an integer `x`, and then pass `x` to the thread `t1` by reference. The `factorial` will take the second parameter:
+```
+void factorial(int N, int& x) {
+    int res = 1;
+    for(int i = N; i > 1; i--)
+        res *= i;
+    
+    std::cout << "Result is: " << res << endl;
+    x = res;
+}
+
+int main() {
+    int x;
+    std::thread t1(factorial, 4, std::ref(x));
+
+    t1.join();
+}
+```
+But this is not enough. `x` is a shared variable between the child thread and the parent thread, so we need to protect it with some kind of mutex. And we also want to make sure that the child thread will set the variable `x` first, and then the parent thread ahead and fetch the variable. So we may also want a `std::condition_variable`.
+```
+std::mutex mu;
+std::condition_variable cond;
+
+void factorial(int N, int& x) {
+    int res = 1;
+    for(int i = N; i > 1; i--)
+        res *= i;
+    
+    std::cout << "Result is: " << res << std::endl;
+    x = res;
+}
+```
+Now our code becomes more complicated, we need to lock and unlock the mutex, we need to call `cond.notify()` and `cond.wait()`. And more importantly, we have two global variables `mu` and `cond` that needs to be taken care of. So our code structure become pretty messy. All we need to do is launch a thread and get the result from the thread. The standard library allow you to provide an easier way to this job. So instead of using thread object to create a thread, we're going to use `std::async()`. The thread is a class, and `std::async()` is a function. And this function returns a very important thing - `std::future` object:
+```
+#include <future>
+
+int factorial(int N) { 
+    int res = 1;
+    for(int i = N; i > 1; i--)
+        res *= i;
+
+    std::cout << "Result is: " << res << std::endl;
+    return res;
+ }
+ 
+int main() {
+    int x;
+    std::future<int> fu = std::async(factorial, 4);
+    x = fu.get();
+}
+```
+This future is a channel where we can get the result from the child thread. We can do `x = fu.get()`. Then the `factorial()` function doesn't need the second parameter, but it does need a return value `int`. And at the end, it needs to return `res`. And we don't need all the global variables `mu` and `cond`. So our code become much cleaner. 
+
+
+The `fu.get()` method will wait until the child thread finish, and then return the value from the child thread. So conceptually, a `std::future` class represents an object where you can get something in the future. And the `std::future` object can called the get function of only once. If later on, we call the `fu.get()` again, it will crash out program. So you should not do that:
+```
+int main() {
+    int x;
+    std::future<int> fu = std::async(factorial, 4);
+    x = fu.get();
+    fu.get();           // crash
+}
+```
+
+Let's say we're going to use `std::async()` function to create another thread, but that is not completely true. The `std::aysnc()` function may or may not create another thread. And that can be controlled by another parameter. For example, we're going to call the `std::async()` function with parameter of `std::launch::deferred`:
+```
+int main() {
+    int x;
+    std::future<int> fu = std::async(std::launch::deferred, factorial, 4);
+    x = fu.get();
+}
+```
+Now the `std::async()` function will not create the thread. It will actually defer the execution of this function until later on, when the `fu.get()` method is called. So when the `fu.get()` method is called, the `factorial()` function will be executed in the same thread.
+
+If we launch the `std::async()` function with the `std::launch::async` parameter, then it will create another thread:
+```
+    std::future<int> fu = std::async(std::launch::async, factorial, 4);
+```
+And we also can `or` the two values together:
+```
+    std::future<int> fu = std::async(std::launch::async | std::launch::deferred, factorial, 4);
+```
+
