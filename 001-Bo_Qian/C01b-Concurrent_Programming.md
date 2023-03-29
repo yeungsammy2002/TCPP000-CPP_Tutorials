@@ -554,8 +554,53 @@ If we launch the `std::async()` function with the `std::launch::async` parameter
 ```
     std::future<int> fu = std::async(std::launch::async, factorial, 4);
 ```
-And we also can `or` the two values together:
+And we also can `or` the two values together. This means that whether the `std::async()` function will create another thread or not, we will be determined by the implementation:
 ```
     std::future<int> fu = std::async(std::launch::async | std::launch::deferred, factorial, 4);
+```
+ And this `std::launch::async | std::launch::deferred` actually is a default value for this parameter, so these two line of code are exactly the same:
+ ```
+    std::future<int> fu = std::async(factorial, 4);
+    std::future<int> fu = std::async(std::launch::async | std::launch::deferred, factorial, 4);
+ ```
+If you want to make sure that a new thread will be born, then we should use `std::launch::async` parameter:
+```
+    std::future<int> fu = std::async(std::launch::async, factorial, 4);
+```
+
+So now we have use the `std::future` to pass the child thread to the parent thread, we can also use the future to do the opposite thing. We can pass the value from the parent thread to the child thread, not at the time of creating the thread, but sometimes in the future. For that, we also need a `std::promise`. And we need another `std::future` `f`, and we will pass the future as a reference to the thread. And then this `factorial()` function will take `std::future` as a parameter, and sometimes later, it can call the `std::future` to get a value:
+```
+int factorial(std::future<int>& f) {     // take future as parameter
+    int res = 1;
+
+    int N = f.get();                    // call future to get value
+    for(int i = N; i > 1; i--)
+        res *= i;
+    
+    std::cout << "Result is: " << res << std::endl;
+    return res;
+}
+
+int main() {
+    int x;
+
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+
+    std::future<int> fu = std::async(std::launch::async, factorial, 4, std::ref(f));
+
+    // do something else
+    p.set_value(4);
+
+    x = fu.get();
+    std::cout << "Get from child: " << x << std::endl;
+}
+```
+By doing that, we're telling our child thread that we will send him a value, but we don't have that value yet. So we'll send it over in the future. That is our `std::promise`. At this moment, we just do whenever we can do and then wait for our package. And sometimes later, we will do something else, and may probably take a nap. And then, we will keep our promise `4`. So after we have set the value `4`, the child thread will get the value `4`. And let's print something to verify the program is good (last statement).
+
+Let's run it. So the `Result is: 24`, and `Get from child: 24` is printed out by parent. Our program is good:
+```
+Result is: 24
+Get from child 24
 ```
 
