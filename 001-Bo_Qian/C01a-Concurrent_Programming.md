@@ -328,7 +328,7 @@ As you can see, `"Trust is the mother of deceit"` is printed out by main thread.
 - ### Passing Argument by Pointer Using `std::move()`
 Suppose `s` is no longer used in the main thread, and we don't want to share the memory between the thread because the memory sharing creates database problem, and we don't like to pass `s` by value either because passing by value is inefficient.
 
-There is nother way to achieve the same thing is instead of passing `s` over by reference, we can pass it over by good old pointer using `std::move()` function.
+There is another way to achieve the same thing. Instead of passing `s` over by reference, we can pass it over by good old pointer using `std::move()` function.
 ```
 class Fctor {
 public:
@@ -454,7 +454,7 @@ The reason it happens this way is because we have two threads running, and both 
 
 
 ## Solving Race Condition using Mutex
-Note that is defined in `<mutex>` header.
+Note that `std::mutex` is defined in `<mutex>`.
 
 One way to solve the race condition is using ***mutex*** to synchronize the access of the common resource among a group of threads, in this case, `std::cout`.
 
@@ -513,11 +513,12 @@ However, there is a problem with this, what if this line of code throws an excep
 ```
 void shared_print(std::string msg, int id) {
     mu.lock();
-    std::cout << msg << id << std::endl;        // throw exception
+    ...                 // throw exception
     mu.unlock();
 }
 ```
-So it is recommended not to use the mutex `.lock()` and `unlock()` function directly. Instead, we can use a `std::lock_guard<std::mutex>`. For example:
+
+So it is **not** recommended to use the mutex `.lock()` and `.unlock()` function directly. Instead, we can use a `std::lock_guard<std::mutex>`. For example:
 ```
 void shared_print(std::string msg, int id) {
     std::lock_guard<std::mutex> guard(mu);      // RAII
@@ -526,23 +527,23 @@ void shared_print(std::string msg, int id) {
 ```
 Here we are using ***Resource Acquisition Is Initialization* (RAII)** technique. Whenever the `guard` goes out of scope, the mutex `mu` will always be unlocked with or without exception.
 
-There is another problem with this program, the resource `std::cout` is not completely under the protection of the mutex `mu`, because `std::cout` is a global variable so other thread can still use `std::cout` directory without going through the `.lock()`.
+There is another problem with this program, the resource `std::cout` is not completely under the protection of the mutex `mu`, because `std::cout` is a global variable so other thread can still use `std::cout` directly without going through the `.lock()`.
 
 In order to protect the resource completely, a mutex must be bundled together with the resource it is protecting. 
 
-So a more realistic example is like this. We have a class `LogFile`, and `LogFile` have a ***mutex*** `m_mutex`. And ***ofstream*** `f`, which are protected by the ***mutex***. An its constructor opens up a ***log file*** `log.txt`, and let's ignore the destructor for now. And it also has a similar print function `shared_print()`, which use a ***lock guard*** and a ***mutex*** to protect the access of `f`:
+So a more realistic example is like this. Let's say we have a class `LogFile`, and `LogFile` have a `std::mutex` `m_mutex`. And `std::ofstream` `f`, which are protected by the ***mutex***. And its constructor opens up a ***log file*** `log.txt`, and let's ignore the destructor for now. And it also has a similar print function `shared_print()`, which use a `std::lock_guard` and a `std::mutex` to protect the access of `f`:
 ```
 class LogFile {
     std::mutex m_mutex;
-    ofstream f;
+    std::ofstream f;            // ofstream is private
 public:
     LogFile() {
         f.open("log.txt");
     }   // Need destructor to close file
     
     void shared_print(std::string id, int value) {
-        std::lock_guard<mutex> locker(m_mutex);
-        f << "From " << id << ": " << value << std::endl;
+        std::lock_guard<std::mutex> locker(m_mutex);
+        f << "From " << id << value << std::endl;
     }
 };
 
@@ -569,7 +570,7 @@ There are things that you should never do, for example, you should never return 
 ```
 class LogFile {
     ...
-    ofstream& getStream() { return f; }     // bad practice
+    std::ofstream& getStream() { return f; }     // bad practice
     void processf(void fun(ofstrea&)) {     // bad practice
         fun(f);
     }

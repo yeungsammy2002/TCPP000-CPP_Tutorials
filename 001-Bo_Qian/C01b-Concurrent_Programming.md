@@ -12,7 +12,7 @@ public:
 
     void shared_print(std::string id, int value) {
         std::lock_guard<mutex> locker(_mu);
-        _f << "From " << id << ": " << value << std::endl;
+        _f << id << value << std::endl;
     }
 };
 
@@ -43,7 +43,7 @@ public:
 
     void shared_print(std::string id, int value) {
         std::lock_guard<mutex> locker(_mu);
-        std::cout << "From " << id << ": " << value << std::endl;       // using `std::cout` instead of `_f`
+        std::cout << id << value << std::endl;       // using `std::cout` instead of `_f`
     }
 };
 
@@ -64,17 +64,17 @@ int main() {
 If we run the program, we will see both threads are printing things to `std::cout` in a synchronized manner:
 ```
 ...
-From From main: : 47
+From main: 47
 From t1: -48
-From From main: : 48
+From main: 48
 From t1: -49
-From From main: : 49
+From main: 49
 From t1: -50
-From From main: : 50
+From main: 50
 From t1: -51
-From From main: : 51
+From main: 51
 From t1: -52
-From From main: : 52
+From main: 52
 ...
 ```
 
@@ -91,12 +91,12 @@ public:
     void shared_print(std::string id, int value) {
         std::lock_guard<mutex> locker(_mu);
         std::lock_guard<mutex> locker2(_mu2);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
     void shared_print2(std::string id, int value) {
         std::lock_guard<mutex> locker2(_mu2);
         std::lock_guard<mutex> locker(_mu);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
 };
 ```
@@ -105,13 +105,13 @@ To protect our resource, we need ***two lockers***. First one for `_mu` is calle
 Now, if we run the program again, the program didn't finished. It stopped in the middle and hang on there:
 ```
 ...
-From From main: : 14
+From main: 14
 From t1: -14
-From From main: : 15
+From main: 15
 From t1: -15
-From From main: : 16
+From main: 16
 From t1: -16
-From From main: : 17
+From main: 17
 ```
 What had happened is the ***classic deadlock situation***. The `t1` thread locks the mutex `_mu`, and before `t1` go ahead and lock `_mu2`, the main thread locks the mutex `_mu2`. So the `t1` is waiting for the main thread release `_mu2` and the main thread is waiting for `t1` to release `_mu`. It is ***deadlock***.
 
@@ -120,24 +120,24 @@ To avoid ***deadlock***, you need to make sure everybody is locking to mutexes i
     void shared_print(std::string id, int value) {
         std::lock_guard<mutex> locker(_mu);
         std::lock_guard<mutex> locker2(_mu2);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
     void shared_print2(std::string id, int value) {
         std::lock_guard<mutex> locker(_mu);
         std::lock_guard<mutex> locker2(_mu2);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
 ```
 Now if we run the program again, the program finished without a deadlock:
 ```
 ...
-From From main: : 96
+From main: 96
 From t1: -96
-From From main: : 97
+From main: 97
 From t1: -97
-From From main: : 98
+From main: 98
 From t1: -98
-From From main: : 99
+From main: 99
 From t1: -99
 ```
 
@@ -149,23 +149,23 @@ void shared_print(std::string id, int value) {
     std::lock(_mu, _mu2);
     std::lock_guard<mutex> lock(_mu, std::adopt_lock);
     std::lock_guard<mutex> lock(_mu2, std::adopt_lock);
-    std::cout << "From " << id << ": " << value << std::endl;
+    std::cout << id << value << std::endl;
 }
 void shared_print2(std::string id, int value) {
     std::lock(_mu, _mu2);
     std::lock_guard<mutex> lock(_mu, std::adopt_lock);
     std::lock_guard<mutex> lock(_mu2, std::adopt_lock);
-    std::cout << "From " << id << ": " << value << std::endl;
+    std::cout << id << value << std::endl;
 }
 ```
 Now if we run the program again, then the program also finished without any deadlock:
 ```
 ...
-From From main: : 97
+From main: 97
 From t1: -94
-From From main: : 98
+From main: 98
 From t1: -95
-From From main: : 99
+From main: 99
 From t1: -96
 From t1: -97
 From t1: -98
@@ -183,7 +183,7 @@ void shared_print2(std::string id, int value) {
     }
     {
         std::lock_guard<mutex> locker2(_mu2);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
 }
 ```
@@ -201,7 +201,7 @@ void shared_print2(std::string id, int value) {
     }
     {
         std::lock_guard<mutex> locker2(_mu2);
-        std::cout << "From " << id << ": " << value << std::endl;
+        std::cout << id << value << std::endl;
     }
 }
 ```
