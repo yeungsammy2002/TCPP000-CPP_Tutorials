@@ -401,6 +401,57 @@ int main() {
 ```
 Before they go ahead and access `q`, they'll lock the mutex. This is good, because `q` is a shared memory between the thread `t1` and the thread `t2`, So if the access of `q` is not synchronized with a mutex, then there will a data race. However, there is another problem, the thread `t2` is in a busy waiting state. It keeps checking if `q` is empty, and if `q` is empty, it will unlock the lock and immediately go to the next loop. So it will keep looping.
 
-We all know busy waiting is very inefficient. One way to improve efficiency is that if the `q` is empty, we'll let the thread to take a nap, and then go to the next loop. This will largely reduce the number of looping. But the problem is how do we decide on the time duration of its nap. If the time is too short, then the thread will still end up spending a lot of time looping.
+We all know busy waiting is very inefficient. One way to improve efficiency is that if the `q` is empty, we'll let the thread to take a nap, and then go to the next loop. This will largely reduce the number of looping. But the problem is how do we decide on the time duration of its nap. If the time is too short, then the thread will still end up spending a lot of time looping. If the time is too long, then it may not be able to get the data in time. So it is very hard to find the best number, this is where the ***condition variable*** comes in.
 
-# 6 - 2:48
+In addition to the mutex, we also need a `std::condition_variable` object, let's say `cond`. And in thread `t1`, after we has pushed the data into `q` and unlock the `locker`, we would call `cond.notify_one`. This will wake up one thread if any that is waiting on this condition:
+```
+std::deque<int> q;
+std::mutex mu;
+std::condition_variable cond;
+
+void function_1() {
+    int count = 10;
+    while(count > 0) {
+        std::unique_lock<mutex> locker(mu);
+        q.push_front(count);
+        locker.unlock();
+        cond.notify_one();          // Notify one waiting thread, if there is one
+        std::this_thread::sleep_for(chrono::seconds(1));
+        count--;
+    }
+}
+```
+In thread `t2`, we don't need `if`-`else`-block, we only need to call `cond.wait(locker)`, this will put thread `t2` into sleep until being notified by thread `t1`. So `std::condition_variable` can enforce that the thread `t2` will go ahead and fetch the data only after thread `t1` has pushed the data into the `q`. In other words, it can enforce certain parts of the two threads to be executed in a predefined order.
+```
+void function_2() {
+    int data = 0;
+    while(data != 1) {
+        std::unique_lock<mutex> locker(mu);
+        cond.wait(locker);          // spurious wake
+        data = q.back();
+        q.pop_back();
+        locker.unlock();
+        std::cout << "t2 got a value from t1: " << data << std::endl;
+    }
+}
+```
+The reason why `cond.wait()` method takes `locker` as an argument is because the mutex is locked by the thread `t2`, and a thread should never go to sleep while holding a mutex. We don't want to lock everybody out while you are sleeping. So before the `cond.wait()` method, put thread into sleep it will unlock the `locker`, and then go to sleep. And once the thread `t2` is woke up by the `cond.notify_one()` method, it will lock the `locker` again. And then continue to accessing the `q`. And after that, it will unlock the `locker`. Since we have lock and unlock the mutex many times, we have to use `std::unique_lock` for `std::condition_variable`. We cannot use `std::lock_guard`.
+
+There is another problem. The thread `t2` can wake up by itself, and that is called ***spurious wake***. And if it is a ***spurious wake***, we don't want the thread to continue running, we want to put it back to sleep again. So the `cond.wait()` method can take another parameter, which is a predicate that determines whether the condition is really met for the thread to continue running. In this case, we will use a ***lambda function***, if `q` is not empty:
+```
+void function_2() {
+    int data = 0;
+    while(data != 1) {
+        std::unique_lock<mutex> locker(mu);
+        cond.wait(locker, []() { return !q.empty(); });     // if `q` is not empty
+        data = q.back();
+        q.pop_back();
+        locker.unlock();
+        std::cout << "t2 got a value from t1: " << data << std::endl;
+    }
+}
+```
+So if the thread `t2` woke up and found that the `q` is empty, it will go back to sleep again. If the `q` is not empty, it will go ahead and pop off the data.
+
+Another thing to know is there could be more than one thread that is waiting on the same condition. If that is the case, when you call `cond.notify_one()`, it only wakes up one thread. If you want to wake up all the threads that is waiting at the same time, we should call `cond.notify_all()`. That will wake up all the threads. So with `std::condition_variable`, we can make sure that threads are running in the fixed order for certain portion of their code. In this example, the thread `t1` will push the data into `q` first, and then notify the thread `t2` to running. And then the thread `t2` will pop off the data, process the data, and go to the next loop, and waiting for the next data to be available.
+
