@@ -454,7 +454,7 @@ The reason it happens this way is because we have two threads running, and both 
 
 
 ## Solving Race Condition using Mutex
-Note that `std::mutex` is defined in `<mutex>`.
+Note that `std::mutex` and `std::lock_guard` are defined in `<mutex>`.
 
 One way to solve the race condition is using ***mutex*** to synchronize the access of the common resource among a group of threads, in this case, `std::cout`.
 
@@ -543,7 +543,7 @@ public:
     
     void shared_print(std::string id, int value) {
         std::lock_guard<std::mutex> locker(m_mutex);
-        f << "From " << id << value << std::endl;
+        f << id << value << std::endl;
     }
 };
 
@@ -562,7 +562,7 @@ int main() {
     t1.join();
 }
 ```
-In the `main()` function, we need to create a log file `log`, and then pass it to the thread `t1` by reference. And `function_1()` will take `LogFile` reference. And inside `t1`, we will call `log.shared_print()`. And this `main()` function will also called `log.shared_print()`.
+In the `main()` function, we need to create a `LogFile` object called `log`, and then pass it to the thread `t1` by reference. And `function_1()` will take `LogFile` reference. And inside `t1`, we will call `log.shared_print()`. And this `main()` function will also called `log.shared_print()`.
 
 Now the resource `f` is under the total protection of the mutex. Nobody can access `f` without going through the lock mechanism. However, you need to maintain this level of protection when you grow the class of log file.
 
