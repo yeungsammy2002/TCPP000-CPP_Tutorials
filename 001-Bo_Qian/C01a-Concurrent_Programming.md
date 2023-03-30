@@ -564,14 +564,24 @@ int main() {
 ```
 In the `main()` function, we need to create a `LogFile` object called `log`, and then pass it to the thread `t1` by reference. And `function_1()` will take `LogFile` reference. And inside `t1`, we will call `log.shared_print()`. And this `main()` function will also called `log.shared_print()`.
 
-Now the resource `f` is under the total protection of the mutex. Nobody can access `f` without going through the lock mechanism. However, you need to maintain this level of protection when you grow the class of log file.
+Now the resource `f` is under the total protection of the mutex. Nobody can access `f` without going through the lock mechanism. However, you need to maintain this level of protection when you grow the class of `LogFile`.
 
 There are things that you should never do, for example, you should never return `f` to the outside world. For example, you should **never** have a function like this:
 ```
 class LogFile {
-    ...
-    std::ofstream& getStream() { return f; }     // bad practice
-    void processf(void fun(ofstrea&)) {     // bad practice
+    std::mutex m_mutex;
+    std::ofstream f;
+public:
+    LogFile() {
+        f.open("log.txt");
+    }   // Need destructor to close file
+    void shared_print(std::string id, int value) {
+        std::lock_guard<std::mutex> locker(m_mutex);
+        f << id << value << std::endl;
+    }
+    // Never return `f` to the outside world
+    std::ofstream& getStream() { return f; }        // bad practice
+    void processf(void fun(ofstream&)) {            // bad practice
         fun(f);
     }
 }
