@@ -272,3 +272,30 @@ int main() {
 
 So these are the threading utilities that the standard library provides. And we can add a time constraint to some of the utility functions by using the `<chrono>` library (you can find them in the Modern C++ playlist).
 
+Let's start with the thread. Any thread can sleep for a certain amount of time:
+```
+int main() {
+    std::thread t1(factorial, 6);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+}
+```
+So this thread will sleep for 3 milliseconds.
+
+Now let's define a time point. We have a time point `tp`, which is of the steady clock and it is equal to the current time of steady clock plus 4 microseconds. And then we can also do `std::this_thread::sleep_until` the time of `tp`. Mutex also have similar thing, we can call the `ulocker.try_lock()`, this will try to lock the mutex. And if it's not successful, it will immediately return. And `ulocker` can also try lock for a certain amount of time, in this case, if `500` has passed and then the mutex still cannot be locked, then the function will return. We can also do `ulocker.try_lock_until()` with a certain time point `tp`.
+```
+int main() {
+    ...
+    std::chrono::steady_clock::time_point tp = std::chrono::steady_clock::now() + std::chrono::microseconds(4);
+    std::this_thread::sleep_until(tp);
+    ...
+    ulocker.try_lock();
+    ulocker.try_lock_for(std::chrono::nanoseconds(500));
+    ulocker.try_lock_until(tp);
+}
+```
+You probably have seen the pattern, the functions that end with `_for()` takes duration for parameter. And in the functions ends with `_until()` takes time point for parameter, and same thing for ***condition variable***. We have used the `.wait()` method, and there's a `.wait_for()`, which takes a duration. And `cond.wait_until()` takes a time point `tp`:
+```
+    std::condition_variable cond;
+    cond.wait_for(std::chrono::microseconds(2));
+    cond.wait_until(tp);
+```
