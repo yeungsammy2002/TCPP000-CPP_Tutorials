@@ -234,19 +234,41 @@ Let's reuse our `factorial()` function.
 int factorial(int N) { ... }
 
 int main() {
-    /* thread */
+    /* Thread */
     std::thread t1(factorial, 6);
 
-    /* mutex */
+    /* Mutex */
     std::mutex mu;
     std::lock_guard<std::mutex> locker(mu);
     std::unique_lock<std::mutex> ulocker(mu);
 
-    /* condition variable */
+    /* Condition Variable */
+    std::condition_variable cond;
+
+    /* Promise and Future */
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+
+    /* async() */
+    std::future<int> fu = async(factorial, 6);
+
+    /* Packaged Task */
+    std::packaged_task<int(int)> t(factorial);
+    std::future<int> fu2 = t.get_future();
+    t(6);
 }
 ```
-- #### *thread* - We have learned ***thread***. How to create a thread object and spawn a thread (`t1`), so it create `t1` with a `factorial()` function.
+- #### *Thread* - We have learned ***thread***. How to create a thread object and spawn a thread (`t1`), so it create `t1` with a `factorial()` function.
 
-- #### *mutex* - We also learned the ***mutex*** to sychronize the data access. And the mutex has a member method `.lock()` and `unlock()`, but they are not recommended to use directly. Instead, we should use `std::lock_guard`. If you need an extra flexiblilty, you should use `std::unique_lock`. And the `std::unique_lock` can lock and unlock a mutex multiple times, and it also can transfer the ownership of a mutex from one unique lock to another.
+- #### *Mutex* - We also learned the ***mutex*** to sychronize the data access. And the mutex has a member method `.lock()` and `unlock()`, but they are not recommended to use directly. Instead, we should use `std::lock_guard`. If you need an extra flexiblilty, you should use `std::unique_lock`. And the `std::unique_lock` can lock and unlock a mutex multiple times, and it also can transfer the ownership of a mutex from one unique lock to another.
 
-- #### *condition variable* - We have learned *condition variable*
+- #### *Condition variable* - We have learned *condition variable*. Condition variable is to synchronize the execution order of threads.
+
+- #### *Promise* & *Future* - We have learned *promise* and *future*. `p` is promise to send an integer variable. We can create the future `f`. And `f` can be used to fetch the variable send over by `p`.
+
+- #### `async()` - We have learned `async()` function, which is another way to spawn a thread. And `async()` function can also return a *future*. `async()` can either spawn a child thread to launch the `factorial()` function, or run the `factorial()` function in the same thread.
+
+- #### *Packaged Task* - Finally, we have learned *packaged task*. Packaged task is a class template that can be parameterized the ways the function signature of the task we're going to create. In this case, `factorial()`. And later on, the task can be executed the same way you run the function. And the task can also return the future `fu2` to fetch the return the value from the task.
+
+So these are the threading utilities that the standard library provides. And we can add a time constraint to some of the utility functions by using the `<chrono>` library (you can find them in the Modern C++ playlist).
+
