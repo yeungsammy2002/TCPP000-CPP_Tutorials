@@ -293,9 +293,22 @@ int main() {
     ulocker.try_lock_until(tp);
 }
 ```
-You probably have seen the pattern, the functions that end with `_for()` takes duration for parameter. And in the functions ends with `_until()` takes time point for parameter, and same thing for ***condition variable***. We have used the `.wait()` method, and there's a `.wait_for()`, which takes a duration. And `cond.wait_until()` takes a time point `tp`:
+
+You probably have seen the pattern, the functions that end with `_for()` takes duration for parameter. And in the functions ends with `_until()` takes time point for parameter, and same thing for ***condition variable***. We have used the `.wait()` method, and there's a `.wait_for()`, which takes a duration. And `cond.wait_until()` takes a time point `tp`. It also needs to take a `std::unique_locker` as its first parameter:
 ```
     std::condition_variable cond;
-    cond.wait_for(std::chrono::microseconds(2));
-    cond.wait_until(tp);
+    cond.wait_for(ulocker, std::chrono::microseconds(2));
+    cond.wait_until(ulocker, tp);
 ```
+
+And lastly the future has a `.get()` method, but it also has a `.wait()` method, which waits for the data to be available. Actually the `.get()` method were internally called the `.wait()` method, so the `.get()` method that data is not available, it will wait. And the `.wait_for()` method also has a `.wait_for()` that takes a duration. And `.wait_until()` that takes a time point `tp`:
+```
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+    f.get();
+    f.wait();
+    f.wait_for(std::chrono::milliseconds(2));
+    f.wait_until(tp);
+```
+
+So this shows how the thread libraries can be used with certain time constraint.
