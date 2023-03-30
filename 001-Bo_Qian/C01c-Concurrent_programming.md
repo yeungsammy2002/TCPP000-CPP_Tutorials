@@ -168,6 +168,85 @@ int main() {
     std::cout << fu.get();
 }
 ```
-There are one minor problem and one major problem.
 
-# 9 - 8:50
+There are still one minor problem and one major problem. The minor problem is since this `t` is no longer used in the main thread, we can move it to the `task_q`:
+```
+int factorial(int N) {
+    int res = 1;
+    for(int i = N; i > 1; i--)
+        res *= i;
+    std::cout << "Result is " << res << std::endl;
+    return res;
+}
+
+std::deque<std::packaged_task<int()>> task_q;
+std::mutex mu;
+std::condition_variable cond;
+
+void thread_1() {
+    std::packaged_task<int()> t;
+    {
+        std::unique_lock<std::mutex> locker(mu);        // using unique lock instead of lock guard
+        cond.wait(locker, [](){ !task_q.empty() });
+        t = std::mutex
+        task_q.pop_front();
+    }
+    t();
+}
+
+int main() {
+    std::thread t1(thread_1);
+    std::packaged_task<int()> t(bind(factorial, 6));
+    std::future<int> fu = t.get_future();
+    {
+        std::lock_guard<std::mutex> locker(mu);
+        task_q.push_back(std::move(t));             // move
+    }
+    cond.notify_one();
+
+    std::cout << fu.get();
+
+    t1.join();
+}
+```
+And then the major problem is the `thread_1` might call the `.front()` method before the main thread call the `q.push_back()` method. That will become a disaster. So we need to make sure the `.front()` method is called after the `q.push_back()` method. To do that, we need a `std::condition_variable`. And before calling the `.front()` method, we will call `cond.wait()` with a predicate. This predicate verified that the `task_q` is not empty. And to use condition variable, we should not use `std::lock_guard`, we need to use `std::unique_lock`. And the same thing in the main thread, where you call `cond.notify_one()`. Now this program is thread safe.
+
+So this is how to use a `std::packaged_task` for threading. We have also giving you a review of how to use a `std::mutex` and `std::condition_variable`.
+
+
+
+## Summary of Different Ways of Getting a Future
+There are 3 ways of getting a future:
+1. `std::promise` has a method `std::promise::get_future()`
+2. `std::packaged_task` has a method `std::packaged_task::get_future()`
+3. `std::async()` function returns a future
+
+
+
+
+# Section 10 - Review & Time Constrains
+Today we'll give you a review of the things that we have learned and also show you how to add the time constrains to your threads.
+
+
+
+Let's reuse our `factorial()` function. 
+```
+int factorial(int N) { ... }
+
+int main() {
+    /* thread */
+    std::thread t1(factorial, 6);
+
+    /* mutex */
+    std::mutex mu;
+    std::lock_guard<std::mutex> locker(mu);
+    std::unique_lock<std::mutex> ulocker(mu);
+
+    /* condition variable */
+}
+```
+- #### *thread* - We have learned ***thread***. How to create a thread object and spawn a thread (`t1`), so it create `t1` with a `factorial()` function.
+
+- #### *mutex* - We also learned the ***mutex*** to sychronize the data access. And the mutex has a member method `.lock()` and `unlock()`, but they are not recommended to use directly. Instead, we should use `std::lock_guard`. If you need an extra flexiblilty, you should use `std::unique_lock`. And the `std::unique_lock` can lock and unlock a mutex multiple times, and it also can transfer the ownership of a mutex from one unique lock to another.
+
+- #### *condition variable* - We have learned *condition variable*
