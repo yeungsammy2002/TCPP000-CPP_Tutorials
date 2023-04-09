@@ -1,2 +1,106 @@
 # Section 01 - `const`
 
+`const` is a compile time constraint that an object cannot be modified. This constrait is enforced at compile time.
+
+Here we have a `const` integer, and if we want to change `i` to `6`. It failed with the message: `assignment of read-only variable 'i'`:
+```
+const int i = 9;
+i = 6;              // error: assignment of read-only variable 'i'
+```
+So this is what a constant ask. It enforces the "constness" during the compile time.
+
+
+### Define Pointed Data Constant
+Now let's look at some more examples. In this case, the data that point to by `p1` is a `const`, but the pointer itself, `p1` is not `const`. So if we chnage the data that `p1` point to, it will not compile, because the assignment of read-only location `*p1`:
+```
+const int* p1 = &i;     // data is 'const', pointer is not 'const'
+*p1 = 5;                // error: assignment of read-only location '*p1'
+```
+However, if we increment the pointer itself using pointer arithmetic. That modify the `p1` itself. It runs through okay:
+```
+const int* p1 = &i;
+p1++;                   // valid statement
+```
+So `p1` is not a constant, but the data pointed by `p1` is a constant. The way to remember it is **by reading `const int`, so the integer is a constant**.
+
+
+### Define Pointer Constant
+In this example, this is the opposite of `p1`, which means the `p2` itself is a constant, but the data it points to not a constant:
+```
+int* const p2;          // pointer is 'const', data is not
+```
+So the way to remember it is `const p2`, so `p2` is a `const`.
+
+
+### Define Both Data & Pointer Constant
+Now, both the pointer `p3` and the data pointed to by `p3` are `const`:
+```
+const int* const p3;    // data and pointer are both 'const'
+```
+
+
+### Rule to Define Constant Pointed Data & Constant Pointer
+So, it looks easy to remember, `const int`, the integer is `const`. `const p2`, the `p2` is `const`. But here is the tricky one, in this case, so what is `const` and what is not `const`:
+```
+int const* p4 = &i;
+```
+**The rule that you should remember is this:**
+- **If `const` is on the *left* of `*`, *data* is `const`**
+- **If `const` is on the *right* of `*`, *pointer* is `const`**
+
+It is best practice to rewrite this code by changing the order of `int` and `const` to avoid confusion:
+```
+const int* p4 = &i;
+```
+Since in both case, the `const` is on the left of the `*`, so they are the same. And `const int* p4` is much easier to make sense of. `const int`, the integer is `const`. So in this case, the data is `const`, the pointer is not.
+
+
+### Constant Can Be Cast Away by using `const_cast` Operator
+In C++, the type of data can be casted from one to another, and **the "constness" of a data can also be casted away**. In this case, we know the second statement will not compile because we're changing a `const` data:
+```
+const int i = 9;
+i = 6;                      // Compiler error
+```
+Say we really really want to change the integer `i`, we can use `const_cast` operator to case away the "constness" of `i`:
+```
+const int i = 9;
+const_cast<int&>(i) = 6;    // valid statement
+```
+`const_const` is an ***operator*** in C++. It is used to remove the `const` and/or `volatile` qualifiers from a variable.
+
+
+### Make Variable a Constant by using `static_cast` Operator
+Say we have an integer `j`, and `j` is not a `const`. So we can change it to any value we want. But at a certain point, we want to make `j` a `const`. We can do this by using `static_cast` operator. This will make `j` a constant integer:
+```
+int j = 9;
+static_cast<const int&>(j);
+```
+If we modify its value to `7`, it failed:
+```
+int j = 9;
+static_cast<const int&>(j);     // error: assignment of read-only location '*(const int*)(& j)'
+```
+
+`static_case` is a C++ operator used to convert between different types in a type-safe manner. `static_cast` can also be used for ***pointer conversions***, ***upcasting*** and ***downcasting*** in class hierarchies, and converting between arithmetic types.
+
+It is important to note that `static_cast` is a ***compile-time operator*** and **does not perform any runtime checks**. Therefore, it should be used with caution and only when the programmer is certain that the conversion is safe.
+
+
+### Be Careful Of Using Cast with Constant
+So with ***cast***, we can cast away the "constness" of data, and we can also cast the data into a `const`. But in general, ***cast*** is not a good thing. You should avoid them as much as possible.
+
+By cast away the "constness" of a data, we're breaking someone's promise for that data to be a `const`. So ***cast*** is a hacky way of coding.
+
+
+### Benefit of Using `const`
+The beginners usually don't like `const`. It looks nothing but a troublemaker. When the code doesn't compile, remove the `const`, and it compiles. However, `const` is really a good thing to use. It has several benefits.
+
+First, `const` guards against inadvertent write to the variable, so it can stop the wrong behavior at the compile time, rather than wait until the runtime.
+
+Secondly, `const` is a way of self-documenting. By using `const`, you are telling your reader that this variable will not changed, and that is a extra inforamtion for your readers to understand the code.
+
+Thirdly, `const` enables the compiler to do more optimization, so the compiler can make the code tighter, and therefore faster.
+
+Lastly, `const` also means that the variable can be put in **ROM**, the ***Read-Only Memory***. This is particularly useful in the embedded programming.
+
+So, as a professional C++ programmer, you should be using `const` proactively.
