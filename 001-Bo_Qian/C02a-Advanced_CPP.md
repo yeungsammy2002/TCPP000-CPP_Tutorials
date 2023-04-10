@@ -234,8 +234,8 @@ class Dog {
 ```
 
 
-### `const` Functions
-Now let's consider a more interesting case, `const` function. We have a method called `.printDogName()`, and then after the function signature, there is a `const`. This means **this method will not change any of the member variables of this class**:
+### `const` Methods
+Now let's consider a more interesting case, `const` method. We have a method called `.printDogName()`, and then after the function signature, there is a `const`. This means **this method will not change any of the member variables of this class**:
 ```
 class Dog {
     ...
@@ -266,10 +266,10 @@ However, if the method change the member variables, says `age++`. This couldn't 
         age++;
     }
 ```
-And another thing that you should remember is even if this method doesn't change any of the member variables but it call another member method, let's `.getName()`, **which is not a `const` function**, **this still doesn't compile** even though the `.getName()` method doesn't change the member variables at all:
+And another thing that you should remember is even if this method doesn't change any of the member variables but it call another member method, let's `.getName()`, **which is not a `const` method**, **this still doesn't compile** even though the `.getName()` method doesn't change the member variables at all:
 ```
     ...
-    const string& getName() {                               // non-`const` function
+    const string& getName() {                               // non-`const` method
         return name;
     }
 
@@ -277,10 +277,10 @@ And another thing that you should remember is even if this method doesn't change
         std::cout << getName() << "const" << std::endl;     // Compiler error
     }
 ```
-So **a `const` function can only call another `const` function** in order to the `const` correctness.
+So **a `const` method can only call another `const` method** in order to the `const` correctness.
 
 
-### Overloading `const` Function
+### Overloading `const` Method
 Another thing to know is "constness" can be used to overload the function:
 ```
     ...
@@ -303,7 +303,7 @@ int main() {
     d2.printDogName();      // const version called
 }
 ```
-So this is how a `const` function can be overloaded with a non-`const` function.
+So this is how a `const` method can be overloaded with a non-`const` function.
 
 
 ### Overloading `const` Reference Parameter
@@ -319,3 +319,66 @@ class Dog{
     }
 }
 ```
+
+In summary, when the `const` is used with the function, it can be used to specify **`const` parameters**, or **`const` return value**, or **`const` functions**.
+
+
+
+
+# Section 03 - Logic Constness and Bitwise Constness
+Last time, we have discussed `const` function. A `const` function is a member method that doesn't change member variables. So if a function that change member variables, it cannot be a `const` function.
+
+Let's stay back to rethink the question. What does it really mean for a function to be `const`. For example, we have a class `BigArray`, and `BigArray` has a member variable `v`, which is a huge vector of `int`. `BigArray` also has another member variable `accessCounter`, which keeps track of how many times `v` has been accessd. There is also a method `getItem()`, which takes a parameter of `index`. It incremented the `accessCounter` and then return an item of `v` at the position of `index`. From our programming models point of view, this method `getItem()` really should be a `const` method. Because the vector of `v` is the primary data that we're concerned with. The method `getItem()` did not change any value in `v`, it only take a peek at the item at the position of index. So the method `getItem()` really should be a `const`. This is my ***logic constness*** of what a `const` method mean. 
+```
+class BigArray {
+    std::vector<int> v;     // huge vector
+    int accessCounter;
+
+public:
+    int getItem(int index) const {
+        accessCounter++;        // error: increment of member 'BigArray::accessCounter' in read-only object
+        return v[index];
+    }
+};
+
+int main() {
+    BigArray b;
+}
+```
+However, if we compile this program, the compiler reports an error saying `increment of member 'BigArray::accessCounter' in read-only object`. So the compiler disagree with us that this method `getItem()` can be a `const` method, because we're changing one of the member variables of `accessCounter`. So the compiler maintains the concept of ***bitwise constness***. As long as the function has made change to the member variables, it cannot be a `const` method. So there is a conflict between our model of ***logic constness***. And the C++ process concept of ***bitwisse constness***.
+
+How can we solve this conflict? The solution is we can make the member of `accessCounter` a ***mutable member***. By making it a mutable member, `accessCounter` can be changed in the `const` method:
+```
+class BigArray {
+    std::vector<int> v;
+    mutable int accessCounter;          // mutable
+    ...
+}
+
+int main() {
+    BigArray b;
+}
+```
+So if we run this program again, it can run through successfully. Even if the process doesn't have the support of `mutable` members, we still have a solution.
+
+
+We could use `const_cast` to cast away the constness of `this` object, and then increment the `accessCounter`:
+```
+class BigArray {
+    std::vector<int> v;         // huge vector
+    int accessCounter;
+
+public:
+    int getItem(int index) const {
+        const_cast<BigArray*>(this) -> accessCounter++;
+        return v[index];
+    }
+}
+
+int main() {
+    BigArray b;
+}
+```
+
+# 3 - 3:23
+
