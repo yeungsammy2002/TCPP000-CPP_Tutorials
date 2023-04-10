@@ -108,7 +108,7 @@ So, as a professional C++ programmer, you should be using `const` proactively.
 
 
 # Section 02 - `const` and Functions
-Say we have a class `Dog`, which has an integer of `age`, and a string of `name`. And `Dog` has a constructor that initalized the `age` and `name`. And `Dog` has a method called `setAge()`, and which set `age` to the parameter of `a`. And in the `main()` function, we create the `Dog` - `d`, and we have an integer `i` and we have an integer `i` set to `9`, and then we called `d.setAge(i)`, and then print out the `i`:
+Say we have a class `Dog`, which has an integer of `age`, and a string of `name`. And `Dog` has a constructor that initalized the `age` and `name`. And `Dog` has a method called `.setAge()`, and which set `age` to the parameter of `a`. And in the `main()` function, we create the `Dog` - `d`, and we have an integer `i` and we have an integer `i` set to `9`, and then we called `d.setAge(i)`, and then print out the `i`:
 ```
 class Dag {
     int age;
@@ -133,7 +133,7 @@ int main() {
 }
 ```
 
-Suppose the `setAge()` method not only use `a` to set `age`. It also make some change to the parameter `a`, say increment `a` by `1`. Remember, the `setAge()` method takes the parameter by reference, so when we increment `a`, it also incremented the original varaible `i`. So if we run the program, it prints out `10`, because `i` has been changed to `10` by the set age function.:
+Suppose the `.setAge()` method not only use `a` to set `age`. It also make some change to the parameter `a`, say increment `a` by `1`. Remember, the `.setAge()` method takes the parameter by reference, so when we increment `a`, it also incremented the original varaible `i`. So if we run the program, it prints out `10`, because `i` has been changed to `10` by the set age function.:
 ```
 class Dag {
 ...
@@ -153,7 +153,7 @@ int main() {
 
 
 ### `const` Reference Parameter
-Say we don't want that to happen, `i` is a local variable in the `main()` function, and we don't want the `setAge()` method to change it. What we can do is add a `const` over here. Now we're passing `i` as a `const` integer reference to the `setAge()` function. So if we compile the program, it will fail:
+Say we don't want that to happen, `i` is a local variable in the `main()` function, and we don't want the `.setAge()` method to change it. What we can do is add a `const` over here. Now we're passing `i` as a `const` integer reference to the `.setAge()` method. So if we compile the program, it will fail:
 ```
 class Dag {
 ...
@@ -178,13 +178,13 @@ If we remove `a++`, it will succeed:
 ```
 So this is how a `const` reference is passed as a parameter to a function. `const` reference parameter is widely used in C++ functions, and you should be using it whenever it is appropriate.
 
-Now consider if we remove the reference and the `setAge()` method only takes a `const` integer as a parameter. In this case, the `const` is not very useful. It still means that `a` cannot be changed inside the function, but it is not as useful as it is used as `const` reference parameter, because the parameter is **passed by value**, so in the `main()` function when we call `setAge(i)`, we're making a copy of `i` and pass that to the method `setAge()`. And whether the function `setAge()` will use that copy as a `const` and non-`const`, we don't care, it's a copy anyway, do whenever you want:
+Now consider if we remove the reference and the `.setAge()` method only takes a `const` integer as a parameter. In this case, the `const` is not very useful. It still means that `a` cannot be changed inside the function, but it is not as useful as it is used as `const` reference parameter, because the parameter is **passed by value**, so in the `main()` function when we call `.setAge(i)`, we're making a copy of `i` and pass that to the method `.setAge()`. And whether the function `.setAge()` will use that copy as a `const` and non-`const`, we don't care, it's a copy anyway, do whenever you want:
 ```
     void setAge(const int a) {      // passed by value
         age = a;
     }
 ```
-So from the caller's point of view, this `const` is useless. If we overloaded this method with another function that takes integer as a parameter, the caller cannot differentiate these two functions. So if we compile it, it will fail and with the message that the `setAge()` cannot be overloaded. So from the caller's point, these two methods are the same:
+So from the caller's point of view, this `const` is useless. If we overloaded this method with another function that takes integer as a parameter, the caller cannot differentiate these two functions. So if we compile it, it will fail and with the message that the `.setAge()` cannot be overloaded. So from the caller's point, these two methods are the same:
 ```
 class Dag {
 ...
@@ -199,15 +199,123 @@ class Dag {
 // error: 'void Dog::setAge(int)' cannot be overloaded
 ```
 
+
 ### `const` Return Value
-Now let's look at an example of `const` return value. Here we have a method `getName()`, which returns a `const` string reference. And the reason we want to return accounts to string reference is the same reason why we want a `const` reference parameter. We want to return by reference to improve the efficiency of the program, and we want to return a `const` reference so that the caller cannot change the variable that we returned:
+Now let's look at an example of **`const` return value**. Here we have a method `.getName()`, which returns a **`const` string reference**. And the reason we want to return a **`const` string reference** is the same reason why we want a **`const` reference parameter**. We want to return by reference to improve the efficiency of the program, and we want to return a `const` reference so that the caller cannot change the variable that we returned. In the `main()` function, we'll assign the return value of `d.getName()` to a `const` string reference `n`, and then print it out:
 ```
 class Dog {
+    ...
+    Dog() { 
+        age = 3;
+        name = "dummy";
+    }
     ...
     const std::string& getName() {
         return name;
     }
 }
+
+int main() {
+    Dog d;
+    const std::string& n = d.getName();
+    std::cout << n << std::endl;
+}
+```
+If we run the program, `"dummy"` is printed out. So this is how we use a `const` reference return value.
+
+Let's consider remove reference and return `const` string. Now the `const` is completely useless, because the `name` is return by value. So what the function return is the copy of the `name`, which is a ***temporary***. And it doesn't make any sense for a temporary to be defined as `const`:
+```
+class Dog {
+    ...
+    const std::string getName() {
+        return name;
+    }
+}
 ```
 
-# 2 - 4:18
+
+### `const` Functions
+Now let's consider a more interesting case, `const` function. We have a method called `.printDogName()`, and then after the function signature, there is a `const`. This means **this method will not change any of the member variables of this class**:
+```
+class Dog {
+    ...
+    Dog() { 
+        age = 3;
+        name = "dummy";
+    }
+    ...
+    void printDogName() const {
+        std::cout << name << "const" << std::endl;
+    }
+}
+```
+So in the `main()` function, we could called `d.printDogName()`:
+```
+int main() {
+    Dog d;
+    
+    d.printDogName();
+}
+```
+Let's run it, and it prints out `dummyconst`.
+
+However, if the method change the member variables, says `age++`. This couldn't compile:
+```
+    void printDogName() const {
+        std::cout << name << "const" << std::endl;
+        age++;
+    }
+```
+And another thing that you should remember is even if this method doesn't change any of the member variables but it call another member method, let's `.getName()`, **which is not a `const` function**, **this still doesn't compile** even though the `.getName()` method doesn't change the member variables at all:
+```
+    ...
+    const string& getName() {                               // non-`const` function
+        return name;
+    }
+
+    void printDogName() const {
+        std::cout << getName() << "const" << std::endl;     // Compiler error
+    }
+```
+So **a `const` function can only call another `const` function** in order to the `const` correctness.
+
+
+### Overloading `const` Function
+Another thing to know is "constness" can be used to overload the function:
+```
+    ...
+    void printDogName() const {
+        std::cout << name << "const" << std::endl;
+    }
+
+    void printDogName() {
+        std::cout << getName() << "non-const" << std::endl;
+    }
+    ...
+```
+Now the question is which function will be invoked. The answer is the `const` version of `printDogName()` will be invoked if the `Dog` object is a `const`. And the non-`const` version of `printDogName()` will be invoked if the `Dog` object is not a `const`. For example, we have a `Dog` object `d`. This `d` should call the non-`const` version of the `printDogName()`. The `d2` should call the `const` version of `printDogName()`:
+```
+int main() {
+    Dog d;
+    d.printDogName();       // non-const version called
+
+    const Dog d2;
+    d2.printDogName();      // const version called
+}
+```
+So this is how a `const` function can be overloaded with a non-`const` function.
+
+
+### Overloading `const` Reference Parameter
+The last thing to know is a function that takes a **`const` reference parameter** can also be overloaded the function that takes a **reference parameter**:
+```
+class Dog{
+    ...
+    void setAge(const int& a) {
+        age = a;
+    }
+    void setAge(int& a) {
+        age = a;
+    }
+}
+```
