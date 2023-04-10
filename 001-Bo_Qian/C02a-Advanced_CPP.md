@@ -361,7 +361,6 @@ int main() {
 ```
 So if we run this program again, it can run through successfully. Even if the process doesn't have the support of `mutable` members, we still have a solution.
 
-
 We could use `const_cast` to cast away the constness of `this` object, and then increment the `accessCounter`:
 ```
 class BigArray {
@@ -370,7 +369,7 @@ class BigArray {
 
 public:
     int getItem(int index) const {
-        const_cast<BigArray*>(this) -> accessCounter++;
+        const_cast<BigArray*>(this)->accessCounter++;
         return v[index];
     }
 }
@@ -379,6 +378,49 @@ int main() {
     BigArray b;
 }
 ```
+Let's run it, it also runs through okay. However, as we said, ***cast*** is a hacky way of coding, and you should be use it only when you have to.
 
-# 3 - 3:23
 
+### `const` Method May Not Work As Expected
+Now let's consider another example. Let's say `BigArray` has another member called `v2`, and `v2` is another big integer array. And it also has another member method called `setV2Item()`. And this apparently is not a `const` method, it is setting the value of `v2`. It sets the item of `v2` at the position of `index` to be `x`.
+```
+class BigArray {
+    std::vector<int> v;
+    int accessCounter;
+    int* v2;                // another int array
+
+public:
+    int getItem(int index) const {
+        const_cast<BigArray*>(this)->accessCounter++;
+        return v[index];
+    }
+
+    void setV2Item(int index, int x) {
+        *(v2 + index) = x;
+    }
+};
+
+int main() {
+    BigArray b;
+}
+```
+However, if we change this method to be a `const` method and run it, it is still run through okay:
+```
+...
+    void setV2Item(int index, int x) const {
+        *(v2 + index) = x;                      // No error 
+    }
+...
+```
+So even though in our programming model, this is not a `const` method. The C++ compiler will happily accept it as a `const` method, because this method has maintained the ***bitwise constness*** of this class. It doesn't change any of the members directory. So this is another example of conflict between ***logic constness*** and ***bitwise constness***.
+
+However, this conflict is easy to solve, all we need to do is remove the `const`, and now this method is not a `const` method anymore:
+```
+...
+    void setV2Item(int index, int x) {
+        *(v2 + index) = x;
+    }
+...
+```
+
+As a summary, during the software design, if the ***logic constness*** is what you striving for, then you should use `mutable` members to implement the ***logic constness***.
