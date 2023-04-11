@@ -352,11 +352,11 @@ How can we solve this conflict? The solution is we can make the member of `acces
 ```
 class BigArray {
     std::vector<int> v;
-    mutable int accessCounter;          // `accessCounter` now is mutable
+    mutable int accessCounter;          // mutable in `const` method
 
 public:
     int getItem(int index) const {
-        accessCounter++;                // `accessCounter` can be changed in `const` method
+        accessCounter++;                // valid
         return v[index];
     }
 };
