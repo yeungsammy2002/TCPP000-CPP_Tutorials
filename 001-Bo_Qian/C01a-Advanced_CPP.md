@@ -325,9 +325,9 @@ In summary, when the `const` is used with the method, it can be used to specify 
 
 
 # Section 03 - Logic Constness and Bitwise Constness
-Last time, we have discussed `const` method. A `const` method is a member method that doesn't change member variables. So if a function that change member variables, it cannot be a `const` method.
+Last time, we have discussed `const` method. A `const` method is a member method that doesn't change member variables. So if a method that change member variables, it cannot be a `const` method.
 
-Let's stay back to rethink the question. What does it really mean for a method to be `const`. For example, we have a class `BigArray`, and `BigArray` has a member variable `v`, which is a huge vector of `int`. `BigArray` also has another member variable `accessCounter`, which keeps track of how many times `v` has been accessd. There is also a method `getItem()`, which takes a parameter of `index`. It incremented the `accessCounter` and then return an item of `v` at the position of `index`. From our programming models point of view, this method `getItem()` really should be a `const` method. Because the vector of `v` is the primary data that we're concerned with. The method `getItem()` did not change any value in `v`, it only take a peek at the item at the position of index. So the method `getItem()` really should be a `const`. This is my ***logic constness*** of what a `const` method mean. 
+Let's stay back to rethink the question. What does it really mean for a method to be `const`. For example, we have a class `BigArray`, and `BigArray` has a member variable `v`, which is a huge vector of `int`. `BigArray` also has another member variable `accessCounter`, which keeps track of how many times `v` has been accessd. There is also a method `getItem()`, which takes a parameter of `index`. It incremented the `accessCounter` and then return an item of `v` at the position of `index`. From our programming model's point of view, this method `getItem()` really should be a `const` method. Because the vector of `v` is the primary data that we're concerned with. The method `getItem()` did not change any value in `v`, it only take a peek at the item at the position of `index`. So the method `getItem()` really should be a `const`. This is my ***logic constness*** of what a `const` method mean. 
 ```
 class BigArray {
     std::vector<int> v;     // huge vector
@@ -344,23 +344,32 @@ int main() {
     BigArray b;
 }
 ```
-However, if we compile this program, the compiler reports an error saying `increment of member 'BigArray::accessCounter' in read-only object`. So the compiler disagree with us that this method `getItem()` can be a `const` method, because we're changing one of the member variables of `accessCounter`. So the compiler maintains the concept of ***bitwise constness***. As long as the method has made change to the member variables, it cannot be a `const` method. So there is a conflict between our model of ***logic constness***. And the C++ process concept of ***bitwisse constness***.
+However, if we compile this program, the compiler reports an error saying `increment of member 'BigArray::accessCounter' in read-only object`. So the compiler disagree with us that this method `getItem()` can be a `const` method, because we're changing one of the member variables of `accessCounter`. So the compiler maintains the concept of ***bitwise constness***. As long as the method has made change to the member variables, it cannot be a `const` method. So there is a conflict between our model of ***logic constness*** and the C++ process concept of ***bitwise constness***.
 
-How can we solve this conflict? The solution is we can make the member of `accessCounter` a ***mutable member***. By making it a mutable member, `accessCounter` can be changed in the `const` method:
+
+### Implement Logic Constness using `mutable`
+How can we solve this conflict? The solution is we can make the member of `accessCounter` a **`mutable` member**. By making it a `mutable` member, `accessCounter` can be changed in the `const` method:
 ```
 class BigArray {
     std::vector<int> v;
-    mutable int accessCounter;          // mutable
-    ...
-}
+    mutable int accessCounter;          // `accessCounter` now is mutable
+
+public:
+    int getItem(int index) const {
+        accessCounter++;                // `accessCounter` can be changed in `const` method
+        return v[index];
+    }
+};
 
 int main() {
     BigArray b;
 }
 ```
-So if we run this program again, it can run through successfully. Even if the process doesn't have the support of `mutable` members, we still have a solution.
+So if we run this program again, it can run through successfully. 
 
-We could use `const_cast` to cast away the constness of `this` object, and then increment the `accessCounter`:
+
+### Implement Logic Constness using `const_cast` Operator
+Even if the C++ doesn't have the support of `mutable` members, we still have a solution. We could use `const_cast` to cast away the constness of `this` object, and then increment the `accessCounter`:
 ```
 class BigArray {
     std::vector<int> v;         // huge vector
@@ -377,7 +386,7 @@ int main() {
     BigArray b;
 }
 ```
-Let's run it, it also runs through okay. However, as we said, ***cast*** is a hacky way of coding, and you should be use it only when you have to.
+Let's run it, it also runs through okay. However, as we said, ***cast*** is a hacky way of coding, and you should use it only when you have to.
 
 
 ### `const` Method May Not Work As Expected
@@ -385,12 +394,12 @@ Now let's consider another example. Let's say `BigArray` has another member call
 ```
 class BigArray {
     std::vector<int> v;
-    int accessCounter;
-    int* v2;                // another int array
+    mutable int accessCounter;
+    int* v2;                            // another int array
 
 public:
     int getItem(int index) const {
-        const_cast<BigArray*>(this)->accessCounter++;
+        accessCounter++;
         return v[index];
     }
 
@@ -411,7 +420,7 @@ However, if we change this method to be a `const` method and run it, it is still
     }
 ...
 ```
-So even though in our programming model, this is not a `const` method. The C++ compiler will happily accept it as a `const` method, because this method has maintained the ***bitwise constness*** of this class. It doesn't change any of the members directory. So this is another example of conflict between ***logic constness*** and ***bitwise constness***.
+So even though in our programming model, this is not a `const` method. The C++ compiler will happily accept it as a `const` method, because this method has maintained the ***bitwise constness*** of this class. It doesn't change any of the members directly. So this is another example of conflict between ***logic constness*** and ***bitwise constness***.
 
 However, this conflict is easy to solve, all we need to do is remove the `const`, and now this method is not a `const` method anymore:
 ```
