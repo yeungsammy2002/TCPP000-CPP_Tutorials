@@ -27,8 +27,8 @@ After that, you can go to any courses that you are interested here. I believe th
 
 So, to summarize the sequence:
 1. **Advanced C++**
-2. **Modern C++:** **Section 1 ~ 3**
+2. **Modern C++: Section 1 ~ 3**
 3. **C++ Standard Library**
-4. **Modern C++:** **the rest**
-5. **Boost**, **Unit Test**, **Algorithms**, **Concurrent Programming**, **Advanced STL**
+4. **Modern C++: the rest**
+5. **Boost, Unit Test, Algorithms, Concurrent Programming, Advanced STL**
 

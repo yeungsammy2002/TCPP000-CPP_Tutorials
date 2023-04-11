@@ -245,7 +245,7 @@ int main() {
 ```
 If you run it, the compile failed because the deleted method is being used.
 
-If you're using C++ **\*`-O3`**, all you need to do is make the ***copy constructor*** a `private` method and don't define the method:
+If you're using  ***C++03***, all you need to do is make the ***copy constructor*** a `private` method and don't define the method:
 ```
 class OpenFile {
 public:
@@ -264,12 +264,7 @@ int main() {
 ```
 If you run it, the compile failed because the ***copy constructor method*** is `private`.
 
----
-**\* `-O3`** instructs the compiler to optimize for the performance of generated code and disregard the size of the generated code, which might result in an increased code size. It also degrades the debug experience compared to `-O2`.
-
----
-
-Some of you may be clever enough to say *"This is not enough, `OpenFile` member method can still use the copy constructor"*. Say it has a method called `g()` and `g()` create another open file `f2` from `f`. You may this will work:
+Some of you may be clever enough to say *"This is not enough, `OpenFile` member method can still use the copy constructor"*. Say it has a method called `g()` and `g()` create another open file `f2` from `f`:
 ```
 class OpenFile {
 public:
@@ -283,8 +278,110 @@ private:
     OpenFile(OpenFile& rhs);
 };
 ```
-But if you run it, you will still failed with this message `error: ISO C++ forbids declaration of 'g' with no type`.
+This will work, right? If you run it, it will still failed, but now it failed with a message `error: ISO C++ forbids declaration of 'g' with no type`. Although method `g()` can access the ***copy constructor***, since we only have declared the ***copy constructor***, we have not define it. So method `g()` cannot find the body of the ***copy constructor***. So as a result, nobody can use the ***copy constructor*** anymore. And we can also use the same method to disable the ***copy assignment operator***:
+```
+class OpenFile {
+public:
+    OpenFile(std::string filename) {
+        std::cout << "Open a file " << filename << std::endl;
+    }
+    g(OpenFile& f) {
+        OpenFile f2(f);
+    }
+private:
+    OpenFile(OpenFile& rhs);
+    OpenFile& operator=(const OpenFile& rhs);
+};
+```
+This approach can be used to disable any method, i.e. the default constructor, the destructor, or say the `OpenFile` has inherited a method called `writeLine()` and we don't want the `OpenFile` to use that method, you can use this method to turn that method off.
+```
+class OpenFile {
+public:
+    OpenFile(std::string filename) {
+        std::cout << "Open a file " << filename << std::endl;
+    }
+    g(OpenFile& f) {
+        OpenFile f2(f);
+    }
+private:
+    OpenFile(OpenFile& rhs);
+    OpenFile& operator=(const OpenFile& rhs);
+    void writeLine(std::string str);
+};
+```
 
-Although method `g()` can access
+Let's turn off the ***destructor*** by making it to be `private`, and we have not defined it so nobody can use the `OpenFile` destructor anymore:
+```
+class OpenFile {
+    ...
+private:
+    ~OpenFile();                                // destructor
+};
+```
+Is this a good idea? Apparently **NOT**. An object must be destructed one way or another, otherwise some resource is doomed to be leaked. So we have to give a body to the ***destructor***:
+```
+    ~OpenFile() {
+        std::cout << "`OpenFile` destructed." << std::endl;
+    }
+```
 
-# 5 - 4:34
+However, sometimes it does make sense to have a `private` destructor. Let's the following example. Suppose we only have a ***constructor*** and a ***destructor***:
+```
+class OpenFile {
+public:
+    OpenFile(std::string filename) {
+        std::cout << "Open a file " << filename << std::endl;
+    }
+private:
+    ~OpenFile() {
+        std::cout << "`OpenFile` destructed." << std::endl;
+    }
+};
+
+int main() {
+    OpenFile f(std::string("Bo_file"));
+}
+```
+If we compile the program, it will fail because the ***destructor*** is `private` since the `OpenFile` object `f` is stored on ***stack***. Once the `f` is out of scope, the stack unwind, and `f` will be destructed. And since `main()` function has no access to the `private` method of destructor of `OpenFile`, this will not compile. So this kind of file is invincible. It can not be destroyed by anyone else except itself and its `friend`s.
+
+This kind of mechanism sometimes are used by ***reference counting shared pointers***. A ***reference counting shared pointer*** counts the number of pointers that points to itself. And once that count reached `0`, it commits suicide. In our example of `OpenFile` since it doesn't commit suicide and it doesn't have `friend`s, so we have to provide a public inteface. Let's call it `destroyMe()` to delete `this` object. And in the `main()` function we can call `f.destroyMe()` to destroy the `OpenFile` object `f`:
+```
+class OpenFile {
+public:
+    OpenFile(std::string filename) {
+        std::cout << "Open a file " << filename << std::endl;
+    }
+    void destroyMe() {
+        delete this;
+    }
+private:
+    ~OpenFile() {
+        std::cout << "`OpenFile` destructed." << std::endl;
+    }
+};
+
+int main() {
+    OpenFile f(std::string("Bo_file"));
+    f.destroyMe();
+}
+```
+If you run it, it still fail. It still reports the same error, the `OpenFile` destructor is `private`. Since `f` is stored on ***stack***, even though we have called `f.destroyMe()` to destroy the `f`, when the stack unwind, `f` will be destroyed again. So the ***private destructor*** will be invoked anyway. How can we an object like `OpenFile`, which has a ***private destructor***. We could store `f` on ***stack***, and then call `f->destroyMe()`.
+```
+...
+int main() {
+    OpenFile* f = new OpenFile(std::string("Bo_file"));
+    f->destroyMe();
+}
+```
+Now let's run it, the program compiled and run successfully on the console:
+```
+`OpenFile` destructed.
+```
+
+So the conclusion is class like `OpenFile`, which has a ***private destructor*** can only be stored on ***heap***. It cannot be stored on ***stack***. This sometimes can be useful in the ***embedded programming*** where the ***stack size*** is small and the people often time get a ***stack overflow***. You could let the heavy weight classes to have ***private destructor*** so that they can only be stored on the ***heap***. You kind of enforced that they heavy weight objects not to be stored on the ***stack***.
+
+
+### Summary of Disallowing Functions
+1. For ***C++11***, you can always use the keyword `delete` to delete the method.
+2. For ***C++03***, you can declare the method to be `private`, but not define it.
+3. ***Private destructor*** can be used to force the object not to be stored on ***stack***.
