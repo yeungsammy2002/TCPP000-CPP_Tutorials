@@ -385,3 +385,105 @@ So the conclusion is class like `OpenFile`, which has a ***private destructor***
 1. For ***C++11***, you can always use the keyword `delete` to delete the method.
 2. For ***C++03***, you can declare the method to be `private`, but not define it.
 3. ***Private destructor*** can be used to force the object not to be stored on ***stack***.
+
+
+
+
+# Section 06 - Virtual Destructor and Smart Destructor
+We'll talk about using ***vitual destructor*** in ***polymorphic base classes***. 
+
+Let's look at our example. We have a class `Dog`, and `Dog` destructor prints out `"Dog destroyed"`. `YelloDog` derived from `Dog` and `YelloDog` destructor prints out `"Yellow dog destroyed."`. And in the class `DogFactory`, we are using a factory design pattern. We use the `DogFactory` class to be a centralized place of creating `Dog` objects. And we have a `static` method to create `YellowDog` and then return it as a `Dog` pointer. And it is also has other methods to create other types of `Dog` objects. In the `main()` function, I assign the return value of `DogFactory::createYellowDog()` to a `Dog` pointer `pd`. And after I have done something with `pd`. Eventually, I delete `pd`:
+```
+class Dog {
+public:
+    ~Dog() {
+        std::cout << "Dog destroyed" << std::endl;
+    }
+};
+
+class YellowDog : public Dog {
+public:
+    ~YelloDog() {
+        std::cout << "Yello dog destroyed." << std::endl;
+    }
+};
+
+class DogFactory {
+public:
+    static Dog* createYellowDog() {
+        return (new YellowDog());
+        //... create other dogs
+    }
+};
+
+int main() {
+    Dog* pd = DogFactory::createYellowDog();
+    //... Do something with pd
+
+    delete pd;
+}
+```
+Let's run the program, and here is the output on the console:
+```
+Dog Destroyed
+```
+As you can see, when `pd` gets deleted, only the `Dog`'s destructor gets called. That is very bad, because we have created a `YellowDog` object, and at the end only part of the `YellowDog` object is destructed. 
+
+We have to make sure that the `YellowDog`'s own destructor also needs to be invoked. This is why we need a `virtual` destructor for the base classes:
+```
+class Dog {
+public:
+    virtual ~Dog() {
+        std::cout << "Dog destroyed" << std::endl;
+    }
+};
+```
+Now if we run the program, both `YellowDog` destructor and `Dog` destructor invoked:
+```
+Yellow dog destroyed.
+Dog destroyed.
+```
+So the conclusion we are getting from this example is if a class is meant to be used in a polymorphical way, such as in this case we are creating a `YelloDog`, and then casted it into a `Dog`'s pointer. Then the base class must have a ***virtual destructor*** to ensure the destructor is invoked appropriately.
+
+If a class has any sort of virtual method like `bark()` method, it is mostly likely that this class will be used polymorphically, which means mostly likely it will need a ***virtual destructor***:
+```
+class Dog {
+public:
+    virtual ~Dog() {
+        std::cout << "Dog destroyed" << std::endl;
+    }
+    virtual void bark() {}
+};
+```
+If for some reason, you really don't want to have a ***virtual destructor***, then there is a second way to do it by creating a shared pointer of `YellowDog` using `std::shared_ptr` class. In this case, I have created a shared pointer of `YellowDog`, and then casted into a shared pointer of `Dog`. In the `main()` function, I don't need to delete `pd` anymore, because the shared pointer will be responsible to delete the object. And we don't even the virtual destructor of `Dog` class:
+```
+class Dog {
+public:
+    ~Dog() {                                            // no `virtual`
+        std::cout << "Dog destroyed" << std::endl;
+    }
+    virtual void bark() {}
+};
+...
+class DogFactory {
+public:
+    static shared_ptr<Dog> createYellowDog() {
+        return shared_ptr<YellowDog>(new YellowDog());
+        //... create other dogs
+    }
+};
+
+int main() {
+    shared_ptr<Dog> pd = DogFactory::createYellowDog();
+}
+```
+Let's run the program again, and here is the output on the console:
+```
+Yellow dog destroyed.
+Dog destroyed.
+```
+As you can see, both `YellowDog` and `Dog` destructors are invoked.
+
+Note that you can only use the shared pointer to perform this kind of magic. If you are using an ***unique pointer***, it won't do the job. Unique pointer will only invoke the `Dog`'s destructor.
+
+This last thing I want to point out is **all the classes in *STL* have no virtual destructor. So you need to be very careful when you are inheriting from them.** One thing you can do is try to use shared pointer as much as possible for the classes that is derived from the ***STL*** classes.
