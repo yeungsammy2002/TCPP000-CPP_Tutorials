@@ -133,7 +133,7 @@ int main() {
 }
 ```
 
-Suppose the `.setAge()` method not only use `a` to set `age`. It also make some change to the parameter `a`, say increment `a` by `1`. Remember, the `.setAge()` method takes the parameter by reference, so when we increment `a`, it also incremented the original varaible `i`. So if we run the program, it prints out `10`, because `i` has been changed to `10` by the set age function.:
+Suppose the `.setAge()` method not only use `a` to set `age`. It also make some change to the parameter `a`, say increment `a` by `1`. Remember, the `.setAge()` method takes the parameter by reference, so when we increment `a`, it also incremented the original varaible `i`. So if we run the program, it prints out `10`, because `i` has been changed to `10` by the `.setAge()` method:
 ```
 class Dag {
 ...
@@ -176,15 +176,15 @@ If we remove `a++`, it will succeed:
         age = a;
     }
 ```
-So this is how a `const` reference is passed as a parameter to a function. `const` reference parameter is widely used in C++ functions, and you should be using it whenever it is appropriate.
+So this is how a `const` reference is passed as a parameter to a method. `const` reference parameter is widely used in C++ functions, and you should be using it whenever it is appropriate.
 
-Now consider if we remove the reference and the `.setAge()` method only takes a `const` integer as a parameter. In this case, the `const` is not very useful. It still means that `a` cannot be changed inside the function, but it is not as useful as it is used as `const` reference parameter, because the parameter is **passed by value**, so in the `main()` function when we call `.setAge(i)`, we're making a copy of `i` and pass that to the method `.setAge()`. And whether the function `.setAge()` will use that copy as a `const` and non-`const`, we don't care, it's a copy anyway, do whenever you want:
+Now consider if we remove the reference and the `.setAge()` method only takes a `const` integer as a parameter. In this case, the `const` is not very useful. It still means that `a` cannot be changed inside the method, but it is not as useful as it is used as `const` reference parameter, because the parameter is **passed by value**, so in the `main()` function when we call `.setAge(i)`, we're making a copy of `i` and pass that to the method `.setAge()`. And whether the method `.setAge()` will use that copy as a `const` and non-`const`, we don't care, it's a copy anyway, do whenever you want:
 ```
     void setAge(const int a) {      // passed by value
         age = a;
     }
 ```
-So from the caller's point of view, this `const` is useless. If we overloaded this method with another function that takes integer as a parameter, the caller cannot differentiate these two functions. So if we compile it, it will fail and with the message that the `.setAge()` cannot be overloaded. So from the caller's point, these two methods are the same:
+So from the caller's point of view, this `const` is useless. If we overloaded this method with another method that takes integer as a parameter, the caller cannot differentiate these two methods. So if we compile it, it will fail and with the message that the `.setAge()` cannot be overloaded. So from the caller's point, these two methods are the same:
 ```
 class Dag {
 ...
@@ -223,7 +223,7 @@ int main() {
 ```
 If we run the program, `"dummy"` is printed out. So this is how we use a `const` reference return value.
 
-Let's consider remove reference and return `const` string. Now the `const` is completely useless, because the `name` is return by value. So what the function return is the copy of the `name`, which is a ***temporary***. And it doesn't make any sense for a temporary to be defined as `const`:
+Let's consider remove reference and return `const` string. Now the `const` is completely useless, because the `name` is return by value. So what the method return is the copy of the `name`, which is a ***temporary***. And it doesn't make any sense for a temporary to be defined as `const`:
 ```
 class Dog {
     ...
@@ -281,7 +281,7 @@ So **a `const` method can only call another `const` method** in order to the `co
 
 
 ### Overloading `const` Method
-Another thing to know is "constness" can be used to overload the function:
+Another thing to know is "constness" can be used to overload the method:
 ```
     ...
     void printDogName() const {
@@ -293,7 +293,7 @@ Another thing to know is "constness" can be used to overload the function:
     }
     ...
 ```
-Now the question is which function will be invoked. The answer is the `const` version of `printDogName()` will be invoked if the `Dog` object is a `const`. And the non-`const` version of `printDogName()` will be invoked if the `Dog` object is not a `const`. For example, we have a `Dog` object `d`. This `d` should call the non-`const` version of the `printDogName()`. The `d2` should call the `const` version of `printDogName()`:
+Now the question is which method will be invoked. The answer is the `const` version of `printDogName()` will be invoked if the `Dog` object is a `const`. And the non-`const` version of `printDogName()` will be invoked if the `Dog` object is not a `const`. For example, we have a `Dog` object `d`. This `d` should call the non-`const` version of the `printDogName()`. The `d2` should call the `const` version of `printDogName()`:
 ```
 int main() {
     Dog d;
@@ -303,11 +303,11 @@ int main() {
     d2.printDogName();      // const version called
 }
 ```
-So this is how a `const` method can be overloaded with a non-`const` function.
+So this is how a `const` method can be overloaded with a non-`const` method.
 
 
 ### Overloading `const` Reference Parameter
-The last thing to know is a function that takes a **`const` reference parameter** can also be overloaded the function that takes a **reference parameter**:
+The last thing to know is a method that takes a **`const` reference parameter** can also be overloaded the method that takes a **reference parameter**:
 ```
 class Dog{
     ...
@@ -319,16 +319,15 @@ class Dog{
     }
 }
 ```
-
-In summary, when the `const` is used with the function, it can be used to specify **`const` parameters**, or **`const` return value**, or **`const` functions**.
+In summary, when the `const` is used with the method, it can be used to specify **`const` parameters**, or **`const` return value**, or **`const` methods**.
 
 
 
 
 # Section 03 - Logic Constness and Bitwise Constness
-Last time, we have discussed `const` function. A `const` function is a member method that doesn't change member variables. So if a function that change member variables, it cannot be a `const` function.
+Last time, we have discussed `const` method. A `const` method is a member method that doesn't change member variables. So if a function that change member variables, it cannot be a `const` method.
 
-Let's stay back to rethink the question. What does it really mean for a function to be `const`. For example, we have a class `BigArray`, and `BigArray` has a member variable `v`, which is a huge vector of `int`. `BigArray` also has another member variable `accessCounter`, which keeps track of how many times `v` has been accessd. There is also a method `getItem()`, which takes a parameter of `index`. It incremented the `accessCounter` and then return an item of `v` at the position of `index`. From our programming models point of view, this method `getItem()` really should be a `const` method. Because the vector of `v` is the primary data that we're concerned with. The method `getItem()` did not change any value in `v`, it only take a peek at the item at the position of index. So the method `getItem()` really should be a `const`. This is my ***logic constness*** of what a `const` method mean. 
+Let's stay back to rethink the question. What does it really mean for a method to be `const`. For example, we have a class `BigArray`, and `BigArray` has a member variable `v`, which is a huge vector of `int`. `BigArray` also has another member variable `accessCounter`, which keeps track of how many times `v` has been accessd. There is also a method `getItem()`, which takes a parameter of `index`. It incremented the `accessCounter` and then return an item of `v` at the position of `index`. From our programming models point of view, this method `getItem()` really should be a `const` method. Because the vector of `v` is the primary data that we're concerned with. The method `getItem()` did not change any value in `v`, it only take a peek at the item at the position of index. So the method `getItem()` really should be a `const`. This is my ***logic constness*** of what a `const` method mean. 
 ```
 class BigArray {
     std::vector<int> v;     // huge vector
@@ -345,7 +344,7 @@ int main() {
     BigArray b;
 }
 ```
-However, if we compile this program, the compiler reports an error saying `increment of member 'BigArray::accessCounter' in read-only object`. So the compiler disagree with us that this method `getItem()` can be a `const` method, because we're changing one of the member variables of `accessCounter`. So the compiler maintains the concept of ***bitwise constness***. As long as the function has made change to the member variables, it cannot be a `const` method. So there is a conflict between our model of ***logic constness***. And the C++ process concept of ***bitwisse constness***.
+However, if we compile this program, the compiler reports an error saying `increment of member 'BigArray::accessCounter' in read-only object`. So the compiler disagree with us that this method `getItem()` can be a `const` method, because we're changing one of the member variables of `accessCounter`. So the compiler maintains the concept of ***bitwise constness***. As long as the method has made change to the member variables, it cannot be a `const` method. So there is a conflict between our model of ***logic constness***. And the C++ process concept of ***bitwisse constness***.
 
 How can we solve this conflict? The solution is we can make the member of `accessCounter` a ***mutable member***. By making it a mutable member, `accessCounter` can be changed in the `const` method:
 ```
