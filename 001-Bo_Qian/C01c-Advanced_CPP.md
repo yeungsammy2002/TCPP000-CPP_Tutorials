@@ -131,3 +131,79 @@ Now first of all, this program will no longer crash. And secondly, the `Dog`'s c
 
 Which solution should we use? ***Solution 1 - destructor swallow the exception*** or ***Solution 2 - move the exception-prone code to a different function***? The answer depends on who is the better person to handle the exception. If it is a `Dog`, you should use ***Solution 1***. If it is `Dog`'s client, you should use ***Solution 2***.
 
+
+
+
+# Section 8 - Virtual Function in Constructor or Destructor
+I'm going to show you a **pitfall** in calling ***virtual function*** in ***constructor*** or ***destructor***.
+
+Let's look at our example. We have a class `Dog`. And `Dog`'s constructor prints out `"Dog born."`. And `Dog`'s `bark()` method prints out `"I am just a dog"`. A `Dog` also has a `seeCat()` method, when a `Dog` see a cat, it barks. `YellowDog` is derived from a `Dog`. And the `YellowDog`'s constructor prints out `"Yellow dog born."`, and the `YellowDog`'s `bark()` prints out `"I am a yellow dog"`. In the `main()` function, I create a `YellowDog` object called `d`, and then call `d.seeCat()`:
+```
+class Dog {
+public:
+    Dog() {
+        std::cout << "Dog born." << std::endl;
+    }
+    void bark() {
+        std::cout << "I am just a dog" << std::endl;
+    }
+    void seeCat() {
+        bark();
+    }
+};
+
+class YellowDog : public Dog {
+public:
+    YellowDog() {
+        std::cout << "Yellow dog born." << std::endl;
+    }
+    void bark() {
+        std::cout << "I am a yellow dog" << std::endl;
+    }
+};
+
+int main() {
+    YellowDog d;
+    d.seeCat();
+}
+```
+Let's run the program. And here is the output on the console:
+```
+Dog born.
+Yellow dog born.
+I am just a dog
+```
+So when I create a `YelloDog` object `d`, it first call the `Dog`'s constructor. And then prints out `"Dog born."`. Then it call `YellowDog`'s constructor and prints out `"Yellow dog born."`. And then it calls `d.seeCat()`, and `d.seeCat()` calls the `bark()` method. Under the `.bark()` method, which prints out `"I am just a dog"`, even though this is a `YellowDog` object.
+
+To help the `Dog` to be honest, we have to make this `.bark()` method `virtual`. The version of a method can be inherited, so the `YellowDog`'s `bark()` method automatically becomes a `virtual` method, but in practice, it is a good idea to always put a `virtual` in front of the method to make it explicit that this is a `virtual` method:
+```
+class Dog {
+public:
+    Dog() {
+        std::cout << "Dog born." << std::endl;
+    }
+    virtual void bark() {
+        std::cout << "I am just a dog" << std::endl;
+    }
+    void seeCat() {
+        bark();
+    }
+};
+
+class YellowDog {
+public:
+    YellowDog() {
+        std::cout << "Yellow dog born." << std::endl;
+        virtual void bark() {
+            std::cout << "I am a yellow dog" << std::endl;
+        }
+    }
+};
+```
+Now let's run the program, and here is the output on the console:
+```
+Dog born.
+Yellow dog born.
+I am a yellow dog
+```
+# 8 - 1:52
