@@ -484,6 +484,7 @@ Dog destroyed.
 ```
 As you can see, both `YellowDog` and `Dog` destructors are invoked.
 
-Note that you can only use the shared pointer to perform this kind of magic. If you are using an ***unique pointer***, it won't do the job. Unique pointer will only invoke the `Dog`'s destructor.
+Note that you can only use the ***shared pointer*** to perform this kind of magic. If you are using an ***unique pointer***, it won't do the job. Unique pointer will only invoke the `Dog`'s destructor.
 
-This last thing I want to point out is **all the classes in *STL* have no virtual destructor. So you need to be very careful when you are inheriting from them.** One thing you can do is try to use shared pointer as much as possible for the classes that is derived from the ***STL*** classes.
+This last thing I want to point out is **all the classes in *STL* have no virtual destructor. So you need to be very careful when you are inheriting from them.** One thing you can do is try to use ***shared pointer*** as much as possible for the classes that is derived from the ***STL*** classes.
+
