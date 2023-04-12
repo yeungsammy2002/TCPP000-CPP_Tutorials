@@ -206,4 +206,77 @@ Dog born.
 Yellow dog born.
 I am a yellow dog
 ```
-# 8 - 1:52
+So when the `.seeCat()` method invoke the `bark()` method, it realize that `this` object is a `YellowDog`, so it invoke the `YellowDog`'s method. This is the power of dynamic binding. As long as the `d` is a `YellowDog` object, it will always call a `YellowDog`'s virtual method.
+
+However, there are some scenarios where this idea of dynamic binding is not working. Let's say the `bark()` method is invoked inside the `Dog`'s constructor to see what happen:
+```
+class Dog {
+public:
+    Dog() {
+        std::cout << "Dog born." << std::endl;
+        bark();                                         // here
+    }
+    virtual void bark() {
+        std::cout << "I am just a dog" << std::endl;
+    }
+    void seeCat() {
+        bark();
+    }
+};
+
+class YellowDog : public Dog {
+public:
+    YellowDog() {
+        std::cout << "Yellow dog born." << std::endl;
+        virtual void bark() {
+            std::cout << "I am a yellow dog" << std::endl;
+        }
+    }
+}
+
+int main() {
+    YellowDog d;
+    d.seeCat();
+}
+```
+Here is the output on the console:
+```
+Dog born.
+I am just a dog
+Yellow dog born.
+I am a yellow dog
+```
+This `bark()` method prints out `I am just a dog`. Even though the `bark()` method is a virtual method, and we know that the object being created is a `YellowDog`, it is still calling `Dog`'s `bark()` method.
+
+When `YellowDog` object `d` is created, before it calling the `YellowDog`'s constructor. It first call the `Dog`'s constructor. So at this point, the constructor of the `YellowDog` is not executed yet. In other words, the `YellowDog` is not constructed yet. We all know it is dangerous to call the member method of an object that is not constructed yet unless that method is a `static` method. So the compiler is doing the second best thing, which is calling the `Dog`'s own `bark()` method. So this `bark()` method behaves like a ***non virtual method*** when it is invoked inside a constructor.
+
+The conclusion we are getting from this example is **we should avoid calling virtual method in a constructor**. A constructor should do as little as possible to put the object in valid state and that's it. Calling any fancy method inside the constructor is not recommended.
+
+And at the same idea for ***destructor***. If we have a destructor on `Dog` that also call the `bark()` method, then we run the program:
+```
+class Dog {
+public:
+    Dog() {
+        std::cout << "Dog born." << std::endl;
+        bark();
+    }
+    virtual void bark() {
+        std::cout << "I am just a dog" << std::endl;
+    }
+    void seeCat() {
+        bark();
+    }
+    ~Dog() {
+        bark();                                         // here
+    }
+};
+...
+```
+As you can see on the console, when the destructor of the `Dog` calling the `bark()` method, it also call the `Dog`'s `bark()` method (the last `I am just a dog`), because when the `d` gets destroyed, it first called the destructor of the `YellowDog`, and then call the destructor of the `Dog`. So at this point the `YellowDog` is already destroyed. And it is not a good idea to call the member method of something is already destroyed:
+```
+Dog born.
+I am just a dog
+Yellow dog born.
+I am a yellow dog
+I am just a dog
+```
