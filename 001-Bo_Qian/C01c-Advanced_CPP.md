@@ -280,3 +280,39 @@ Yellow dog born.
 I am a yellow dog
 I am just a dog
 ```
+
+
+
+
+# Section 09 - Assignment to Self in Assignment Operator
+One of the C++ critical features is ***operator overload***. It can exploit people's intuition and reduce their learning curve for new libraries. ***Assignment operator*** `operator=` is one of the operators that's frequently being overloaded. In this section, we are going to talk about one pitfall in implementing ***assignment operator***, which is ***self-assignment***.
+
+This is an example of ***self-assignment***:
+```
+Dog dd;
+dd = dd;                // look silly
+```
+You may ask where people really do stupid thing like this? No, they were not. But they may very well do things like this:
+```
+dogs[i] = dogs[j];      // looks less silly
+```
+This is a ***self-assignment*** when `i` and `j` are equal. That is why we need to handle ***self-assignment*** appropriately in our assignment operator.
+
+Now let's look at another example. We have a class `Dog` and `Dog` wears `Collar`. So this `Dog` has a data member `pCollar`, which is a pointer to a `Collar` class. And the `Dog`'s assignment operator will copy everything from the right hand side `Dog` reference `rhs` to itself. And in our case, the main thing to copy over is the `pCollar`. The natural implementation of that is I'll first delete my own `pCollar`, and then I copy construct the new `pCollar` from the right hand side of its `pCollar` - `*rhs.pCollar`:
+```
+class Collar;
+class Dog {
+    Collar* pCollar;
+    Dog& operator=(const Dog& rhs) {
+        delete pCollar;
+        pCollar = new Collar(*rhs.pCollar);
+        return *this;
+    }
+}
+```
+However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog`, in other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar` and accessing an object that is deleted. And the result could be disastrous.
+
+So what's our solution?
+
+# 9 - 2:31
+
