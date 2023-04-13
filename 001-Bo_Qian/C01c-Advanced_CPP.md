@@ -423,4 +423,95 @@ void functionA() {
 ```
 The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects deciding on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain automatic deallocation and reclamation.
 
-# 10 - 3:19
+
+Another good example of ***RAII*** is ***shared pointer***. A ***shared pointer*** is a ***reference counting smart pointer***. It counts the number of pointer points to itself. And when that number reach `0`, the smart pointer will be destroyed. Now in `function_A()`, I created a new `Dog` and assign the new `Dog`'s pointer to a shared pointer `pd`. Once `pd` goes out of scope, or in other words, once there's no more pointer points to `pd`, the new `Dog` will be destroyed:
+```
+int function_A() {
+    std::tr1::shared_ptr<Dog> pd(new Dog());
+    ...
+}   // The `Dog` is destructed when `pd` goes out of scope (no more pointer points to `pd)
+```
+Note that `std::tr1::shared_ptr` is equivalent to `std::stared_ptr` in ***C++11*** standard. `tr1` stands for ***Technical Report 1***.
+
+
+Let's look at another example. I have a class `Dog`, a class `Trick` and a function `train()`, which train a `Dog` with some kind of dog trick. I have a function `getTrick()` which returns a `Trick` object. Now, in the `main()` function, I invoke the `train()` function with the parameter `Dog` is created from a new `Dog`. And the parameter `dogTrick` is get from the `getTrick()` function:
+```
+class Dog;
+class Trick;
+void train(std::tr1::shared_ptr<Dog> pd, Trick dogTrick);
+Trick getTrick();
+
+int main() {
+    train(std::tr1::shared_ptr<Dog> pd(new Dog()), getTrick());
+}
+```
+Now, do you see any problem with this kind of code? Let's examine on what happens in the `train()` function parameter passing, more specifically, this part of the code `std::tr1::shared_ptr<Dog> pd(new Dog()), getTrick()`.
+
+There are three things happening, one is creating a new `Dog`. Second thing is invoking the `getTrick()` function. Lastly, construct a ***shared pointer*** and assign a `Dog` to the ***shared pointer***:
+1. `new Dog();`
+2. `getTrick();`
+3. construct `std::tr1::shared_ptr<Dog>`.
+
+In C++, the order of the three operations are **NOT fixed**. It is completely determined by the compiler. So if the compiler decide to execute the three operations in this order, then there is a problem. The `getTrick()` function might throw an exception, and if that happen, we have created a new `Dog`, and the new `Dog` has not being assigned to a ***shared pointer*** yet. So the memory of the new `Dog` will be leaked.
+
+The conclusion we can take from this example is don't combine the operation of storing objects in a ***shared pointer*** with any other statement. In other words, put the storing objects in shared pointer statement to a standalone statement. So in this example, we'll extract this part of the code `std::tr1::shared_ptr<Dog> pd(new Dog())` in `trick()` call and do something like this:
+```
+class Dog;
+class Trick;
+void train(std::tr1::shared_ptr<Dog> pd, Trick dogTrick);
+Trick getTrick();
+
+int main() {
+    std::tr1::shared_ptr<Dog> pd(new Dog());
+    train(getTrick(pd), getTrick());
+}
+```
+Now our code is thread safe, because the new `Dog` once get created, it will be always assigned to a ***shared pointer***, and it is not impossible to have memory leak.
+
+
+In the last example, what happens when the resource management object is copied? In this example, I create `L1` from a ***mutex*** `mu`, and then copy construct `L2` from `L1`. Usually, the mutex is mutually exclusive, so it cannot be called shared by multiple clients:
+```
+Lock L1(&mu);
+Lock L2(L1);
+```
+So one solution for this is prohibit copying completely. We can do that by disallow the copy constructor and the copy assignment operator from being used by our client. And to see how to do that, please read my another section that is disallow compiler generated functions and we're not going to talk about that in this section.
+
+Here is another solution. Sometimes, the resource can be shared by multiple clients, and in those kind of scenario, all we need to always want to make sure is that resource will be released appropriately once all the clients are done with it. So we need to implement some kind of ***reference count* mechanism** to keep track of the number of clients who is using the resource. And we can do that with the ***shared pointer***.
+
+In previous example, we have seen that shared pointer can take one parameter, which is a newly created object that's starting on heap:
+```
+int main() {
+    std::tr1::shared_ptr<Dog> pd(new Dog());
+    train(getTrick(pd), getTrick());
+}
+```
+The shared pointer constructor can take a second parameter, which is a ***deleter***. A ***deleter*** is a function that will be invoked when the shared pointer is destroyed. And the default value for the ***deleter*** is the operator delete:
+```
+template<class Other, class D> shared_ptr(Other* ptr, D deleter);
+```
+So in this example, once the shared pointer `pd` is destroyed, the default value of deleter will be performed upon the `new Dog()`:
+```
+    std::tr1::shared_ptr<Dog> pd(new Dog());
+```
+A good thing about the shared pointer is the ***deleter*** can be customized to any function you like. Here we're going to take advantage of that.
+
+Now let's look at the new implementation of the `Lock` class. Now it has private data member `pMutex`, which is a ***shared pointer*** to a ***mutex***. The constructor of the `Lock` initialized the `pMutex` with the ***pointer*** of the ***mutex*** as the first parameter, and then `Mutex_unlock` function at the second parameter, the ***deleter***. In the body of the constructor, it will pre-lock the mutex. So what this means is when `Lock` object is created, it will lock the mutex. And there is no more pointer points to `pMutex`. The mutex will be unlocked.
+```
+class Lock {
+private:
+    std::tr1::shared_ptr<Mutex_t> pMutex;
+public:
+    explicit Lock(Mutex_t* pm) : pMutex(pm, Mutex_unlock) {
+        Mutex_lock(pm);
+        // The second parameter of shared_ptr constructor is "deleter" function
+    }
+};
+```
+
+Let's look at the example again. I created `Lock` object `L1` from mutex, and then copy construct `L2` from `L1`. By this time, we have two pointers points to `pMutex`. And the reference count is ***2***. And by the time both `L1` and `L2` goes out of scope, the number of pointer points to `pMutex` will become `0`, that means `pMutex`'s ***deleter*** will be invoked. And then the mutex will be unlocked:
+```
+Lock L1(&mu);
+Lock L2(L1);
+```
+So that completes our solution for our ***Solution 2***, which guarantees the unlocking of mutex once there is no client is using the mutex anymore.
+
