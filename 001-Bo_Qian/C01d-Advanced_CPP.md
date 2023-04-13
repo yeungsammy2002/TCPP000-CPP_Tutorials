@@ -84,6 +84,40 @@ Dog::Dog(char* name) {
     c.meow();
 }
 ```
-Now we have two global variables. One is the `Cat` object `c`, and another one is `Dog` object `d`. And **since they are in different source file, the order of the initialization is undefined**. In other words, whether the `d` will be constructed before `c`, or 
+Now we have two global variables. One is the `Cat` object `c`, and another one is `Dog` object `d`. And **since they are in different source file, the order of the initialization is undefined**. In other words, whether the `d` will be constructed before `c`, or `c` constructed before `d` is undefined. This will cause a big problem, because when we construct `d`, this constructor will call `c.meow()`. So at this point, if `c` is already constructed, then we're fine. If `c` is not constructed, then the program will crash. So in other words, if `d` is constructed after `c`, then the program will live. If `c` is constructed after `d`, then the program will die. So our program has 50 by 50 chance of dying.
 
-# 11 - 2:31
+Now let's run the program, this actually runs okay, which means the `Cat` is constructed before the `Dog`:
+```
+Constructing Cat Smokey
+Constructing Dog Gunner
+Cat rules! My name is Smokey
+Dog rules! My name is Gunner
+```
+So if we comment this `c.meow()` out:
+```
+...
+Dog::Dog(char* name) {
+    std::cout << "Constructing Dog " << name << std::endl;
+    _name = name;
+    // c.meow();
+}
+```
+And in the `Cat`'s constructor (`Cat.cpp`), we call `d.bark()`, and we also need to add `extern Dog d;` because `d` is defined in another source file:
+```
+#include "Cat.h"
+#include "Dog.h"
+#include <iostream>
+
+extern Dog d;
+
+void Cat::meow() {
+    std::cout << "Cat rules! My name is " << _name << std::endl;
+}
+
+Cat::Cat(char* name) {
+    std::cout << "Constructing Cat " << name << std::endl;
+    _name = name;
+    d.bark();
+}
+```
+Now this program should crash because we know that the `Cat` is constructed before the `Dog`. So when we call `d.bark()`, the `Dog` object `d` is not constructed yet. So this program should crash. Let's run it, as you can see, the program crash.
