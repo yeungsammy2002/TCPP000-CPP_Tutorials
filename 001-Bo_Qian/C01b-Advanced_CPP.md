@@ -392,7 +392,7 @@ So the conclusion is class like `OpenFile`, which has a ***private destructor***
 # Section 06 - Virtual Destructor and Smart Destructor
 We'll talk about using ***vitual destructor*** in ***polymorphic base classes***. 
 
-Let's look at our example. We have a class `Dog`, and `Dog` destructor prints out `"Dog destroyed"`. `YelloDog` derived from `Dog` and `YelloDog` destructor prints out `"Yellow dog destroyed."`. And in the class `DogFactory`, we are using a factory design pattern. We use the `DogFactory` class to be a centralized place of creating `Dog` objects. And we have a `static` method to create `YellowDog` and then return it as a `Dog` pointer. And it is also has other methods to create other types of `Dog` objects. In the `main()` function, I assign the return value of `DogFactory::createYellowDog()` to a `Dog` pointer `pd`. And after I have done something with `pd`. Eventually, I delete `pd`:
+Let's look at our example. We have a class `Dog`, and `Dog` destructor prints out `"Dog destroyed"`. `YellowDog` derived from `Dog` and `YellowDog` destructor prints out `"Yellow dog destroyed."`. And in the class `DogFactory`, we are using a factory design pattern. We use the `DogFactory` class to be a centralized place of creating `Dog` objects. And we have a `static` method to create `YellowDog` and then return it as a `Dog` pointer. And it is also has other methods to create other types of `Dog` objects. In the `main()` function, I assign the return value of `DogFactory::createYellowDog()` to a `Dog` pointer `pd`. And after I have done something with `pd`. Eventually, I delete `pd`:
 ```
 class Dog {
 public:
@@ -403,7 +403,7 @@ public:
 
 class YellowDog : public Dog {
 public:
-    ~YelloDog() {
+    ~YellowDog() {
         std::cout << "Yello dog destroyed." << std::endl;
     }
 };
@@ -443,7 +443,7 @@ Now if we run the program, both `YellowDog` destructor and `Dog` destructor invo
 Yellow dog destroyed.
 Dog destroyed.
 ```
-So the conclusion we are getting from this example is if a class is meant to be used in a polymorphical way, such as in this case we are creating a `YelloDog`, and then casted it into a `Dog`'s pointer. Then the base class must have a ***virtual destructor*** to ensure the destructor is invoked appropriately.
+So the conclusion we are getting from this example is if a class is meant to be used in a polymorphical way, such as in this case we are creating a `YellowDog`, and then casted it into a `Dog`'s pointer. Then the base class must have a ***virtual destructor*** to ensure the destructor is invoked appropriately.
 
 If a class has any sort of virtual method like `bark()` method, it is mostly likely that this class will be used polymorphically, which means mostly likely it will need a ***virtual destructor***:
 ```

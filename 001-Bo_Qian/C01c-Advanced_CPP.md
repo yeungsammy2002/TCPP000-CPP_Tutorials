@@ -91,7 +91,7 @@ Our solution number one is the destructor swallows whatever the exception that i
     }
     ...
 ```
-The downside of this solution is since the exception is swallow by the destructor, the `Dog`'s client will not get the exception, so they will not know what has happened and do appropriate thing to handle that.
+The downside of this solution is since the exception is swallow by the destructor, the `Dog`'s clan will not get the exception, so they will not know what has happened and do appropriate thing to handle that.
 
 
 ### Solution 2 - Move the Exception-Prone Code to a Different Function
@@ -127,9 +127,9 @@ int main() {
     }
 }
 ```
-Now first of all, this program will no longer crash. And secondly, the `Dog`'s client will get the exception and do a proper thing to handle the exception. The downside of this solution is one additional API for `Dog`'s client to call.
+Now first of all, this program will no longer crash. And secondly, the `Dog`'s clan will get the exception and do a proper thing to handle the exception. The downside of this solution is one additional API for `Dog`'s clan to call.
 
-Which solution should we use? ***Solution 1 - destructor swallow the exception*** or ***Solution 2 - move the exception-prone code to a different function***? The answer depends on who is the better person to handle the exception. If it is a `Dog`, you should use ***Solution 1***. If it is `Dog`'s client, you should use ***Solution 2***.
+Which solution should we use? ***Solution 1 - destructor swallow the exception*** or ***Solution 2 - move the exception-prone code to a different function***? The answer depends on who is the better person to handle the exception. If it is a `Dog`, you should use ***Solution 1***. If it is `Dog`'s clan, you should use ***Solution 2***.
 
 
 
@@ -310,9 +310,117 @@ class Dog {
     }
 }
 ```
-However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog`, in other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar` and accessing an object that is deleted. And the result could be disastrous.
+However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog`, in other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar`, I'm accessing an object that is deleted, and the result could be disastrous.
 
-So what's our solution?
 
-# 9 - 2:31
+### Solution 1 - Checking If there is Self-Assignment 
+One simple solution is we can do a check. If `this` equals to the right hand side's `Dog` - `rhs`, then we simply return `*this`:
+```
+class Collar;
+class Dog {
+    Collar* pCollar;
+    Dog& operator(const Dog& rhs) {
+        if(this == &rhs)                    // here
+            return *this;
 
+        delete pCollar;
+        pCollar = new Collar(*rhs.pCollar);
+        return *this;
+    }
+}
+```
+Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the right hand side `Dog` object are not the same `Dog`. 
+
+However, there is still a problem with code. What happens if the copy constructor of the right hand side's `Dog`s `pCollar` throws an exception. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s clan later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog` destructor may want to try to delete the `pCollar` again, and the result is undefined. So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully:
+```
+class Collar;
+class Dog {
+    Collar* pCollar;
+    Dog& operator(const Dog& rhs) {
+        if(this == &rhs)
+            return *this;
+
+        pCollar = new Collar(*rhs.pCollar);
+        delete pCollar;                     // here
+        return *this;
+    }
+}
+```
+
+To achieve that purpose, I need to create a copy of original `pCollar`, and then I create a new `pCollar` if that is successful and I'll delete the original `pCollar`:
+```
+class Collar;
+class Dog {
+    Collar* pCollar;
+    Dog& operator(const Dog& rhs) {
+        if(this == &rhs)
+            return *this;
+
+        Collar* pOrigCollar = pCollar;      // here
+        pCollar = new Collar(*rhs.pCollar);
+        delete pOrigCollar;                 // here
+        return *this;
+    }
+};
+```
+Now we are safe. Even if the `new` operator throws an exception, the `Dog` still holding a pointer that points to a valid `Collar`. So this gives you a small demo of writing exception safe code.
+
+
+### Solution 2 - Deletgation
+Now let's look at our ***Solution 2***. ***Solution 2*** bascially dedicates the assignment operation to the `Collar` class, so I simply copy `*rhs.pCollar` to `*pCollar`. It will either do a **memeber by member copying** of the `Collar` class, or invoke the `Collar` class's ***overloaded assignment operator* `operator=`**:
+```
+class Dog {
+    Collar* pCollar;
+    Dog& operator=(const Dog& rhs) {
+        *pCollar = *rhs.pCollar;            // member by member copying of collars or
+                                            // call collar's `operator=`
+        return *this;
+    }
+};
+```
+One thing to note is I don't necessarily need to check if `this` `Dog` object and the right hand side's `Dog` object - `rhs` are the same `Dog` object. If they are the same, I will make a copy of itself anyway. This may incur some runtime cost. But since it doesn't cause any serious trouble, I don't want to worry about the runtime cost now until later may profile that helps me that this is important.
+
+
+Besides, the `if`-statement checking in ***Solution 1*** is not for free. It will also incur some runtime cost. So removing the `if`-statement will more or less compensate the cost of the ***self-assignment***.
+
+
+
+
+# Section 10 - Resource Acquistion Is Initialization - RAII
+We're going to talk about a special coding technique called ***Resource Acquistion Is Initialization* - *RAII***. What it basically means is using object to manage resources. Resources could be memory, hardware device, network handle...etc.
+
+Let's look at an example. Here I have a ***mutex*** `mu`. And in `functionA()`, I lock the ***mutex***, and then do a bunch of things, and then unlock ***mutex***:
+```
+Mutex_t mu = MUTEX_INITIALIZER;
+
+void functionA() {
+    Mutex_lock(&mu);
+    ...                 // Doing a bunch of things
+    Mutex_unlock(&mu);  // Will this line always be executed?
+}
+```
+This is pretty regular looking code, but there is a problem with this code. The problem is the statement of unlocking ***mutex*** may not be executed, because `"Doing a bunch of things"` could return to `functionA()` prematurely. Even if it doesn't return, it may throw an ***exception***. And in either case, the ***mutex*** will be locked forever. So neither way to guarantee that the ***mutex*** will be unlocked once is no longer needed.
+
+Let's look at our solution. The solution is to use the ***Resource Acquisition Is Initialization* (RAII) technique**. Here I have a class `Lock`. The class `Lock` have a `private` data member, which is a ***pointer*** to ***mutex***. And in the constructor of the `Lock`, the ***mutex*** will be locked. And in the destructor of the `Lock`, ***mutex*** will be unlocked. Now in `functionA()`, whenever I want to lock the ***mutex***, I construct a `Lock`, and then do whatever things that I want to do. And by the end of `functionA()`, `mylock` will be destroyed from the ***stack***. And then the ***destructor*** of the `Lock` will be invoked. So ***mutex*** will be unlocked:
+```
+class Lock {
+private:
+    Mutext_t* m_pm;
+public:
+    explicit Lock(Mutex_t *pm) {
+        Mutext_lock(pm);
+        m_pm = pm;
+    }
+    ~Lock() {
+        Mutex_unlock(m_pm);
+    }
+};
+
+void functionA() {
+    Lock mylock(&mu);
+    ...                 // Do a bunch of things
+}   // The mutex will always be released when mylock is destroyed from stack
+```
+The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects deciding on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain automatic deallocation and reclamation.
+
+# 10 - 3:19
