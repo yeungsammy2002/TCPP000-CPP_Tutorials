@@ -263,6 +263,8 @@ public:
 
 However, this is a good to follow the convention, and you'd better follow it unless you have some special reason. Another convention is the **`class` data member are usually named with a trailing underscore** and the `struct` data member are named as the same way you name a regular variable.
 
+
+### Getter & Setter
 Now in the `main()` function, I create a `Person_t` object called `PT`. And I can access `PT`'s data member directly `PT.age`. For example, I want to print it out, and then I create a `Person` object `P` and I also want to print out `P.age_`:
 ```
 int main() {
@@ -275,23 +277,50 @@ int main() {
 ```
 This will not compiler because `age_` is a private data of the `Person`.
 
-If I really want to access the private data of a class, I have to provide some public interface for that `.age()`, and all this method does is return the `age_`:
+If I really want to access the private data of a class, I have to provide some public interface for that `.age()`, and all this method does is return the `age_`. Since this method only fetch the data of `age_` and doesn't change it, so we should make this method a `const` method. If later on, I do want to change the `age_`, then we need to provide another public method `set_age()` to change the `age_`:
 ```
 class Person {
     std::string name_;
     unsigned age_;
 public:
-    unsigned age() {
+    unsigned age() const {          // getter / accessor
         return age_;
-    };
-}
+    }
+    void set_age(unsigned a) {
+        age_ = a;                   // setter / mutator
+    }
+};
 ```
+This `age()` method usually called ***getter*** or ***accessor*** method, which is almost always a `const` method. And this `set_age()` method is usually called ***setter*** or ***mutator*** method.
 
-And then in the `main()` function, I can call `P.age()`:
+And then in the `main()` function, I can call `P.age()`. And I can set the `age_` to a different value:
 ```
 int main() {
     Person P;
     std::cout << P.age();
+    P.set_age(4);
 }
 ```
-# 12 - 3:40
+Some of you maybe start complaining *"If we have a private data member, and we defined **getter** and **setter** for this private data member. Then what's the point of making this data member private? We could just make it public and all of sudden, it saves us the additional effort of defining these member methods"*.
+
+When we create object-oriented code, we want to separate the interface from the implementation. We want to encapsulate the complicated implementation and only talk to the outside world through interfaces. In this case, these `age()` and `set_age()` methods are interface. And these variables `name_` and `age_` are implementation. If you make the data member public, essentially you are exposing the internal implementation to the outside world, which usually bring a lot of headache in the long run.
+
+For example, if you later on decided that `age_` is not a appropriate name for this variable, you want to change it with setter and getter methods, it is very easy to change the variable name. But if the data member is public and your client has been using it all over the place, then you have to change this variable `age_` in many different places.
+
+Another example is if you want to add some rules to setting the `age_`, for example, a `Person`'s age should not be larger then `200`. Then with the ***setter method***, you can easily add the rule check at the beginning of this method. But if the variable `age_` is public, then there's no easy way to enforce that rule.
+
+So this is the idea of having setter and getter methods instead of making the variable public.
+
+
+### Avoiding Too Many Setter & Getter methods
+On the other hand, having too many of setter and getter methods is also not a good design practice. If I have to provide setter and getter methods for many of my private data member, it means that my data needs to be used by somebody else. If that is the case, why the data belongs to me? why the data not belongs to somebody else? So having too many setting and getter methods indicates there's some problem with my design, maybe I should architect my design models in a different way. So in general, you should avoid too many of setter and getter methods in your code.
+
+
+### Trailing Underscore Convention for Private `class` data members
+As a side note, some of you might be curious why we weird convention of trailing underscore `name_`, `age_` for `class` data members. In the very old days, many people use `m_age` to denote a `class` data member. But then people start to think why using two characters to denote `class` data members if we could just use one. So some people think of using leading underscore `_age` for that purpose, and actually, the leading underscore is the offical naming convention in ***Python*** for private class data member. But the problem with C++ is the leading underscore is already used for other purpose, it is used for global variables, it is used for internal implementation related variables, particularly, the ***underscore followed by a capital letter*** and ***double underscore*** are widely used in the internal implementation. This is why people have invented the ***trailing underscore*** notation for the `class` data member. But again, a convention is a convention, there's nothing right or wrong here. It is most important for you to be consistent with the existing convention that is already used in the project that you are working on.
+
+
+### Summary
+1. Use `struct` for ***passive objects*** with ***public data***, use `class` for ***active objects*** with ***private data***.
+2. Use ***setter***/***getter*** to access `class`'s data instead of making that data ***public***.
+3. Avoid making ***setter*** / ***getter*** if possible.

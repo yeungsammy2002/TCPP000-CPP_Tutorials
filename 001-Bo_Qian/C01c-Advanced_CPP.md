@@ -91,7 +91,7 @@ Our solution number one is the destructor swallows whatever the exception that i
     }
     ...
 ```
-The downside of this solution is since the exception is swallow by the destructor, the `Dog`'s clan will not get the exception, so they will not know what has happened and do appropriate thing to handle that.
+The downside of this solution is since the exception is swallow by the destructor, the `Dog`'s client will not get the exception, so they will not know what has happened and do appropriate thing to handle that.
 
 
 ### Solution 2 - Move the Exception-Prone Code to a Different Function
@@ -127,9 +127,9 @@ int main() {
     }
 }
 ```
-Now first of all, this program will no longer crash. And secondly, the `Dog`'s clan will get the exception and do a proper thing to handle the exception. The downside of this solution is one additional API for `Dog`'s clan to call.
+Now first of all, this program will no longer crash. And secondly, the `Dog`'s client will get the exception and do a proper thing to handle the exception. The downside of this solution is one additional API for `Dog`'s client to call.
 
-Which solution should we use? ***Solution 1 - destructor swallow the exception*** or ***Solution 2 - move the exception-prone code to a different function***? The answer depends on who is the better person to handle the exception. If it is a `Dog`, you should use ***Solution 1***. If it is `Dog`'s clan, you should use ***Solution 2***.
+Which solution should we use? ***Solution 1 - destructor swallow the exception*** or ***Solution 2 - move the exception-prone code to a different function***? The answer depends on who is the better person to handle the exception. If it is a `Dog`, you should use ***Solution 1***. If it is `Dog`'s client, you should use ***Solution 2***.
 
 
 
@@ -331,7 +331,7 @@ class Dog {
 ```
 Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the right hand side `Dog` object are not the same `Dog`. 
 
-However, there is still a problem with code. What happens if the copy constructor of the right hand side's `Dog`s `pCollar` throws an exception. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s clan later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog` destructor may want to try to delete the `pCollar` again, and the result is undefined. So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully:
+However, there is still a problem with code. What happens if the copy constructor of the right hand side's `Dog`s `pCollar` throws an exception. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s client later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog` destructor may want to try to delete the `pCollar` again, and the result is undefined. So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully:
 ```
 class Collar;
 class Dog {
