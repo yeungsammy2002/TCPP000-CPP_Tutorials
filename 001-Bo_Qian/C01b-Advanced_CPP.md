@@ -154,6 +154,8 @@ public:
 ...
 ```
 
+
+### Member must be Initialized if it is a Reference
 Now let's add a second data member `std::string& m_name` for `Dog`:
 ```
 ...
