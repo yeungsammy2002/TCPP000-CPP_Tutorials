@@ -123,7 +123,7 @@ public:
 ```
 
 
-### `class` is using Default Constructor & its Data Member Default Constructor
+### `class` is using Compiler Generated Default Constructor
 Let's look at our second example. We have a new class `Collar`. And the `Dog` have the data member `m_collar`, which is of type `Collar`. And in the `main()` function, I create a `Dog` object called `dog1`. What do you think the output of this program is:
 ```
 class Collar {
