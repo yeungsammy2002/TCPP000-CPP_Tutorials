@@ -121,3 +121,99 @@ Cat::Cat(char* name) {
 }
 ```
 Now this program should crash because we know that the `Cat` is constructed before the `Dog`. So when we call `d.bark()`, the `Dog` object `d` is not constructed yet. So this program should crash. Let's run it, as you can see, the program crash.
+
+To solve this problem, there are different ways to solve this problem, but the most commonly used is the ***singleton design pattern***.
+
+
+### Singleton Design Pattern
+I have created another class `Singleton` (`Singleton.h`), and then the `Singleton` has a `Dog`'s pointer `pd`, a `Cat`'s pointer `pc`, a destructor, a `getDog()` method, and a `getCat()` method:
+```
+class Dog;
+class Cat;
+
+class Singleton {
+    static Dog* pd;
+    static Cat* pc;
+
+public:
+    ~Singleton();
+
+    static Dog* getDog();
+    static Cat* getCat();
+}
+```
+In the `Singleton` source file `Singleton.cpp`, both `pd` and `pc` are initialized to `0`. The `getDog()` method will check if `pd` is `0`, if `pd` is `0`, it create a new `Dog` object with a name `"Gunner"`, and then return `pd`. And next time when the `getDog()` method called, it will not create a new `Dog`, it will return the same `Dog` object `pd`. This is called ***initialized upon first usage idiom***. The same thing for the `Cat`. The `Cat` will be initialized only when it needs to be used:
+```
+#include "Singleton.h"
+#include "Dog.h"
+#include "Cat.h"
+
+Dog* Singleton::pd = 0;
+Cat* Singleton::pc = 0;
+
+Dog* Singleton::getDog() {
+    if(!pd)
+        pd = new Dog("Gunner");     // Initialize Upon First Usage Idiom
+    return pd;
+}
+
+Cat* Singleton::getCat() {
+    if(!pc)
+        pc = new Cat("Smokey");
+    return pc;
+}
+
+Singleton::~Singleton() {
+    if(pd) delete pd;
+    if(pc) delete pc;
+    pd = 0;
+    pc = 0;
+}
+```
+Now I don't need any global variable of `Cat` or `Dog`. Whenever I need a `Dog`, I call the `getDog()` method. And when I need a `Cat`, I call the `getCat()` method. And there will only be one `Dog` of `"Gunner"` and one `Cat` of `"Smokey"` available.
+
+So in the `main()` function, let's say I'll call `Singleton::getCat()->meow()`.
+```
+int main() {
+    Singleton::getCat()->meow();
+}
+```
+And in the `Cat`'s constructor (`Cat.cpp`), I'll call `Singleton::getDog()->bark()`:
+```
+#include "Cat.h"
+#include "Dog.h"
+#include <iostream>
+
+void Cat::meow() {
+    std::cout << "Cat rules! My name is " << _name << std::endl;
+}
+
+Cat::Cat(char* name) {
+    std::cout << "Constructing Cat " << name << std::endl;
+    _name = name;
+    Singleton::getDog()->bark();
+}
+```
+And we don't need any global variable of `Cat` anymore. We should always call `getCat()` when we need a `Cat`:
+```
+#include "Dog.h"
+
+void Dog::bark() {
+    std::cout << "Dog rules! My name is " << _name << std::endl;
+}
+
+Dog::Dog(char* name) {
+    std::cout << "Constructing Dog " << name << std::endl;
+    _name = name;
+}
+```
+Now let's run the program. Here is the output on the console:
+```
+Constructing Cat Smokey
+Constructing Dog Gunner
+Dog rules! My name is Gunner
+Cat rules! My name is Smokey
+```
+So the program finished without a crash. The program should not crash because both `Dog` and `Cat` will be created whenever they are needed. And note that the `Singleton` has a destructor if `pd` and `pc` are not `0`, they will be deleted, and then reassign them to zero.
+
+So to make sure that both the `Dog` and `Cat` will be deleted, we only need to create a `Singleton` instance of `s`. When `s` goes out of scope, it will automatically delete either the `Dog` or the `Cat`, or both. So both `Dog` and `Cat` will be constructed and deleted only if they are used. If they are not used, nothing will happen. This is the beauty of ***singleton design pattern***.
