@@ -241,7 +241,7 @@ public:
     OpenFile(std::string filename) {
         std::cout << "Open a file " << filename << std::endl;
     }
-    OpenFile(OpenFile& rhs) = delete;
+    OpenFile(const OpenFile& rhs) = delete;
 };
 
 int main() {
@@ -260,7 +260,7 @@ public:
         std::cout << "Open a file " << filename << std::endl;
     }
 private:
-    OpenFile(OpenFile& rhs);
+    OpenFile(const OpenFile& rhs);
 };
 
 int main() {
@@ -282,7 +282,7 @@ public:
         OpenFile f2(f);
     }
 private:
-    OpenFile(OpenFile& rhs);
+    OpenFile(const OpenFile& rhs);
 };
 ```
 This will work, right? If you run it, it will still failed, but now it failed with a message `error: ISO C++ forbids declaration of 'g' with no type`. Although method `g()` can access the ***copy constructor***, since we only have declared the ***copy constructor***, we have not define it. So method `g()` cannot find the body of the ***copy constructor***. So as a result, nobody can use the ***copy constructor*** anymore. And we can also use the same method to disable the ***copy assignment operator***:
@@ -296,7 +296,7 @@ public:
         OpenFile f2(f);
     }
 private:
-    OpenFile(OpenFile& rhs);
+    OpenFile(const OpenFile& rhs);
     OpenFile& operator=(const OpenFile& rhs);
 };
 ```
@@ -314,7 +314,7 @@ public:
         OpenFile f2(f);
     }
 private:
-    OpenFile(OpenFile& rhs);
+    OpenFile(const OpenFile& rhs);
     OpenFile& operator=(const OpenFile& rhs);
     void writeLine(std::string str);
 };

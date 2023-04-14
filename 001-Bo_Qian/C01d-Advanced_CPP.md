@@ -380,3 +380,82 @@ Secondly, when we make a copy of this `Person` - `"George"` and saved in the vec
 Lastly, this `Person` - `"George"` is a ***r-value***, which means it will be destroyed at the end of this statement. And when the `Person` - `"George"` is destroyed. It will call the destructor, and it will delete the object that pointing to by the `pName_` pointer. And as a direct result of that, the `Person` in the vector, who's pointer `pName_` will be pointing to a deleted object of string. So when we call the `Person` in the vector's `.printName()` method, it will access an object that is already deleted. This is why this program has crashed.
 
 So what should we do with this kind of `class`? There are two solutions that you can use.
+
+
+### Solution 1
+The first solution is define ***copy constructor*** and ***copy assignment operator*** for ***deep copying***. So let's define a copy constructor, it will make a ***deep copy***. Since we need to access this private data member, so we need to provide an ***accessor*** to that data member. And we should do the same thing for ***copy assignment operator***, and this one should also do ***deep copying***:
+```
+class Person {
+public:
+    Person(std::string name) {
+        pName_ = new std::string(name);
+    }
+    Person(const Person& rhs) {                     // Copy constructor
+        pName_ = new std::string(*(rhs.pName()));
+    }
+    Person& operator=(const Person& rhs);           // Deep copying, Copy assignment operator
+    ~Person() {
+        delete pName_;
+    }
+    void printName() {
+        std::cout << *pName_;
+    }
+    std::string* pName() const {
+        return pName_;
+    }
+
+private:
+    std::string* pName_;
+};
+...
+```
+Now if we run the program, it run through okay. And here is the output on the console:
+```
+GeorgeGoodbye
+``` 
+
+### Solution 2
+The second solution for this is delete the ***copy constructor*** and the ***copy assignment operator***. And we can do that by making the ***copy constructor*** and the ***copy assignment operator*** **private methods**, so that nobody else can use them. And better than that, we can remove the definition of these two methods (*the function body*), so that even the `Person`'s children and `friend`s cannot use these two methods:
+```
+class Person {
+public:
+    Person(std::string name) {
+        pName_ = new std::string(name);
+    }
+    void printName() {
+        std::cout << *pName_;
+    }
+    std::string* pName() const {
+        return pName_;
+    }
+
+private:
+    std::string* pName_;
+    Person(const Person& rhs);              // Copy constructor
+    Person& operator=(const Person& rhs);   // Copy assignment operator
+};
+
+int main() {
+    std::vector<Person> persons;
+    persons.push_back(Person("George"));
+
+    persons.back().printName();
+
+    std::cout << "Goodbye" << std::endl;
+}
+```
+So now we have two solutions, ***Solution 1*** and ***Solution 2***, which one should we prefer? Personally, I prefer the ***Solution 2*** - delete the copy constructor and the copy assignment operator. If you think about it, there's rarely the case where you have to define a copy constructor and a copy assignment operator. One common place where you want to define these two methods is when you're working with ***STL* containers**. ***STL* containers** requires their "containee" to be **copy constructible** and **copy assignable**, but we can easily work around this by saving an object's pointer in the containers instead of the object itself. And when we push back, we push back a pointer of the `Person`. And when we call the `.printName()` method, we use the pointer syntax. And of course, we need to remember to delete all the objects later on:
+```
+...
+int main() {
+    std::vector<Person*> persons;
+    persons.push_back(new Person("George"));
+
+    persons.back()->printName();
+
+    std::cout << "Goodbye" << std::endl;
+}
+```
+So this will work as expected.
+
+However, even though we can live without the copy constructor and the copy assignment operator. Sometimes, we do need to make a copy of an object. How can we do that if we don't have these two methods? We can define a ***clone method***.
