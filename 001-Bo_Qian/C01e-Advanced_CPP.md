@@ -60,10 +60,14 @@ Generally speaking and there are two kinds of type conversion:
 1. ***Implicit Type Conversion***
 2. ***Explicit Type Conversion*** - is also called ***Casting*** 
 
-There are four casting operators in C++ - ***static cast***, ***dynamic cast***, ***const cast***, and ***reintepret cast***.
+There are four casting operators in C++:
+1. ***static cast***
+2. ***dynamic cast***
+3. ***const cast***
+4. ***reintepret cast***
 
 
-### Static Cast
+- ### Static Cast
 Let's start with ***static cast***. `static_cast` can convert an object from one type to another.
 
 Here I initialize an integer `i` to `9`. And then I cast `i` from an integer to a `float`. `static_cast` can work on any type of type, as long as the type conversion is defined for those types:
@@ -81,7 +85,7 @@ Dog* pd = static_cast<Dog*>(new YelloDog());        // Convert pointer/reference
 ```
 
 
-### Dynamic Cast
+- ## Dynamic Cast
 Now let's look at ***dynamic cast***. First I create a `YellowDog`, and then cast the pointer to a `Dog`'s pointer. Now this is a ***static cast***, even though I'm not using the `static_cast` operator. Then I cast the `Dog`'s pointer `pd` back to `YellowDog`'s pointer `py`:
 ```
 Dog* pd = new YellowDog();                      // static case
@@ -89,12 +93,45 @@ YellowDog py = dynamic_cast<YellowDog*>(pd);
 ```
 ***Dynamic cast*** can only work on ***pointers*** or ***references***. It cannot work on an ***object***. And they convert from one type to a related type, and typically it will be used in ***down cast***, which means it casts an object from its ***base class*** to a ***derived class***. In this case, from a `Dog` to a `YellowDog`.
 
-# 16 - 3:41
+Another different from the static cast is the dynamic in additional to perform the type casting also perform a runtime time check. It will check if the types are compatible for the casting to succeed. In this case, it will check if `pd` is pointing to a `YellowDog`, and not just a `Dog`. If the casting succeed, the `py` will become `pd`. If it failed, `py` will equals to `0`, which is a ***null pointer***.
+
+Finally, ***dynamic cast*** requires the two types to be polymorphic, which means they need to at least have one virtual method.
 
 
-### Const Cast
+- ### Const Cast
+***Const cast*** is used to cast away the ***constness***. In the example, I have the `const` `chat` pointer `str` points to `"Hello, world."`. And the `"Hello, world."` cannot be modified because it defines to be a constant. Then I can use `const_cast` to cast away the ***constness*** and then assign the result to `modifiable` `char` pointer. And now the `"Hello, world."` can be changed:
+```
+const char* str = "Hello, world.";
+char* modifiable = const_cast<char*>(str);
+```
+Like the ***dynamic cast***, the ***const cast*** can only work on pointers or references. It cannot work on the object itself. So if I change this `char*` to `char`. It won't work that way:
+```
+char* modifiable = const_cast<char>(str);   // X
+```
+Unlike the ***dynamic cast***, the ***const cast*** can only work on same type. So both `str` and `modifiable` are both `char` pointers. Only difference is one is a constant and other one is not constant.
 
 
-### Reintepret Cast
+- ### Reintepret Cast
+Our last cast operator is a ***reintepret cast***. In this example, I have a `p` pointer, which is point to some address `51110980`, and then I will use `reintepret_cast` to intepret the memory content in that address `51110980` into a dog. The `reinterpret_cast` can only work on ***pointers*** or ***references***. It cannot work on the object itself:
+```
+long p = 51110980;
+Dog* dd = reinterpret_cast<Dog*>(p);        // re-intepret the bits of the object pointed to
+                                            // The ultimate cast that can cast one pointer to any other type of pointer
+```
+If you compare to the previous three cast that works on pointers or references, the ***static cast*** is working on the ***related type***. And the ***dynamic cast*** also can work on ***related type***. The ***const cast*** can only work on ***same type***. And the ***reintepret cast*** can work on ***any type***. You can cast from one pointer to any other type of pointer with ***reintepret cast***. So this is the most powerful cast. 
 
+And because it is so powerful, it also gives you a lot of room to make mistakes. That is why you always need to use extra caution when using the ***reintepret cast***.
+
+Typcially, ***reintepret cast*** is used in ***low-level coding***, because it tends to generate code that's not portable.
+
+
+## C-Style Casting
+C++ also inherited that the old-fashioned casting style from ***C***, that's called ***C-style casting***. ***C-style casting*** has ***two forms***.
+
+# 16 - 7:50
+```
+short a = 2000;
+int i = (int)a;
+int j = int(a);
+```
 
