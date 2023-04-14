@@ -182,10 +182,12 @@ This gives me a way to use the compiler generated constructor even though I have
 
 
 
-# Section 05 - Disallow Functions
+# Section 05 - Disallowing Compiler Generated Methods
 Last time we've talked about the four methods that the compiler automatically generated for us if we don't create them ourselves. The ***copy constructor***, the ***copy assignement operator***, the ***destructor*** and the ***default constructor***. That is nice. It save us some effort and time to create them. However, the ***compiler generated methods*** are not always useful. And sometimes, they are even dangerous to use.
 
-For example, we have a class `OpenFile`, which represent a file being opened. Since the compiler will automatically generated the default constructor for us. I can do `OpenFile f`, and this will call the compiler generated default method:
+
+### Disallowing Compiler Generated Default Constructor
+For example, we have a class `OpenFile`, which represent a file being opened. Since the compiler will automatically generated the default constructor for us, I can do `OpenFile f`. And this will call the ***compiler generated default constuctor***:
 ```
 class OpenFile {
 };
@@ -219,7 +221,10 @@ If you run it, it will compile without error:
 ```
 Open a file Bo_file
 ```
-In this case, the compiler generated method is just useless, but it doesn't harm us anyway. But sometimes, the compiler generated method could be dangerous to use. For example, say now I have open `"Bo_file"` for writing with `f`. And then I create another `OpenFile` object called `f2`, which is copy constructed from `f`. This will call the ***compiler generated copy constructor*** for `f2`. And `f2` will also write to `"Bo_file"`:
+
+
+### Disallowing Compiler Generated Copy Constructor
+In the previous case, the compiler generated method is just useless, but it doesn't harm us anyway. But sometimes, the compiler generated method could be dangerous to use. For example, say now I have open `"Bo_file"` for writing with `f`. And then I create another `OpenFile` object called `f2`, which is copy constructed from `f`. This will call the ***compiler generated copy constructor*** for `f2`. And `f2` will also write to `"Bo_file"`:
 ```
 int main() {
     OpenFile f(std::string("Bo_file"));
@@ -312,6 +317,8 @@ private:
 };
 ```
 
+
+### Disallowing Compiler Generated Destructor
 Let's turn off the ***destructor*** by making it to be `private`, and we have not defined it so nobody can use the `OpenFile` destructor anymore:
 ```
 class OpenFile {
