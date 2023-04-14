@@ -379,7 +379,9 @@ Secondly, when we make a copy of this `Person` - `"George"` and saved in the vec
 
 Lastly, this `Person` - `"George"` is a ***r-value***, which means it will be destroyed at the end of this statement. And when the `Person` - `"George"` is destroyed. It will call the destructor, and it will delete the object that pointing to by the `pName_` pointer. And as a direct result of that, the `Person` in the vector, who's pointer `pName_` will be pointing to a deleted object of string. So when we call the `Person` in the vector's `.printName()` method, it will access an object that is already deleted. This is why this program has crashed.
 
-So what should we do with this kind of `class`? There are two solutions that you can use.
+So what should we do with this kind of `class`? There are two solutions that you can use:
+- ***Solution 1***: Define ***copy constructor*** and ***copy assignment operator*** for ***deep copying***.
+- ***Solution 2***: Delete ***copy constructor*** and ***copy assignment operator***, define `clone()` method.
 
 
 ### Solution 1
@@ -412,7 +414,8 @@ private:
 Now if we run the program, it run through okay. And here is the output on the console:
 ```
 GeorgeGoodbye
-``` 
+```
+
 
 ### Solution 2
 The second solution for this is delete the ***copy constructor*** and the ***copy assignment operator***. And we can do that by making the ***copy constructor*** and the ***copy assignment operator*** **private methods**, so that nobody else can use them. And better than that, we can remove the definition of these two methods (*the function body*), so that even the `Person`'s children and `friend`s cannot use these two methods:
@@ -458,4 +461,34 @@ int main() {
 ```
 So this will work as expected.
 
+
+### Solution 2 with Clone Method
 However, even though we can live without the copy constructor and the copy assignment operator. Sometimes, we do need to make a copy of an object. How can we do that if we don't have these two methods? We can define a ***clone method***.
+```
+class Person {
+public:
+    Person(std::string name) {
+        pName_ = new std::string(name);
+    }
+    void printName() {
+        std::cout << *pName_;
+    }
+    std::string* pName() const {
+        return pName_;
+    }
+    Person* clone() {                       // here
+        return (new Person(*(pName_)));
+    }
+
+private:
+    std::string* pName_;
+    Person(const Person& rhs);
+    Person& operator=(const Person& rhs);
+};
+```
+So this `clone()` method will return an identical copy of `this` object itself. You can all the places where the copying has happened by grabbing the method name `clone` of all your code.
+
+The problem with copy constructor is making the copying implicit. The copying can happen implicitly when an object is passed as a parameter to another function, or being return from another function. And implicitly copying is often time the place where the bug is introduced. So our ***Solution 2*** is delete copy constructor and copy assignment operator, and then define `clone()` method.
+
+So in summary, anytime you have one object owning another object through its pointer like this `string* pName_;`, you need to implement one of these solutions. First one is define the ***copy constructor*** and the ***copy assignment operator*** for ***deep copying***. And second one is delete the ***copy constructor*** and the ***copy assignment operator***, then define `clone()` method.
+
