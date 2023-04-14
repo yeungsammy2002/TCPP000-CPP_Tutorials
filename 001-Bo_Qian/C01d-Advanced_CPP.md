@@ -1,5 +1,4 @@
 # Section 11 - Static Initialization Fiasco
-
 We'll talk about static initialization fiasco problem, which is a subtle problem that can crash your program. We'll talk about how this crash can be introduced and what is the common solution to this problem.
 
 Let's look at our example. We have two classes `Cat` and `Dog`.
@@ -324,3 +323,60 @@ As a side note, some of you might be curious why we weird convention of trailing
 1. Use `struct` for ***passive objects*** with ***public data***, use `class` for ***active objects*** with ***private data***.
 2. Use ***setter***/***getter*** to access `class`'s data instead of making that data ***public***.
 3. Avoid making ***setter*** / ***getter*** if possible.
+
+
+
+
+# Section 13 - Resource Managing Class
+We are going to talk about a pitfall that happens when you have a class that owns another object through its pointer.
+
+Here is an example of this. We have a class `Person`, and this `Person` has a private data member, which is a ***pointer to a string* `pName_`**. And in this `Person`'s constructor, it create a new `std::string` object with this `name`. And in the `Person`'s destructor, it deletes that `pName_`. So this is what I mean by one class is only another class by pointer. In this case, the `Person` owns the ***string*** through its ***pointer* `pName_`**:
+```
+class Person {
+public:
+    Person(std::string name) {
+        pName_ = new std::string(name);
+    }
+    ~Person() {
+        delete pName_;
+    }
+
+    void printName() {
+        std::cout << *pName_;
+    }
+
+private:
+    std::string* pName_;
+}
+
+int main() {
+    std::vector<Person> persons;
+    persons.push_back(Person("George"));
+
+    persons.back().printName();
+
+    std::cout << "Goodbye" << std::endl;
+}
+```
+Note that if the `Person` has the pointer of `pName_`, but it is not responsible of creating and destructing of the object of `pName_`. Then this `Person` is not owning that object of `pName_`. It merely has acquaintance with that object of `pName_`.
+
+And this `Person` also have a `printName()` method, which prints out the name. And in the `main()` function, I create a vector of `Person` called `persons`. And then I create a `Person` who's name is `"George"`, and push it back into the `persons`, the vector. Since I'm using the `.push_back()` method, the `persons`'s `back()` method will return a reference to the last `Person` object in the vector, namely the `Person` - `"George"`. And then I invoke the `.printName()` method from that `Person` object.
+
+If I run the program, it actually crash. If we look at the call stack, it crash at the point where the `.printName()` method is called. This code looks so innocent. I create a `Person`, push it into vector and then call its `.printName()` method. What could go wrong?
+
+Let's analyze what has happened with this line of code. What happened over here is actually different for ***C++11* standard** than for ***older standard***. I will mainly talk about the ***older standard***. In the future, we'll cover the ***C++11***:
+```
+    persons.push_back(Person("George"));
+```
+With the ***older standard***, this simple line of code actually involves three operations. 
+- Step 1. This `Person` - `"George"` is constructed
+- Step 2. A copy of `"Georage"` is saved in the vector `persons`
+- Step 3. This `Person` - `"George"` is destroyed
+
+There are couple of things that we need to pay attention to. First of all, this `Person` - `"George"` and this `Person` in the vector are **NOT** the same `Person`. They are identical, but they are not the same, they are different objects. One `Person` is copy of the other. 
+
+Secondly, when we make a copy of this `Person` - `"George"` and saved in the vector, we are making a ***shallow copy*** of this `Person` - `"George"`, because that's what the default copy constructor would do. So as a result of that, this `Person` - `"George"`'s pointer `pName_` and the `Person` in the vector's pointer `pName_` are pointing to the same object of string.
+
+Lastly, this `Person` - `"George"` is a ***r-value***, which means it will be destroyed at the end of this statement. And when the `Person` - `"George"` is destroyed. It will call the destructor, and it will delete the object that pointing to by the `pName_` pointer. And as a direct result of that, the `Person` in the vector, who's pointer `pName_` will be pointing to a deleted object of string. So when we call the `Person` in the vector's `.printName()` method, it will access an object that is already deleted. This is why this program has crashed.
+
+So what should we do with this kind of `class`? There are two solutions that you can use.

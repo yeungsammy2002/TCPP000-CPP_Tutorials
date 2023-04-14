@@ -300,6 +300,9 @@ private:
     OpenFile& operator=(const OpenFile& rhs);
 };
 ```
+
+
+### Disallow Any Inherited Methods by Putting it into `private`
 This approach can be used to disable any method, i.e. the default constructor, the destructor, or say the `OpenFile` has inherited a method called `writeLine()` and we don't want the `OpenFile` to use that method, you can use this method to turn that method off.
 ```
 class OpenFile {
