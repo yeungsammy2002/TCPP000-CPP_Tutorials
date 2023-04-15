@@ -154,4 +154,43 @@ In general, the ***C++ style castings*** are preferred over the ***C-style casti
 
 
 # Section 17 - All Castings Considered Part 2
+In the last section, we have covered the different types of castings in C++. In this section, we will look at some examples and come up with the summary. 
+
+Let's look at the example with ***dynamic cast***. We have a has a ***virtual destructor***. Remember the ***dynamic cast*** requires the types to be polymorphic, so they need to have at least one ***virtual method***. And we have a `YellowDog` derived from `Dog`, and the `YellowDog` can `bark()`. In `main()` function, I first create a new `Dog`, and assign it to `Dog`'s pointer `pd`. And some time later `...`, under different context, I got a wrong impression that the `pd` is actually pointing to a `YellowDog`. So I dynamically cast `pd` to a `YellowDog`'s pointer `py`, which is obviously a bug that I introduced. Then I let the `py` bark. And for debug purpose, I print out the value of `py` and `pd`:
+```
+class Dog {
+public:
+    virtual ~Dog() {}
+};
+
+class YellowDog : public Dog {
+    int age;
+public:
+    void bark() {
+        std::cout << "woof. " << std::endl;
+    }
+};
+
+int main() {
+    Dog* pd = new Dog();
+    ...
+    YellowDog* py = dynamic_cast<YellowDog*>(pd);
+    py->bark();
+    std::cout << "py = " << py << std::endl;
+    std::cout << "pd = " << pd << std::endl;
+}
+```
+Now what will the output from this program? 
+
+Here is the output on the console:
+```
+woof.
+py = 0;
+pd = 57873400
+```
+The output is `woof.`, it barked, and the `py` is `0`, and `pd` is some kind of ***pointer***. So happened in this code?
+
+First of all, `YellowDog` is derived from `Dog`. So that means, all `YellowDog` objects are `Dog` objects, but not all `Dog` objects are `YellowDog` objects. So when I cast `pd`, which is a `Dog` object to a `YellowDog`, it certainly will fail. And as a result, the `py` will become `0`.
+
+And then when `py` bark, isn't that allow access? Actually not, because when the compiler see `py` to `bark()`.
 
