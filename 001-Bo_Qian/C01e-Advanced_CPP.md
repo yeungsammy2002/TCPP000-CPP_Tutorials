@@ -327,8 +327,8 @@ This is the table that summarizes all the castings that we've talked about so fa
 There are four columns. First one is ***Generate_Code***, it indicates whether the casting will generate a substantial vulnerable code that will get executed during one time. ***Generate_data*** indicates whether the casting will generate a different data object and saved in memory. Here I don't count a ***pointer*** as a data only the "pointee" counts. ***risk_level*** indicates how risky is it to the ***cast***. ***data_type*** indicates what kind of data type can the cast perform.
 
 
-### Object Casting
-| Cast Type | Generate_Code | Generate_data | risky_level | data_type |
+### C++ Style - Object Casting Summary Table
+| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
 | - | - | - | - | - |
 | `static_cast` | yes | yes | 2 | any types (as long as type conversion is defined) |
 
@@ -343,11 +343,40 @@ The `static_cast` for an object is not so risky to use. The only place I can thi
 You can perform `static_cast` on any types, as long as the type conversion is defined for these two types.
 
 
-### Pointer Casting / Reference Casting
-| Cast Type | Generate_Code | Generate_data | risky_level | data_type |
+### C++ Style - Pointer Casting / Reference Casting Summary Table
+| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
 | - | - | - | - | - |
 | `static_cast` | no | no | 4 | related types |
 | `dynamic_cast` | yes | no | 3 | related types (down-cast) |
 | `const_cast` | no | no | 1 | same type |
 | `reintepret_cast` | no | no | 5 | any types |
+
+All four types of castings can be used on a ***pointer and reference casting***. 
+
+`static_cast` for pointers will not generate code. It merely tell the compiler to interpret the pointer in a different way. It will not generate data either, it will work on the same data that's being pointed. We have in previous example that `static_cast` is very risky to use, it always succeed and you need to be very careful not to make a wrong cast. `static_cast` only work on related types, which means between child and parent.
+
+`dynamic_cast` will generate additional vulnerable code, because it will perform runtime type checking to see if two types are compatible for `dynamic_cast`. `dynamic_cast` typically will not generate additional data, it will work on the same data being pointed. And the `dynamic_cast` is less risky than the `static_cast` because of the dynamic runtime check it performs. And it can only work on related types. And most of them it's used for ***down-casting***.
+
+`const_cast` will not generate code. And it will not generate data. It's very safe to use. But it's not completely risk-free, because by using `const_cast`, you are changing an object to that original being consider the `const`, so you are breaking promise for the object to be `const`. `const_cast` can only work on same type.
+
+`reinterpret_cast` will not generate code. It will not generate data. And it is the most risky operation. It can work on any types and it always succeed, which means you need to be very clear what you are doing and making sure you are casting things correctly.
+
+
+
+### C Style - Object Casting Summary Table
+| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
+| - | - | - | - | - |
+| - | yes | yes | 5 | any types (as long as type conversion is defined) |
+
+***C-style casting*** is a mixture of a `static_cast`, `const_cast` and `reinterpret_cast`. So based on that, you can get the answers for the table based on the content of previous table.
+
+
+### C Style - Pointer Casting / Reference Casting Summary Table
+| Cast Type | Generate_Code | Generate_data | risky_level | data_type |
+| - | - | - | - | - |
+| - | no | no | 5 | any types |
+
+
+I've uploaded the notes to my personal website and you can download notes and save it for future reference if you like:
+https://boqian.weebly.com/
 
