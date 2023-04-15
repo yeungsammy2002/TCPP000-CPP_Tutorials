@@ -280,7 +280,21 @@ In summary, polymorphism is a better and more elegant solution before using type
 
 Sometimes, the casting can be a hack code, which may or may not be a good thing. But we'll look at it anyway. 
 
-Again, we have a class `Dog` and `Dog` have `bark()` method. This time, the `bark()` method is a **`const` method**.
+Again, we have a class `Dog` and `Dog` have `bark()` method. This time, the `bark()` method is a **`const` method**:
+```
+class Dog {
+public:
+    std::string m_name;
+    Dog() : m_name("Bob") {}
+    void bark() const {                                     // here
+        std::cout << "My name is " << m_name << std::endl;
+    }
+};
+...
+```
+What does the `const` method mean? Who is `const`? Literally speaking, only a variable, or an object can be a `const`, a function or a method cannot be a `const`. Then who has become `const` as a result of the keyword `const`. It's the object pointed to by `this` pointer become `const` in the scope of the `bark()` method.
+
+In the `bark()` method, if I try to change `m_name` to `"Henry"`, the compiler will not let me to do it because the compiler knows that method is `const` method, and I cannot change the member data of the `Dog` in this method:
 ```
 class Dog {
 public:
@@ -288,6 +302,52 @@ public:
     Dog() : m_name("Bob") {}
     void bark() const {
         std::cout << "My name is " << m_name << std::endl;
+        m_name = "Henry";                                   // Compiler error
     }
-}
+};
+...
 ```
+However, if I really want to change the name of the `Dog` in this method, I can do it using `const_cast` operator.
+```
+class Dog {
+public:
+    std::string m_name;
+    Dog() : m_name("Bob") {}
+    void bark() const {
+        std::cout << "My name is " << m_name << std::endl;
+        const_cast<Dog*>(this)->m_name = "Henry";           // here
+    }
+};
+...
+```
+Now I have successfully changed the data member of `Dog` inside the `Dog`'s `const` method.
+
+This is the table that summarizes all the castings that we've talked about so far, and there are a lot of information in this table. So I hope I will not put you into sleep. First of all, I have grouped all the casting into two groups, one is ***object casting***, and another one is ***pointer and reference casting***, because these two are so much different from each other in terms of the behavior.
+
+There are four columns. First one is ***Generate_Code***, it indicates whether the casting will generate a substantial vulnerable code that will get executed during one time. ***Generate_data*** indicates whether the casting will generate a different data object and saved in memory. Here I don't count a ***pointer*** as a data only the "pointee" counts. ***risk_level*** indicates how risky is it to the ***cast***. ***data_type*** indicates what kind of data type can the cast perform.
+
+
+### Object Casting
+| Cast Type | Generate_Code | Generate_data | risky_level | data_type |
+| - | - | - | - | - |
+| `static_cast` | yes | yes | 2 | any types (as long as type conversion is defined) |
+
+There is only one cast can be used on an object, which is `static_cast`. 
+
+The `static_cast` for an object always generate code, it will invoke either will invoke either the type conversion function, or the constructor of the casted type, so it will generate a substantial runnable code. 
+
+The `static_cast` of object will generate a new data to be used.
+
+The `static_cast` for an object is not so risky to use. The only place I can think of is if you defined too many of the implicit type conversion, then sometimes the code will become tricky.
+
+You can perform `static_cast` on any types, as long as the type conversion is defined for these two types.
+
+
+### Pointer Casting / Reference Casting
+| Cast Type | Generate_Code | Generate_data | risky_level | data_type |
+| - | - | - | - | - |
+| `static_cast` | no | no | 4 | related types |
+| `dynamic_cast` | yes | no | 3 | related types (down-cast) |
+| `const_cast` | no | no | 1 | same type |
+| `reintepret_cast` | no | no | 5 | any types |
+
