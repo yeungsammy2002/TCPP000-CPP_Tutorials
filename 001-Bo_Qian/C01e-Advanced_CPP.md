@@ -150,3 +150,8 @@ In general, the ***C++ style castings*** are preferred over the ***C-style casti
 1. First of all, it's easier to identify in the code by grabbing an `_cast`, you can easily find out all the ***C++ style castings*** in your code.
 2. Secondly, the ***C++ style castings*** tend to generate less usage error. That is because there are **4 different type of castings** in C++. And each one have a narrowly specified purpose. So that gives you less room to make mistakes. And also the ***C++ style castings*** provide a runtime type checking capability to check if the types are compatible for casting. So that is also a powerful tool to use.
 
+
+
+
+# Section 17 - All Castings Considered Part 2
+
