@@ -115,8 +115,8 @@ Unlike the ***dynamic cast***, the ***const cast*** can only work on same type. 
 Our last cast operator is a ***reintepret cast***. In this example, I have a `p` pointer, which is point to some address `51110980`, and then I will use `reintepret_cast` to intepret the memory content in that address `51110980` into a dog. The `reinterpret_cast` can only work on ***pointers*** or ***references***. It cannot work on the object itself:
 ```
 long p = 51110980;
-Dog* dd = reinterpret_cast<Dog*>(p);        // re-intepret the bits of the object pointed to
-                                            // The ultimate cast that can cast one pointer to any other type of pointer
+Dog* dd = reinterpret_cast<Dog*>(p);    // re-intepret the bits of the object pointed to
+                                        // The ultimate cast that can cast one pointer to any other type of pointer
 ```
 If you compare to the previous three cast that works on pointers or references, the ***static cast*** is working on the ***related type***. And the ***dynamic cast*** also can work on ***related type***. The ***const cast*** can only work on ***same type***. And the ***reintepret cast*** can work on ***any type***. You can cast from one pointer to any other type of pointer with ***reintepret cast***. So this is the most powerful cast. 
 
@@ -126,12 +126,27 @@ Typcially, ***reintepret cast*** is used in ***low-level coding***, because it t
 
 
 ## C-Style Casting
-C++ also inherited that the old-fashioned casting style from ***C***, that's called ***C-style casting***. ***C-style casting*** has ***two forms***.
+C++ also inherited that the old-fashioned casting style from ***C***, that's called ***C-style casting***. ***C-style casting*** has ***two forms***. One is ***C-like cast notation***, another is the ***functional notation***. **Both forms are the same**, there is no difference between them.
 
-# 16 - 7:50
+
+### C-like Cast Notation
+In this example, I have a `short` integer `a`, and I cast it into `i` using the ***C-like cast notation***:
 ```
 short a = 2000;
-int i = (int)a;
-int j = int(a);
+int i = (int)a;     // C-like cast notation
 ```
+
+
+### Functional Notation
+In this example, I have a `short` integer `a`, and I cast it into `j` using the ***functional notation***:
+```
+short a = 2000;
+int i = int(a);     // functional notation
+```
+
+***C-style casting*** is really a mixture of ***static cast***, ***const cast***, and ***reintepret cast***. The only cast that doesn't support the ***dynamic cast***. Now we have a ***C-style casting*** that just does the exact same thing as these 3 C++ sytle casting. Then which one should I use?
+
+In general, the ***C++ style castings*** are preferred over the ***C-style casting***. The reasons are:
+1. First of all, it's easier to identify in the code by grabbing an `_cast`, you can easily find out all the ***C++ style castings*** in your code.
+2. Secondly, the ***C++ style castings*** tend to generate less usage error. That is because there are **4 different type of castings** in C++. And each one have a narrowly specified purpose. So that gives you less room to make mistakes. And also the ***C++ style castings*** provide a runtime type checking capability to check if the types are compatible for casting. So that is also a powerful tool to use.
 
