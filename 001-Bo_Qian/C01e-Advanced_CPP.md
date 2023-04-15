@@ -380,3 +380,8 @@ All four types of castings can be used on a ***pointer and reference casting***.
 I've uploaded the notes to my personal website and you can download notes and save it for future reference if you like:
 https://boqian.weebly.com/
 
+
+
+
+# Section 18 - Inheritance - Public, Protected, and Private
+
