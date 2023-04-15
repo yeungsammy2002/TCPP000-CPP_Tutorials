@@ -192,5 +192,102 @@ The output is `woof.`, it barked, and the `py` is `0`, and `pd` is some kind of 
 
 First of all, `YellowDog` is derived from `Dog`. So that means, all `YellowDog` objects are `Dog` objects, but not all `Dog` objects are `YellowDog` objects. So when I cast `pd`, which is a `Dog` object to a `YellowDog`, it certainly will fail. And as a result, the `py` will become `0`.
 
-And then when `py` bark, isn't that allow access? Actually not, because when the compiler see `py` to `bark()`.
+And then when `py` bark, isn't that allow access? Actually not, because when the compiler see `py` to `bark()`. It will try to intepret `bark()` method to be a `static` method. And in this example, the `bark()` didn't access any data member of a `YellowDog`. So it can indeed be treated as a `static` method. So `py` bark successfully, which makes a perfect cover up for my bug.
 
+Now suppose I make the `bark()` method to access the `YellowDog`'s member data. Now the compiler can no longer treat `bark()` method as a static method. So when `py->bark()`, it will crash, which is a better thing because the debugger will immediately pointing me to where the bug happened, rather then before the bug is completely hidden and I have no idea when the bug will explode:
+```
+...
+class YellowDog : public Dog {
+    int age;
+public:
+    void bark() {
+        std::cout << "woof. I am " << age << std::endl;
+    }
+};
+
+int main() {
+    Dog* pd = new Dog();
+    ...
+    YellowDog* py = dynamic_cast<YellowDog*>(pd);
+    py->bark();                                     // crash
+    std::cout << "py = " << py << std::endl;
+    std::cout << "pd = " << pd << std::endl;
+    ...
+}
+```
+
+Now suppose I am not going to use `dynamic_cast`, instead I use `static_cast`. Unlike `dynamic_cast`, the `static_cast` will not perform runtime type checking. So the `static_cast` of `Dog`'s pointer to a `YellowDog`'s pointer will always succeed. So `py` will never be a ***null pointer***. When `py` bark, it will access a part of memory that doesn't belong to `py`. And the result is undefined. Sometimes, it will crash, but most of the time, it will run through and print out a random number for `age`. So as a result, the bug become more in changed and elusive. This is why we need to be very careful when using ***cast***. And apparently `static_cast` is a more risky to use than `dynamic_cast`:
+```
+...
+int main() {
+    Dog* pd = new Dog();
+    ...
+    YellowDog* py = static_cast<YellowDog*>(pd);    // here
+    py->bark();
+    std::cout << "py = " << py << std::endl;
+    std::cout << "pd = " << pd << std::endl;
+    ...
+}
+```
+
+The correct way to do it is we still use `dynamic_cast`. And before running `py->bark()`, let's check if `py` is a ***null pointer***. And now it will work as expected:
+```
+...
+int main() {
+    Dog* pd = new Dog();
+    ...
+    YellowDog* py = dynamic_cast<YellowDog*>(pd);
+    if(py)
+        py->bark();
+    std::cout << "py = " << py << std::endl;
+    std::cout << "pd = " << pd << std::endl;
+    ...
+}
+```
+
+But can we make the code better? We actually can. A better approach for this code is adding a virtual `bark()` method for `Dog`. Now in the `main()` function, instead of using `dynamic_cast` with ***null*** checking, I can simply call `py->bark()`:
+```
+class Dog {
+public:
+    virtual ~Dog() {}
+    virtual bark() {}
+};
+
+...
+int main() {
+    Dog* pd = new Dog();
+    ...
+    py->bark();
+    std::cout << "py = " << py << std::endl;
+    std::cout << "pd = " << pd << std::endl;
+}
+```
+Why this code is better? First of all, it reduced the ***\*cyclomatic complexity*** of the code. Instead of having three lines of code with a `if`-statement, I have only one line of code. 
+
+Secondly, this is a better object-oriented design, because we're relegating the responsibility of invoking the right `bark()` method to the object itself `pd`, whether it's a `Dog` or a `YellowDog`. So we'll have a better managed code.
+
+Lastly, by using the virtual method, I can gain a little bit of the performance advantage, because the ***dynamic cast*** using ***runtime type identification***, and ***runtime type identification*** could be very costly, depending on a the compiler, **sometimes it could be up to 50 times more expensive**.
+
+---
+***\*Cyclomatic complexity*** is a way to measure how complicated a computer program is. Imagine that you have a big maze that you need to navigate through. The more twists and turns the maze has, the more complicated it is. Similarly, the more different paths and decisions a program has to make, the more complicated it is.
+
+Cyclomatic complexity counts the number of different paths that a program can take, and the more paths there are, the higher the cyclomatic complexity is. It's like counting the number of doors and turns in a maze. If a program has a high cyclomatic complexity, it means that it has a lot of possible paths that it can take, and it might be harder to understand and test.
+
+So, just like you might try to simplify a maze by removing some of the dead ends or making the paths more direct, programmers try to simplify their programs by reducing the cyclomatic complexity. This makes the program easier to understand, test, and maintain.
+
+---
+In summary, polymorphism is a better and more elegant solution before using typecasting.
+
+Sometimes, the casting can be a hack code, which may or may not be a good thing. But we'll look at it anyway. 
+
+Again, we have a class `Dog` and `Dog` have `bark()` method. This time, the `bark()` method is a **`const` method**.
+```
+class Dog {
+public:
+    std::string m_name;
+    Dog() : m_name("Bob") {}
+    void bark() const {
+        std::cout << "My name is " << m_name << std::endl;
+    }
+}
+```
