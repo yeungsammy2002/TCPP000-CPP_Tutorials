@@ -32,13 +32,13 @@ You imagine that the compiler generated methods are empty methods that doing not
 Here are the things that the compiler generated methods will do:
 - The ***default constructor*** will **call *base class's default constructor* and the *data member's default constructor***.
 
-- The ***copy constructor*** will do a **member by member initialization**. It will use the members from **right hand side `Dog` object called `rhs`** to initialize every member of `this` object.
+- The ***copy constructor*** will do a **member by member initialization**. It will use the members from **right hand side `Dog` object `rhs`** to initialize every member of `this` object.
 
 - The ***copy assignment operator*** will do a **member by member copying**, and it will copy the members from **constant right hand side `Dog` object reference** called `rhs` to `this` `Dog` object.
 
 - The ***destructor*** is doing the opposite. It will **call the *base class's destructor* and the *data member's destructor***.
 
-Now you may want to ask a question. What if the compiler generated method is unable to do the job they are supposed to do? For example, the ***copy assignment operator*** will do a member by member copying, what if one of members is a `const` or a reference? Remember that `const` and reference they cannot be copied. They can only be initialized, then what does the compiler do? **The compiler will simply do not generator this copy assignment function.**
+Now you may want to ask a question. What if the compiler generated method is unable to do the job they are supposed to do? For example, the ***copy assignment operator*** will do a member by member copying, what if one of the members is a `const` or a *reference*? Remember that `const` and *reference* they cannot be copied. They can only be initialized, then what does the compiler do? **The compiler will simply do not generator this copy assignment function.**
 
 Similarly, for a `Dog`'s default constructor, what if the base class doesn't have a ***default constructor***. This `Dog() { ... }` method will not be generated.
 
