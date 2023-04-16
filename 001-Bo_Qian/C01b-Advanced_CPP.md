@@ -46,7 +46,7 @@ For destructor, every `class` have a ***destructor*** so it should be no problem
 
 So the compiler generated methods sometimes are really handy to use, but you need to keep these things if you are relying on the compiler to generate these methods for you.
 
-Note that all the compiler generated method are ***public*** and ***inline***. **They are generated only if they are needed**, that means if they are not used at all in the function with other functions, then they will not be generated, even if the compiler is capable of generating them.
+Note that all the compiler generated methods are ***public*** and ***inline***. **They are generated only if they are needed**, that means if they are not used at all in the function with other functions, then they will not be generated, even if the compiler is capable of generating them.
 
 
 ### How Does Compiler Generated Methods Works
