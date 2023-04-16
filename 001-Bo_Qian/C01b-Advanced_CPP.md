@@ -183,11 +183,11 @@ This gives me a way to use the compiler generated constructor even though I have
 
 
 # Section 05 - Disallowing Compiler Generated Methods
-Last time we've talked about the four methods that the compiler automatically generated for us if we don't create them ourselves. The ***copy constructor***, the ***copy assignement operator***, the ***destructor*** and the ***default constructor***. That is nice. It save us some effort and time to create them. However, the ***compiler generated methods*** are not always useful. And sometimes, they are even dangerous to use.
+Last time we've talked about the four methods that the compiler automatically generated for us if we don't create them ourselves. The ***default constructor***, the ***copy constructor***, the ***copy assignment operator*** and the ***destructor***. That is nice. It save us some effort and time to create them. However, the ***compiler generated methods*** are not always useful. And sometimes they are even dangerous to use.
 
 
 ### Disallowing Compiler Generated Default Constructor
-For example, we have a class `OpenFile`, which represent a file being opened. Since the compiler will automatically generated the default constructor for us, I can do `OpenFile f`. And this will call the ***compiler generated default constuctor***:
+For example, we have a class `OpenFile`, which represent a file being opened. Since the compiler will automatically generated the default constructor for us, I can do `OpenFile f`. And this will call the ***compiler generated default constructor***:
 ```
 class OpenFile {
 };
@@ -208,11 +208,16 @@ public:
         std::cout << "Open a file " << filename << std::endl;
     }
 };
+
+int main() {
+    OpenFile f;
+}
 ```
 If you run it, you'll see the compiler failed. That is because no match function for call to the default constructor (`no match function for call to 'OpenFile::OpenFile()'`). So the default constructor is not there anymore.
 
 Now in order to create our `OpenFile` object, I need to provide a parameter, let's call it `std::string("Bo_file")`. And then run it:
 ```
+...
 int main() {
     OpenFile f(std::string("Bo_file"));
 }
@@ -224,7 +229,9 @@ Open a file Bo_file
 
 
 ### Disallowing Compiler Generated Copy Constructor
-In the previous case, the compiler generated method is just useless, but it doesn't harm us anyway. But sometimes, the compiler generated method could be dangerous to use. For example, say now I have open `"Bo_file"` for writing with `f`. And then I create another `OpenFile` object called `f2`, which is copy constructed from `f`. This will call the ***compiler generated copy constructor*** for `f2`. And `f2` will also write to `"Bo_file"`:
+In the previous case, the compiler generated method is just useless, but it doesn't harm us anyway. But sometimes, the compiler generated method could be dangerous to use. 
+
+In this example, say now I have open `"Bo_file"` for writing with `f`. And then I create another `OpenFile` object called `f2`, which is copy constructed from `f`. This will call the ***compiler generated copy constructor*** for `f2`, and `f2` will also write to `"Bo_file"`:
 ```
 int main() {
     OpenFile f(std::string("Bo_file"));
@@ -232,7 +239,7 @@ int main() {
     OpenFile f2(f);
 }
 ```
-Now we have both `f` and `f2` writing to `"Bo_file"` at the same time. So the result will be pretty messy. So I want to disallow the ***copy constructor*** from being use, what can I do?
+Now we have both `f` and `f2` writing to `"Bo_file"` at the same time. So the result will be pretty messy. So I want to disallow the ***compiler generated copy constructor*** from being use, what can I do?
 
 If you are using ***C++11*** already, it is pretty easy. All you need to do is to make the ***copy constructor*** to be a ***deleted method*** by using `delete` keyword:
 ```
@@ -269,7 +276,7 @@ int main() {
     OpenFile f2(f);                     // Compiler error
 }
 ```
-If you run it, the compile failed because the ***copy constructor method*** is `private`.
+If you run it, the compile failed because the ***copy constructor*** is `private`.
 
 Some of you may be clever enough to say *"This is not enough, `OpenFile` member method can still use the copy constructor"*. Say it has a method called `g()` and `g()` create another open file `f2` from `f`:
 ```
@@ -278,13 +285,14 @@ public:
     OpenFile(std::string filename) {
         std::cout << "Open a file " << filename << std::endl;
     }
-    g(OpenFiles& f) {
+    OpenFile g(OpenFiles& f) {
         OpenFile f2(f);
     }
 private:
     OpenFile(const OpenFile& rhs);
 };
 ```
+
 This will work, right? If you run it, it will still failed, but now it failed with a message `error: ISO C++ forbids declaration of 'g' with no type`. Although method `g()` can access the ***copy constructor***, since we only have declared the ***copy constructor***, we have not define it. So method `g()` cannot find the body of the ***copy constructor***. So as a result, nobody can use the ***copy constructor*** anymore. And we can also use the same method to disable the ***copy assignment operator***:
 ```
 class OpenFile {
@@ -292,7 +300,7 @@ public:
     OpenFile(std::string filename) {
         std::cout << "Open a file " << filename << std::endl;
     }
-    g(OpenFile& f) {
+    OpenFile g(OpenFile& f) {
         OpenFile f2(f);
     }
 private:
@@ -310,13 +318,13 @@ public:
     OpenFile(std::string filename) {
         std::cout << "Open a file " << filename << std::endl;
     }
-    g(OpenFile& f) {
+    OpenFile g(OpenFile& f) {
         OpenFile f2(f);
     }
 private:
     OpenFile(const OpenFile& rhs);
     OpenFile& operator=(const OpenFile& rhs);
-    void writeLine(std::string str);
+    void writeLine(std::string str);            // here
 };
 ```
 
@@ -332,12 +340,15 @@ private:
 ```
 Is this a good idea? Apparently **NOT**. An object must be destructed one way or another, otherwise some resource is doomed to be leaked. So we have to give a body to the ***destructor***:
 ```
+...
+private:
     ~OpenFile() {
         std::cout << "`OpenFile` destructed." << std::endl;
     }
+    ...
 ```
 
-However, sometimes it does make sense to have a `private` destructor. Let's the following example. Suppose we only have a ***constructor*** and a ***destructor***:
+However, sometimes it does make sense to have a `private` destructor. Let's take a closer look at the ***private destructor***. Suppose we only have a ***constructor*** and a ***destructor***:
 ```
 class OpenFile {
 public:
