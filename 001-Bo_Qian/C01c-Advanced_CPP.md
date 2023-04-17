@@ -173,9 +173,9 @@ Dog born.
 Yellow dog born.
 I am just a dog
 ```
-So when I create a `YelloDog` object `d`, it first call the `Dog`'s constructor. And then prints out `"Dog born."`. Then it call `YellowDog`'s constructor and prints out `"Yellow dog born."`. And then it calls `d.seeCat()`, and `d.seeCat()` calls the `bark()` method. Under the `.bark()` method, which prints out `"I am just a dog"`, even though this is a `YellowDog` object.
+So when I create a `YellowDog` object `d`, it first call the `Dog`'s constructor. And then prints out `"Dog born."`. Then it call `YellowDog`'s constructor and prints out `"Yellow dog born."`. And then it calls `d.seeCat()`, and `d.seeCat()` calls the `bark()` method. Under the `.bark()` method, which prints out `"I am just a dog"`, even though this is a `YellowDog` object.
 
-To help the `YellowDog` to be honest, we have to make this `.bark()` method `virtual`. The version is of a method can be inherited. So the `YellowDog`'s `bark()` method automatically becomes a `virtual` method. But in practice, it is a good idea to always put a `virtual` in front of the method to make it explicit that this is a `virtual` method:
+To help the `YellowDog` to be honest, we have to make this `Dog`'s `bark()` method `virtual`. So the `YellowDog`'s `bark()` method automatically becomes a `virtual` method. But in practice, it is a good idea to always put a `virtual` keyword in front of the method to make it explicit that this is a `virtual` method:
 ```
 class Dog {
 public:
