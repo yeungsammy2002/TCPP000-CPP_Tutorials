@@ -580,7 +580,8 @@ public:
     using ring::tinkle;
 };
 ```
-If you want to do the same thing for the ***composition***, it's a lot some cumbersome. You have to create a new class derived from `Ring`, and then override the virutal method `tremble()`. And inside `Dog`, you can have a member of the derived `Ring` inside of the original `Ring`. Overall, the ***composition*** is still the preferred code structure, you should always 
+If you want to do the same thing for the ***composition***, it's a lot some cumbersome. You have to create a new class derived from `Ring`, and then override the virtual method `tremble()`. And inside `Dog`, you can have a member of the derived `Ring` inside of the original `Ring`.
 
-# 18 - 10:37
+Overall, the ***composition*** is still the preferred code structure, you should always use ***composition*** whenever you can, and use ***private inheritance*** when you have to.
+
 
