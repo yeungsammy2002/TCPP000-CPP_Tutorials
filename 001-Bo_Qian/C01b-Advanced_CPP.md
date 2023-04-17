@@ -413,7 +413,7 @@ So the conclusion is class like `OpenFile`, which has a ***private destructor***
 
 
 # Section 06 - Virtual Destructor and Smart Destructor
-We'll talk about using ***vitual destructor*** in ***polymorphic base classes***. 
+We'll talk about using ***virtual destructor*** in ***polymorphic base classes***. 
 
 Let's look at our example. We have a class `Dog`, and `Dog` destructor prints out `"Dog destroyed"`. `YellowDog` derived from `Dog` and `YellowDog` destructor prints out `"Yellow dog destroyed."`. And in the class `DogFactory`, we are using a factory design pattern. We use the `DogFactory` class to be a centralized place of creating `Dog` objects. And we have a `static` method to create `YellowDog` and then return it as a `Dog` pointer. And it is also has other methods to create other types of `Dog` objects. In the `main()` function, I assign the return value of `DogFactory::createYellowDog()` to a `Dog` pointer `pd`. And after I have done something with `pd`. Eventually, I delete `pd`:
 ```
@@ -435,8 +435,8 @@ class DogFactory {
 public:
     static Dog* createYellowDog() {
         return (new YellowDog());
-        //... create other dogs
     }
+    //... create other dogs
 };
 
 int main() {
@@ -492,8 +492,8 @@ class DogFactory {
 public:
     static shared_ptr<Dog> createYellowDog() {
         return shared_ptr<YellowDog>(new YellowDog());
-        //... create other dogs
     }
+    //... create other dogs
 };
 
 int main() {

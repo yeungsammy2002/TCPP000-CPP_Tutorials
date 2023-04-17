@@ -383,5 +383,84 @@ https://boqian.weebly.com/
 
 
 
-# Section 18 - Inheritance - Public, Protected, and Private
+# Section 18 - Inheritance - Public, Private and Protected
+We are going to talk about the three type of ***inheritance*** - `public`, `private` and `protected` inheritance, what are they, how should you use them in your code.
 
+In this example, I have a base class `B`, and I have a **class `D_pub`**, which is a ***public child*** of `B`. `D_priv`, which is a ***private child*** of `B`. `D_prot`, which is a ***protected child*** of `B`:
+```
+class B {
+};
+class D_pub : public B {};
+class D_priv : private B {};
+class D_prot : protected B {};
+```
+
+The three keywords - `public`, `private` and `protected`, specified three different levels of **access control from the *derived class* to the *base class***. The access control rules can be summarize into four rules:
+1. None of the ***derived class*** can access anything that is `private` in` B`. This should be easy to understand, because `B`'s ***private members*** are `B`'s privacy. And then no matter what kind of child you are of `B`, you cannot intrude `B`'s privacy.
+   
+2. **`class D_pub : public B {};`** - `D_pub` inherits ***public members*** of `B` as `public` and the ***protected members*** of `B` as `protected`. I asumme you have used ***public inheritance*** a lot of time in your code already, so this one should not be surprised to you either. Both `B`'s public and protected members will become **`D_pub`'s *public* and *protected members***.
+   
+3. **`class D_priv : private B {};`** - `D_priv` inherits the ***public members*** and ***protected members*** of `B` as `private`. In other words, both **`B`'s *public*** and ***protected* members** become **`D_priv`'s *private members***.
+   
+4. **`class D_prot : protected B {};`** - `D_prot` inherits the ***public members*** and ***protected member*** of `B` as `protected`. In other words, both **`B`'s *public*** and ***protected* members** become **`D_prot`'s *protected members***.
+
+
+### Inheritance from Casting's Point of View
+Now let's look at the three kinds of inheritance from ***casting*'s point of view**. There are three rules:
+1. Anyone can cast a **`D_pub` pointer - `D_pub*`** to a **`B` pointer - `B*`**. Because `D_pub` inherited all the public interface of `B` as public interface. In other words, `D_pub` can do anything that `B` can do. `D_pub` is considered a special kind of `B`.
+   
+2. `D_priv`'s members and `friend`s can cast a **`D_priv` pointer - `D_priv*`** to **`B` pointer - `B*`**.
+   
+3. `D_prot`'s members, `friend`s, and children can cast a **`D_prot` pointer - `D_prot*`** to **`B` pointer - `B*`**.
+
+Now it should be clear to you that only ***public inheritance*** indicate an ***"is-a" relationship*** between the ***parent*** and ***child***. Neither of the ***private inheritance*** nor the ***protected inheritance*** indicate an ***"is-a" relationship***.
+
+
+## Detailed Examples
+Now let's look at the live example. Our class `B` has three methods, a `public` method `f_pub()`, a `protected` method `f_prot()`, and a `private` method `f_priv()`. In side the class `D_pub`, there is a `public` method `f()`:
+```
+class B {
+public:
+    void f_pub() {
+        std::cout << "f_pub is called.\n";
+    }
+protected:
+    void f_prot() {
+        std::cout << "f_prot is called\n";
+    }
+private:
+    void f_priv() {
+        std::cout << "f_priv is called.\n";
+    }
+};
+
+class D_pub : public B {
+public:
+    void f() {
+        f_pub();        // OK. D_pub's public method
+        f_prot();       // OK. D_pub's protected method
+        f_priv();       // Error. B's private method
+    }
+};
+```
+`f()` invoking `f_pub()` method is okay, because `f_pub()` has become `D_pub`'s ***public method***. And similarly, invoking `f_prot()` method is also okay, because `f_prot()` method is now a `D_pub`'s ***protected method***. However, invoking `f_priv()` is not allowed.
+
+
+Now let's look at `D_prot`, the protected child of `B`. `D_prot`'s `f()` method can invoke `f_pub()` also. But the reason is `f_pub()` has become `D_prot`'s protected method as compared to public method in `D_pub`. `f_prot()` has also become `D_prot`'s ***protected method***:
+```
+class D_prot : protected B {
+public:
+    void f() {
+        f_pub();        // OK. D_prot's protected method
+        f_prot();       // OK. D_ptrot's protect method
+        f_priv();       // Error. B's private method
+    }
+};
+```
+
+
+```
+class D_priv : private B {
+
+};
+```
