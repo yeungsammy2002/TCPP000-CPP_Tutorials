@@ -416,6 +416,7 @@ Now let's look at the three kinds of inheritance from ***casting*'s point of vie
 Now it should be clear to you that only ***public inheritance*** indicate an ***"is-a" relationship*** between the ***parent*** and ***child***. Neither of the ***private inheritance*** nor the ***protected inheritance*** indicate an ***"is-a" relationship***.
 
 
+
 ## Detailed Examples
 Now let's look at the live example. Our class `B` has three methods, a `public` method `f_pub()`, a `protected` method `f_prot()`, and a `private` method `f_priv()`. In side the class `D_pub`, there is a `public` method `f()`:
 ```
@@ -445,8 +446,7 @@ public:
 ```
 `f()` invoking `f_pub()` method is okay, because `f_pub()` has become `D_pub`'s ***public method***. And similarly, invoking `f_prot()` method is also okay, because `f_prot()` method is now a `D_pub`'s ***protected method***. However, invoking `f_priv()` is not allowed.
 
-
-Now let's look at `D_prot`, the protected child of `B`. `D_prot`'s `f()` method can invoke `f_pub()` also. But the reason is `f_pub()` has become `D_prot`'s protected method as compared to public method in `D_pub`. `f_prot()` has also become `D_prot`'s ***protected method***:
+Now let's look at `D_prot`, the protected child of `B`. `D_prot`'s `f()` method can invoke `f_pub()` also. But the reason is `f_pub()` has become `D_prot`'s protected method as compared to public method in `D_pub`. `f_prot()` has also become `D_prot`'s ***protected method***. Finally, it cannot access `f_priv()`:
 ```
 class D_prot : protected B {
 public:
@@ -458,9 +458,129 @@ public:
 };
 ```
 
-
+`D_priv` class is the private child of `B`. `D_priv` can access `f_pub()` and `f_prot()` because they have become private methods of `D_priv` as compared for protected methods of `D_prot`. And the `D_priv` also cannot access `B`'s private method `f_priv()`:
 ```
 class D_priv : private B {
-
+public:
+    void f() {
+        f_pub();        // OK. D_priv private method
+        f_prot();       // OK. D_priv private method
+        f_priv();       // Error. B's private method
+    }
 };
 ```
+
+Now in the `main()` function, I create the `D_pub` object `D1`, and invoke `.f_pub()` from `D1`, which is okay because `.f_pub()` is `D_pub`'s public method. I create `D2` and invoke `.f_pub()` from `D2`, which is error because `.f_pub()` is `D_prot`'s protected method, not public method:
+```
+...
+int main() {
+    D_pub D1;       // OK. f_pub() is D_pub's public method.
+    D1.f_pub();
+    D_prot D2;
+    D2.f_pub();     // Error. f_pub() is D_prot's protected method.
+    ...
+}
+```
+If I really want to invoke `f_pub()` method from `D2`, what I need to do is inside the `D_prot` definition, I add `using B::f_pub;` \*here. This declaration will bring the `f_pub()` method into the scope of `D_prot`.
+```
+class D_prot : protected B {
+public:
+using B::f_pub;         // *here
+    void f() {
+        f_pub();        // OK. D_prot's protected method
+        f_prot();       // OK. D_ptrot's protect method
+        f_priv();       // Error. B's private method
+    }
+};
+...
+```
+And then this error will go away. Finally, I can cast **`D1` pointer address `&D1`** into **`B` pointer `pB`**, but I cannot cast **`D2`'s address** into **`B`'s pointer**:
+```
+...
+int main() {
+    D_pub D1;
+    D1.f_pub();
+    D_prot D2;
+    D2.f_pub();     // OK, error will go away
+
+    B* pB = &D1;    // OK
+    pB = &D2;       // Error
+}
+```
+
+### Private Inheritance
+As we've talked the public inheritance indicates ***"is-a" relationship*** between the child and the parent. For example, `D_pub` ***is-a*** kind of a `B`. And what does the ***private inheritance*** mean? Surprisingly, ***private inheritance*** indicates relationship that similar to ***composition***, in other words, the ***"has-a" relationship***.
+
+Let's look at our example. We have a class `Ring`, which has a public method `tinkle()`. And for the composition, our class `Dog` has a `Ring` type member attribute called `m_ring`. When a `Dog` tinkles, it invokes the `Ring`'s `tinkle()` method. This is commonly known as ***call forwarding***:
+```
+class Ring {
+public:
+    void tinkle() { ... }
+};
+
+/* Composition */
+class Dog {
+    Ring m_ring;
+public:
+    void tinkle() {
+        m_ring.tinkle();            // call forwarding
+    }
+};
+```
+This demostrates a ***composition code structure***. 
+
+However, you can do the same with ***private inheritance***. Now the `Dog` is privately derived from `Ring`. And the `Dog` can bring the `Ring`'s `tinkle()` interface into the `Dog`'s interface with **\*this** statement:
+```
+class Ring {
+public:
+    void tinkle() { ... }
+};
+
+/* Private Inheritance */
+class Dog : private Ring {
+public:
+    using Ring::tinkle;             // *this
+};
+```
+
+***Composition*** and ***private inheritance*** are similar, in terms that both `Dog` classes can access `Ring`'s public interface. And if `Dog`s client want to access those interface, the `Dog`s have to bring those interface into `Dog` itself's public interface with either ***call forwarding*** or with **`using` declaration**. However, they are not totally same. The private inheritance `Dog` can access `Ring`'s protected members, but the composition `Dog` cannot.
+
+In general, the ***composition*** code structure is prefer over the ***private inheritance***. Because, number one, the ***composition*** is consider a better object-oriented code structure, since `Dog` can only access `Ring`'s public interface. `Dog`'s `m_ring` is more decouple. And secondly, the ***composition*** is more flexible. 
+
+For example, suppose the `Dog` has another `Ring` type member attribute called `m_ring2`. With ***composition***, it's easy to do that. But with ***private inheritance***, it's impossible:
+```
+...
+/* Composition */
+class Dog {
+    Ring m_ring;
+    Ring m_ring2;                   // here
+public:
+    void tinkle() {
+        m_ring.tinkle();
+    }
+};
+```
+Another example is, suppose the `Dog` is tied of the same `Ring`. And during the runtime, once switched a different `Ring`, and again, it's easy to for ***composition*** and it's impossbile for ***private inheritance***.
+
+There are few rare case where the ***private inheritance*** is actually preferred over the ***composition***. For example, suppose the `Ring` has a virtual method `tremble()`. And inside `tinkle()`, the virtual method `trembled()` is called. And in the `Dog`, we want to override that `tremble()` method, so we can easily define a virtual method `tremble()` for `Dog`. And we can reuse the `tinkle()` method from the `Ring`:
+```
+class Ring {
+    virtual tremble();
+public:
+    void tinkle() {
+        ...;
+        tremble();
+    }
+};
+
+/* Private Inheritance */
+class Dog : private Ring {
+    virtual temble();
+public:
+    using ring::tinkle;
+};
+```
+If you want to do the same thing for the ***composition***, it's a lot some cumbersome. You have to create a new class derived from `Ring`, and then override the virutal method `tremble()`. And inside `Dog`, you can have a member of the derived `Ring` inside of the original `Ring`. Overall, the ***composition*** is still the preferred code structure, you should always 
+
+# 18 - 10:37
+
