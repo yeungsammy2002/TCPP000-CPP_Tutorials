@@ -73,7 +73,7 @@ int main() {
 ```
 Let's see what happens when an exception is thrown out of a destructor. If we run this program, it will crash.
 
-When the execution reach the end of `try`-block, the stack will unwind and all the local variables needs to be destroyed. So `"Bob"` will be destroyed first. When `"Bob"`'s destructor execute, it throw exception of `20`. As we have learned previous experiment, it throw the exception `20` is caught by the `catch`-block. `"Henry"` also need to be destroyed, and `"Henry"` destructor also execute and also throw an exception. So as a result, will have two exceptions pending and at the same time, one from `"Bob"`, another one from `"Henry"`. C++ doesn't like having more the one exception pending at the same time, so it will just crash. This is why we should not throw an exception out of a destructor.
+When the execution reach the end of `try`-block, the stack will unwind and all the local variables needs to be destroyed. So `"Bob"` will be destroyed first. When `"Bob"`'s destructor execute, it throw exception of `20`. As we have learned previous experiment, it throw the exception `20` is caught by the `catch`-block. `"Henry"` also need to be destroyed, and `"Henry"` destructor also execute and also throw an exception. So as a result, will have two exceptions pending and at the same time, one from `"Bob"`, another one from `"Henry"`. C++ doesn't like having more than one exception pending at the same time, so it will just crash. This is why we should not throw an exception out of a destructor.
 
 
 ### Solution 1 - Destructor Swallow the Exception
@@ -95,7 +95,7 @@ The downside of this solution is since the exception is swallow by the destructo
 
 
 ### Solution 2 - Move the Exception-Prone Code to a Different Function
-This leads us to our second solution, which is move the exception prone code to a different function, not in the ***destructor***. So the destructor will contain code that is either exception free or having very little chance of of throwing exception. For example, in our `Dog` example, I'll remove the exception thrown code in the destructor. And add another method called `prepareToDestr()`. And in this method, I'll do a bunch of different things and it may thrown exceptions. Now the destructor is exception free. And in the `main()` function, before `dog1` and `dog2` get destroyed, they need to call the `.prepareToDestr()` method:
+This leads us to our second solution, which is move the exception prone code to a different function, not in the ***destructor***. So the destructor will contain code that is either exception free or having very little chance of throwing exception. For example, in our `Dog` example, I'll remove the exception thrown code in the destructor. And add another method called `prepareToDestr()`. And in this method, I'll do a bunch of different things and it may thrown exceptions. Now the destructor is exception free. And in the `main()` function, before `dog1` and `dog2` get destroyed, they need to call the `.prepareToDestr()` method:
 ```
 class Dog {
 public:
@@ -134,8 +134,8 @@ Which solution should we use? ***Solution 1 - destructor swallow the exception**
 
 
 
-# Section 8 - Virtual Function in Constructor or Destructor
-I'm going to show you a **pitfall** in calling ***virtual function*** in ***constructor*** or ***destructor***.
+# Section 8 - Virtual Method in Constructor or Destructor
+I'm going to show you a **pitfall** in calling ***virtual method*** in ***constructor*** or ***destructor***.
 
 Let's look at our example. We have a class `Dog`. And `Dog`'s constructor prints out `"Dog born."`. And `Dog`'s `bark()` method prints out `"I am just a dog"`. A `Dog` also has a `seeCat()` method, when a `Dog` see a cat, it barks. `YellowDog` is derived from a `Dog`. And the `YellowDog`'s constructor prints out `"Yellow dog born."`, and the `YellowDog`'s `bark()` prints out `"I am a yellow dog"`. In the `main()` function, I create a `YellowDog` object called `d`, and then call `d.seeCat()`:
 ```
@@ -175,7 +175,7 @@ I am just a dog
 ```
 So when I create a `YelloDog` object `d`, it first call the `Dog`'s constructor. And then prints out `"Dog born."`. Then it call `YellowDog`'s constructor and prints out `"Yellow dog born."`. And then it calls `d.seeCat()`, and `d.seeCat()` calls the `bark()` method. Under the `.bark()` method, which prints out `"I am just a dog"`, even though this is a `YellowDog` object.
 
-To help the `Dog` to be honest, we have to make this `.bark()` method `virtual`. The version of a method can be inherited, so the `YellowDog`'s `bark()` method automatically becomes a `virtual` method, but in practice, it is a good idea to always put a `virtual` in front of the method to make it explicit that this is a `virtual` method:
+To help the `YellowDog` to be honest, we have to make this `.bark()` method `virtual`. The version is of a method can be inherited. So the `YellowDog`'s `bark()` method automatically becomes a `virtual` method. But in practice, it is a good idea to always put a `virtual` in front of the method to make it explicit that this is a `virtual` method:
 ```
 class Dog {
 public:
@@ -194,9 +194,9 @@ class YellowDog {
 public:
     YellowDog() {
         std::cout << "Yellow dog born." << std::endl;
-        virtual void bark() {
-            std::cout << "I am a yellow dog" << std::endl;
-        }
+    }
+    virtual void bark() {
+        std::cout << "I am a yellow dog" << std::endl;
     }
 };
 ```
@@ -208,6 +208,9 @@ I am a yellow dog
 ```
 So when the `.seeCat()` method invoke the `bark()` method, it realize that `this` object is a `YellowDog`, so it invoke the `YellowDog`'s method. This is the power of dynamic binding. As long as the `d` is a `YellowDog` object, it will always call a `YellowDog`'s virtual method.
 
+
+
+### Dynamic Binding May Not Work as Expected
 However, there are some scenarios where this idea of dynamic binding is not working. Let's say the `bark()` method is invoked inside the `Dog`'s constructor to see what happen:
 ```
 class Dog {
@@ -228,11 +231,11 @@ class YellowDog : public Dog {
 public:
     YellowDog() {
         std::cout << "Yellow dog born." << std::endl;
-        virtual void bark() {
-            std::cout << "I am a yellow dog" << std::endl;
-        }
     }
-}
+    virtual void bark() {
+        std::cout << "I am a yellow dog" << std::endl;
+    }
+};
 
 int main() {
     YellowDog d;
