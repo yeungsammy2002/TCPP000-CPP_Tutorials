@@ -190,7 +190,7 @@ public:
     }
 };
 
-class YellowDog {
+class YellowDog : public Dog {
 public:
     YellowDog() {
         std::cout << "Yellow dog born." << std::endl;
