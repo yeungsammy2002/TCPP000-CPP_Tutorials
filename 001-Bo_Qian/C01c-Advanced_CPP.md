@@ -206,7 +206,7 @@ Dog born.
 Yellow dog born.
 I am a yellow dog
 ```
-So when the `.seeCat()` method invoke the `bark()` method, it realize that `this` object is a `YellowDog`, so it invoke the `YellowDog`'s method. This is the power of dynamic binding. As long as the `d` is a `YellowDog` object, it will always call a `YellowDog`'s virtual method.
+So when the `.seeCat()` method invoke the `bark()` method, it realize that `this` object is a `YellowDog`, so it invoke the `YellowDog`'s method. This is the power of ***dynamic binding***. As long as the `d` is a `YellowDog` object, it will always call a `YellowDog`'s virtual method.
 
 
 
@@ -249,7 +249,7 @@ I am just a dog
 Yellow dog born.
 I am a yellow dog
 ```
-This `bark()` method prints out `I am just a dog`. Even though the `bark()` method is a virtual method, and we know that the object being created is a `YellowDog`, it is still calling `Dog`'s `bark()` method.
+This `bark()` method prints out `I am just a dog`, even though the `bark()` method is a virtual method. And we know that the object being created is a `YellowDog`, it is still calling `Dog`'s `bark()` method.
 
 When `YellowDog` object `d` is created, before it calling the `YellowDog`'s constructor. It first call the `Dog`'s constructor. So at this point, the constructor of the `YellowDog` is not executed yet. In other words, the `YellowDog` is not constructed yet. We all know it is dangerous to call the member method of an object that is not constructed yet unless that method is a `static` method. So the compiler is doing the second best thing, which is calling the `Dog`'s own `bark()` method. So this `bark()` method behaves like a ***non virtual method*** when it is invoked inside a constructor.
 
@@ -273,7 +273,21 @@ public:
         bark();                                         // here
     }
 };
-...
+
+class YellowDog : public Dog {
+public:
+    YellowDog() {
+        std::cout << "Yellow dog born." << std::endl;
+    }
+    virtual void bark() {
+        std::cout << "I am a yellow dog" << std::endl;
+    }
+};
+
+int main() {
+    YellowDog d;
+    d.seeCat();
+}
 ```
 As you can see on the console, when the destructor of the `Dog` calling the `bark()` method, it also call the `Dog`'s `bark()` method (the last `I am just a dog`), because when the `d` gets destroyed, it first called the destructor of the `YellowDog`, and then call the destructor of the `Dog`. So at this point the `YellowDog` is already destroyed. And it is not a good idea to call the member method of something is already destroyed:
 ```
