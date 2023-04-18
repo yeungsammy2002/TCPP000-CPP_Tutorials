@@ -402,11 +402,11 @@ Before going to the solution, let's take a look of what are the things that we w
    
 3. The "generic" algorthim is customized by the derived class. In this example, that is done with the `process_node()` method.
 
-Having these three things in mind. Let's look at our solution. The first thing you might notice is the base class `Generic_Parser` now has become a template class of type `T`. `parse_preorder()` method is the :
+Having these three things in mind. Let's look at our solution. The first thing you might notice is the base class `Generic_Parser` now has become a template class of type `T`. `parse_preorder()` method is the same as before. However, the `process_node()` method is changed. Instead of doing nothing like before, it will statically casted `this` object into the type of `T`. And it invoke the `process_node()` method of the type `T`. Now here is the tricky part, the `EmployeeChart_Parser` class is publicly derived from `Generic_Parser`, and then the `Generic_Parser` is a template class with a template type of `EmployeeChart_Parser`. The rest of the code is the same, the `process_node()` will do some customize thing for the ***employee chart***. In the `main()` function is also the same, it will create an `EmployeeChart_Parser` object and invoke the `parse_preorder()` method for the ***employee chart***. The `.parse_preorder()` method is the method of the `Generic_Parser` **\*overhere**. It will invoke the `process_node()` method. Please note that the `.process_node()` method is no longer a virtual method. So the `Generic_Parser` will call itself a `.process_node()` method, not the `EmployeeChart_Parser`'s `process_node()` method. However, the `Generic_Parser`'s `process_node()` method will case `this` object into type of `T` and invoke `T`'s `process_node()` method. In this example, the type `T` is actually `EmployeeChart_Parser`. So eventually, it is `EmployeeChart_Parser`'s `process_node()` method that got invoked. Thus the polymorphism is achieved:
 ```
 template<typename T> class Generic_Parser {
 public:
-    void parse_preorder(TreeNode* node) {
+    void parse_preorder(TreeNode* node) {           // *overhere
         if(node) {
             process_node(node);
             parse_preorder(node->left);
@@ -424,6 +424,46 @@ public:
         std::cout << "Customized process_node() for EmployeeChart.\n";
     }
 };
-```
 
-# 21 - 4:10
+int main() {
+    ...
+    EmployeeChart_Parser ep;
+    ep.parse_preorder(root);
+    ...
+}
+```
+Now let's review the three elements that we want to simulate:
+1. The ***"is-a" relationship*** between the ***base class*** and the ***derived class***. That is still true.
+   
+2. ***Base class*** defines a ***"generic" algorithm*** that is used by ***derived class***, which is also true.
+   
+3. The ***"generic" algorithm*** is customized by the ***derived class***. And here is done by the `process_node()`, it's also true.
+
+So we're getting all the benefits of polymorphism, but we're not paying any price for it. Another thing to note is from our kind point of view, they can use our class as if it is a true polymorphism. They don't even care whether it is real or simulated polymorphism. This is called ***curiously recurring template pattern* - *CRTP***, is also called ***static polymorphism***, or ***simulated polymorphism***. It is very popular in the library code, because in the most of the application code, you don't really care about the cost of the ***virtual table*** and the ***dynamic binding*** unless your profile tell you that is important. But in the library code, often time you want to squeeze every bit of performance out of your code.
+
+So we are getting all the benefits of polymorphism, but we are not paying price for it. It's like a free launch, right? No, nothing is free in this world. Everything comes in with the price. So what is the price we are paying here?
+
+Suppose I create another parser, which is called `MilitaryChart_Parser`, and the `MilitaryChart_Parser` will be derived from the `Generic_Parser` of the template type of `MilitaryChart_Parser`. Note that the `Generic_Parser` of `EmployeeChart_Parser` and the `Generic_Parser` of `MilitaryChart_Parser` are two different classes. They are distinguished classes that occupies their own space in the program image. Now you realized that the launch is not free. This is a typical trade off between a program image size and a program performance. Whether the trade off is worth it, it totally depends on your application:
+```
+int main() {
+    ...
+    MilitaryChart_Parser ep;
+    ...
+}
+```
+Another thing is want to point out is this is also a small demo of ***Template Metaprogramming* - *TMP***. The idea of ***template metaprogramming*** is it moves part of computation, which typical happens during ***runtime*** up front to the ***compile time***. Therefore, improve the efficiency of your program. And that is exactly what our ***static polymorphism*** does, although ***static polymorphism*** only improve the efficiency a little bit. Sometimes, by using the ***TMP technique***, you can make much bigger improvements to your program.
+
+The last thing that I want to point out is when some people talk about ***static polymorphism***, they are actually referring to the template itself. In this example, I have a template function `Max()`, which go through every element of the vector `v` and find the largest one and return it:
+```
+template<typename T>
+T Max(std::vector<T> v) {
+    T max = v[0];
+    for(typname std::vector<T>::iterator it = v.begin(); it != v.end(); ++it) {
+        it(*it > max)
+            ret = *it;
+    }
+    return max;
+}
+```
+When function `Max()` is materialized with any different type of `T`, or the operators, such as larger than `>`, the copy assignment `=`, will be invoked with different version of ***operator larger than* - `operator>`** and ***copy assignment* - `operator=(const T&)`**. And because that happens in the compiler time, they called it ***static polymorphism***. This nothing wrong with it. It's just a different definition. I just want to clear up with the concepts, so next time you hear other people talking about ***static polymorphism***, you know which one they are talking about.
+
