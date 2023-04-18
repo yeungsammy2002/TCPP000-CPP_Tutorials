@@ -142,3 +142,165 @@ In summary, to maintain the ***"is-a" relationship*** between the base class and
 3. Don't override default parameter values for virtual functions.
    
 4. Force inheritance of shadowed functions.
+
+
+
+
+# Section 20 - Understanding *l-value* & *r-value*
+We're going to talk about ***l-value*** and ***r-value***.
+
+***l-value*** and ***r-value*** are not something that learn into very often. Some people have programmed C++ for years, and they still don't have good understanding of what the ***l-value*** and the ***r-value*** are.
+
+So the question to ask is, why do I care? ***l-value*** and ***r-value*** are actually very important concept in C++ core language. Having a good knowledge of them will help you understand C++ construct, and to explain some simliar strang behavior of C++. It also can help you to decipher compiler errors and warnings, because these two terms appears quite often in the compiler messages.
+
+A second reason that you should care about them is ***C++11*** introduce the new feature called ***r-value reference***. If you don't have a good grasp of ***r-value*** and ***l-value***, it will be impossible for you to learn ***r-value reference***.
+
+
+### Definition of *l-value* & *r-value*
+What are the ***l-value*** and ***r-value***? It is hard to give a rigorous definition of what they are. Instead, here I am give you a simplified definition, which is generally accepted and it should serve you well in the 99% of the time.
+
+- ***l-value*** is an object that occupies some identifiable location in memory. So the keyword here is something in ***memory***, not something in the ***register***. Secondly it has an ***identifiable address***.
+  
+- ***r-value*** is defined by exclusion, any object that is not a ***l-value***, is a ***r-value***.
+
+
+### *l-value* Examples
+Now let's look at some ***l-value* examples**.
+
+I have an integer `i`, `i` is a ***l-value***. Why it is a ***l-value***? Because I can get its address with **ampersand sign `&`**, and assign that address to an ***integer pointer* `p`**. So not only it has an address, it has an address that is **identifiable**. And the content of that address can be modified by assigning `i` to a different value:
+```
+int i;              // i is a l-value
+int* p = &i;        // i's address is identifiable
+i = 2;              // memory content is modified
+```
+
+Second example is I have a class `Dog` and then I create a `Dog` object `d1`, and `d1` is a ***l-value*** of a ***user-defined type* - `class`**:
+```
+class Dog;
+Dog d1;             // l-value of user defined type (class)
+```
+It is fair to say that most of the variables in C++ code are ***l-values***.
+
+
+### *r-value* Examples
+Now let's look at some ***r-value* examples**.
+
+I have an integer `x` and initialize it with `2`. As we said, `x` is a ***l-value***. And `2` is a ***r-value***:
+```
+int x = 2;              // 2 is an r-value
+```
+
+In this case, `x` is initialized with `i + 2`. `i + 2` is an ***r-value***:
+```
+int x = i + 2;          // (i + 2) is an r-value
+```
+
+Why they are ***r-value***? Because if I try to get their address like this, the compiler will error out:
+```
+int* p = &(i + 2);      // Error
+```
+
+And I also cannot assign a different value to them like this. So they are ***r-values***:
+```
+i + 2 = 4;              // Error
+2 = i;                  // Error
+```
+
+In this example, I have a `Dog` object `d1`, and the reture value of `Dog()` is assigned to `d1`. `Dog()` is a ***r-value*** of ***user-defined type* - `class`**.
+```
+Dog d1;
+d1 = Dog();             // Dog() is r-value of user defined type (class)
+```
+
+Now let's look at a function, I have a function `sum()`, which takes an integer `x` and an integer `y`. And then return the sum of `x` and `y`. And then I have a variable `i` and initialize it with the return value of `sum(3, 4)`. `sum(3, 4)` is the ***r-value***:
+```
+int sum(int x, int y) {
+    return x + y;
+}
+int i = sum(3, 4);      // sum(3, 4) is r-value
+```
+
+To conclude, here are the ***l-values*** in the above examples:
+```
+l-values: x, i, d1, p
+```
+
+And here are the r-value in the above examples:
+```
+r-values: 2, i + 2, Dog(), sum(3, 4), x + y
+```
+
+Let's look at the reference. I assume you are ready familiar with ***reference*** in C++.
+
+Here I have created an integer `i`, and I initialize an integer reference `r` with `i`. This reference should actually be called ***l-value reference***, because `r` is a reference to our ***l-value* `i`**:
+```
+int i;
+int& r = i;
+```
+
+If I initialize the **reference `r`** with a ***r-value* `5`**, then the compiler will error out:
+```
+int& r = 5;     // Error
+```
+
+The only exception of this is if `r` is a `const` reference, then it can be assigned with `5`. Although you really should consider this is a shortcut of a ***two-step operations***. ***Step 1***, a **temporary *l-value*** is created with `5`. ***Step 2***, the reference `r` is initialized with this ***temporary l-value***:
+```
+const int& r = 5;
+```
+
+Now let's look at the same idea with the function. I have a function `square()`, which takes a ***l-value reference* `x`**, and it returns **`x`<sup>2</sup>**:
+```
+int square(int& x) {
+    return x * x;
+}
+```
+
+When I invoke the function `square(i)`, `i` is an ***integer***, and it is okay.
+```
+square(i);                      // OK
+```
+
+If I invoke the function `square(40)`, then it is an error because `40` is not a ***l-value***, it's a ***r-value***:
+```
+square(40);                     // Error
+```
+
+How to make `square(40)` work? The workaround is I can change the parameter of the `square()` function into a **`const` integer reference**. And we have seen in the previous example, a **`const` integer reference** can be initialized with a ***r-value***. So the `square(40)` will work, and `square(i)` will still work:
+```
+int square(const int& x) {
+    return x * x;               // square(40) and square(i) work
+}
+
+square(40);                     // OK
+square(i);                      // OK
+```
+
+What confuse the most of the people in the transforming between the ***l-value*** and ***r-value***? An ***l-value*** can be used to create an ***r-value***. In this example, I have a **l-value `i`** and I can create a **r-value** with `i + 2`:
+```
+int i = 1;
+int x = i + 2;
+```
+
+
+### Implicitly Transform *l-value* to *r-value*
+In the second example, integer `x` is initialized with `i`. Now, what is `i`? Is it ***r-value***, or ***l-value***? `i` is obviously a ***l-value***, because it has an address and the `i`'s address is identifiable. However, in the second statement, **`i` is implicitly transformed to a *r-value***:
+```
+int i = 1;
+int x = i;
+```
+So a ***l-value*** can be implicitly transformed into a ***r-value***. However, the other way around is not valid, and ***r-value*** cannot be implicitly transformed into a ***l-value***. And ***r-value*** should be explicitly used to create our ***l-value***. r-value should be explicitly used to create a ***l-value***.
+
+
+### Dereferenced *r-value* Can Be Used as *l-value*
+Here is an example of using ***r-value*** to create ***l-value***. I have an integer array `v`, and `v + 2` is our ***r-value***. However, the dereference of `v + 2` is a `l-value`, which can be assigned with a different value:
+```
+int v[3];
+*(v + 2) = 4;
+```
+
+
+### Misconception about *l-values* and *r-values*
+Instead of continue to talk about what the ***r-values*** and ***l-values*** are. Let's talk about what they are not. There are some misconception that needs to be cleared up.
+
+- #### Misconception 1 - Function or Operator Always Yields *r-values*
+
