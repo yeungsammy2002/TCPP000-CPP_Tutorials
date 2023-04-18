@@ -471,4 +471,72 @@ When function `Max()` is materialized with any different type of `T`, or the ope
 
 
 # Section 22 - Multiple Inheritance - Devil or Angel
+We're going to talk about ***multiple inheritance***. ***Multiple inheritance*** is where **a class is directly derived from more than one *base classes***. Poeple have different opinions with the ***multiple inheritance***. Some people says if ***single inheritance*** is good, then ***multiple inheritance*** must be better. And some people says ***multiple inheritance*** brings too much trouble and subtlety. And its benefits are not worth by the trouble it has made. So I'm going to show you all the benefits and the subtlety with ***multiple inheritance***. In the end, I'll layout my position on this and you decide for your own position.
+
+Let's look at an example. We a class `InputFile`, which opens a file to read. So it has a public `read()` method. We have an `OutputFile` class, it open the file to write, and of course, it has a `write()` method. And later on, it turns out I need to open a file for both reading and writing. It makes sense that we create another class called `IOFile`, which inherit both `InputFile` and `OutputFile`. And as a result, `IOFile` can do both ***reading*** and ***writing***. So far so good, multiple inheritance has served its purpose. Now in order to read a file, we must open the file first. So the `InputFile` needs another method called `open()`. And for the same reason, the `OutputFile` also need a method `open()`. In the `main()` function, I create an `IOFile` object `f`, and I call `f.open()`:
+```
+class InputFile {
+public:
+    void read();
+    void open();
+};
+
+class OutputFile {
+public:
+    void write();
+    void open();
+};
+
+class IOFile : public InputFile, public OutputFile {
+};
+
+int main() {
+    IOFile f;
+    f.open();
+}
+```
+This code will not compile, because `IOFile` has two instances of the `open()` method. One `open()` is inherited from `InputFile`, and another `open()` is inherited from `OutputFile`. So the compiler will issue an error saying *"I don't know which open() you want to call."*. What's even worse is if the `InputFile` has a private `open()` method:
+```
+class InputFile {
+public:
+    void read();
+private:
+    void open();
+};
+...
+```
+Now the `IOFile` has access to only one method of `open()`. So you may think the `f.open()` should invoke the `OutputFile`'s `open()`method, right? No, this still will not compiler.
+
+The C++ standard says **before the compiler sees accessiblility of a function, it must decide which function is the best match for the function call.** So before the compiler see that this `InputFile`'s `open()` method is ***private***. It must first determine which `open()` method should be invoked. That's why the compiler will still issue an error saying *"ambiguous call to the `open()` method"*.
+
+To open the file successfully, you have to say `f.OutputFile::open()`, that would specifically tell the compiler that you want to use the `OutputFile`'s `open()` method to open the file. Now you have seen one subtlety with the ***multiple inheritance***. And let's see more.
+
+Since both `InputFile` and `OutputFile` have the `open()` method, it makes sense for the `InputFile` and `OutputFile` to have a ***common base class***, and move the `open()` method to that ***common base class***. And that is what we are going to do.
+
+
+We have a `File` class, and that the `File` have a `name` of string.
+
+# 22 - 4:19
+
+```
+class File {                //          File
+public:                     //          /  \
+    std::string name;       //  InputFile  OutputFile
+    void open();            //          \  /
+};                          //         IOFile
+
+class InputFile : public File {
+};
+
+class OutputFile : public File {
+};
+
+class IOFile : public InputFile, public OutputFile {
+};      // Diamond shape of hierarchy
+
+int main() {
+    IOFile f;
+    f.open();
+}
+```
 
