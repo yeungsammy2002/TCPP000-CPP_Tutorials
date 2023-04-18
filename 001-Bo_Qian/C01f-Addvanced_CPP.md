@@ -299,8 +299,59 @@ int v[3];
 ```
 
 
-### Misconception about *l-values* and *r-values*
+### Misconception about *l-values* & *r-values*
 Instead of continue to talk about what the ***r-values*** and ***l-values*** are. Let's talk about what they are not. There are some misconception that needs to be cleared up.
 
 - #### Misconception 1 - Function or Operator Always Yields *r-values*
+This conclusion can be easily drawn from the example of where that we've seen so far. In the first statement, initialize `x` with `i + 3`, `i + 3` is a ***r-value***. And in the second statement, `sum(3, 4)` is a ***r-value***:
+```
+int x = i + 3;
+int y = sum(3, 4);
+```
+
+However, this conclusion is **NOT** right. Here is my counter examples. I have a function `foo()`, which returns an integer reference. And in the function, I returns a global variable `myGlobal` by reference. So the return value from the function `foo` is a ***l-value***. I can write code `foo() = 50`, this will complile:
+```
+int myGlobal;
+int& foo() {
+    return myGlobal;
+}
+foo() = 50;         // `foo()` is not r-value
+```
+Some of you may say *"Well, this is a weird-looking code. I never write code like this"*.
+
+Well, point taken, then how about this example? In this example, I'm invoking subscript operator `operator[]` on an array. And `operator[]` almost always generates ***l-value***.
+```
+array[3] = 50;      // operator[] always generates l-value
+```
+
+- #### Misconception 2 - *l-value* are Always Modifiable
+In ***C***, ***l-value*** is defined as a value suitable for left-hand side of assignment. However, this definition is no longer true in C++, because C++ has a `const`, and a `const` although is a ***l-value***, it is **NOT** modifiable.
+```
+const int c = 1;
+c = 2;              // Error, `c` is not modifiable
+```
+
+- #### Misconception 3 - *r-values* are not modifiable
+This seems to be pretty obvious in our examples. `i + 3` is ***r-value***, and it's not modifiable. `sum(3, 4)` is a ***r-value***, and it's not modifiable:
+```
+i + 3 = 6;          // Error
+sum(3, 4) = 7;      // Error
+```
+
+However, this conclusion is only true for the ***built-in types***. It is not true for **user-defined type or `class`**. For example, I can call the default constructor of `Dog` to create a `Dog` object, and then invoke the method `.bark()` on the `Dog` object. The method `.bark()` could change the state of this `Dog()`. So this r-value `Dog()` is modifiable:
+```
+class Dog;
+Dog().bark();       // bark() may change the state of the `Dog` object
+```
+
+### Summary
+If you cannot remember everything that I've talked about ***r-value*** and ***l-value***, please do remember the summary.
+1. Every C++ expression yield either an ***r-value*** or a ***l-value***.
+2. If the expression has an ***identifiable memory address***, it's a ***l-value***. Otherwise, it's a ***r-value***.
+
+
+
+
+# Section 21 - Static Polymorphism
+
 
