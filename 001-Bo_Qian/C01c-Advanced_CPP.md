@@ -302,18 +302,18 @@ I am just a dog
 
 
 # Section 09 - Assignment to Self in Assignment Operator
-One of the C++ critical features is ***operator overload***. It can exploit people's intuition and reduce their learning curve for new libraries. ***Assignment operator*** `operator=` is one of the operators that's frequently being overloaded. In this section, we are going to talk about one pitfall in implementing ***assignment operator***, which is ***self-assignment***.
+One of the C++ critical features is ***operator overloading***. It can exploit people's intuition and reduce their learning curve for new libraries. ***Assignment operator*** `operator=` is one of the operators that's frequently being overloaded. In this section, we are going to talk about one pitfall in implementing ***assignment operator***, which is ***self-assignment***.
 
-This is an example of ***self-assignment***:
+Here is an example of ***self-assignment***:
 ```
 Dog dd;
 dd = dd;                // look silly
 ```
-You may ask where people really do stupid thing like this? No, they were not. But they may very well do things like this:
+You may ask will people really do stupid thing like this? No, they were not. But they may very well do things like this:
 ```
 dogs[i] = dogs[j];      // looks less silly
 ```
-This is a ***self-assignment*** when `i` and `j` are equal. That is why we need to handle ***self-assignment*** appropriately in our assignment operator.
+This is a ***self-assignment*** when `i` and `j` are equal. That is why we need to handle ***self-assignment*** appropriately in our ***assignment operator***.
 
 Now let's look at another example. We have a class `Dog` and `Dog` wears `Collar`. So this `Dog` has a data member `pCollar`, which is a pointer to a `Collar` class. And the `Dog`'s assignment operator will copy everything from the right hand side `Dog` reference `rhs` to itself. And in our case, the main thing to copy over is the `pCollar`. The natural implementation of that is I'll first delete my own `pCollar`, and then I copy construct the new `pCollar` from the right hand side of its `pCollar` - `*rhs.pCollar`:
 ```
@@ -331,7 +331,7 @@ However, there is a problem with this implementation. The problem arises when `t
 
 
 ### Solution 1 - Checking If there is Self-Assignment 
-One simple solution is we can do a check. If `this` equals to the right hand side's `Dog` - `rhs`, then we simply return `*this`:
+One simple solution is we can do a check. If `this` equals to the **right hand side's `Dog` reference `rhs`**, then we simply return `*this`:
 ```
 class Collar;
 class Dog {
@@ -346,7 +346,7 @@ class Dog {
     }
 }
 ```
-Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the right hand side `Dog` object are not the same `Dog`. 
+Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the **right hand side `Dog` object** are not the same `Dog`. 
 
 However, there is still a problem with code. What happens if the copy constructor of the right hand side's `Dog`s `pCollar` throws an exception. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s client later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog` destructor may want to try to delete the `pCollar` again, and the result is undefined. So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully:
 ```
