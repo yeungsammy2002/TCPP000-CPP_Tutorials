@@ -353,5 +353,75 @@ If you cannot remember everything that I've talked about ***r-value*** and ***l-
 
 
 # Section 21 - Static Polymorphism
+We're going to talk about ***static polymorphism***. When we talk about ***polymorphism***, by default, we are talking about ***dynamic polymorphism***, because ***dynamic polymorphism*** is such an important part of ***object-oriented programming***.
 
+Here I am giving you an example of ***dynamic polymorphism***. This is an example of tree parsing. We have a class `Generic_Parser`, and `Generic_Parser` has a publlic member method `parse_preorder()`, which does the preorder parsing of the tree. And while passing on the tree, it invoke a private member method `process_node()`, which does certain specific things to this particular node. However, the `Generic_Parser`'s `process_node()` method is an empty method, which does nothing. `EmployeeChart_Parser` is a specialized parser, and it's derived from the `Generic_Parser`. It overwrites the `process_node()` method, and it doesn't customize thing for the ***employee chart***. In the `main()` function, an `EmployeeChart_Parser` object `ep` is created, and the `ep` will call the `.parse_preorder()` method from its base class. The `.parse_preorder()` method will call `.process_node()` becasue the `.process_node()` method is a virtual method. So it will actually call the `EmployeeChart_Parser`'s `process_node()`. So the generic algorithm of `parse_preorder()` is customized by `EmployeeChart_Parser` own `process_node()` method. This is a typical example of polymorphism:
+```
+struct TreeNode {
+    TreeNode* left, *right;
+};
 
+class Generic_Parser {
+public:
+    void parse_preorder(TreeNode* node) {
+        if(node) {
+            process_node(node);
+            parse_preorder(node->left);
+            parse_preorder(node->right);
+        }
+    }
+private:
+    virtual void process_node(TreeNode* node) {}
+};
+
+class EmployeeChart_Parser : public Generic_Parser {
+private:
+    void process_node(TreeNode* node) {
+        std::cout << "Customized process_node() for EmployeeChart.\n";
+    }
+};
+
+int main() {
+    ...
+    EmployeeChart_Parser ep;
+    ep.parse_preorder(root);
+}
+```
+We like polymorphism because it makes your code more clear and elegant. It helps you write more generic code that is more decouple from other code. However, polymorphism is not for free. It comes with a small price to pay. The price is:
+1. The memory cost of the ***virtual table***.
+2. The runtime cost of ***dynamic binding***, which is basically the code that creates and uses the ***virtual table***.
+
+This cost us a small. However, what if my profile tells me that this is a critcial part of my algorithm, and it needs to run as fast as it can, and I don't want to give up on the benefit of ***polymorphism***. What can I do?
+
+One solution that I'm going to show you in this section is we can actually simulate the behavior of polymorphism. By simulating it, we're getting its benefit, and then not paying its price.
+
+Before going to the solution, let's take a look of what are the things that we want to simulate:
+1. ***"is-a" relationship*** between **base class** and **derived class**. So the `EmployeeChart_Parser` class is publicly derived from `Generic_Parser` class.
+   
+2. Base class defines a "generic" algorthim that is used by ***derived class***. In this case, the generic algorithm is the `parse_preorder()` method.
+   
+3. The "generic" algorthim is customized by the derived class. In this example, that is done with the `process_node()` method.
+
+Having these three things in mind. Let's look at our solution. The first thing you might notice is the base class `Generic_Parser` now has become a template class of type `T`. `parse_preorder()` method is the :
+```
+template<typename T> class Generic_Parser {
+public:
+    void parse_preorder(TreeNode* node) {
+        if(node) {
+            process_node(node);
+            parse_preorder(node->left);
+            parse_preorder(node->right);
+        }
+    }
+    void process_node(TreeNode* node) {
+        static_cast<T*>(this)->process_node(node);
+    }
+};
+
+class EmployeeChart_Parser : public Generic_Parser<EmployeeChart_Parser> {
+public:
+    void process_node(TreeNode* node) {
+        std::cout << "Customized process_node() for EmployeeChart.\n";
+    }
+};
+```
