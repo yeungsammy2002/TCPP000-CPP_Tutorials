@@ -89,7 +89,56 @@ The output is also exactly the same as before, it will first bark `I am a yellow
 Whoof, I am a yellow dog.
 Whoof, I am just a dog.
 ```
-We know that virtual method is bound at ***runtime***. 
+We know that virtual method is bound at ***runtime***. However, the default value for function parameter is bound at compiler time. So when `pd` barks, it will invoke the virtual method of `YellowDog` as we expected. But it will pick up the default value of the message `msg` from `Dog`'s `bark()` method. That is why the `pd` barks `I am just a dog.`.
 
-# 19 - 5:11
+So the lesson we can take from this example is **never overwrite the default parameter value for virtual method**.
 
+Now suppose the `Dog` has a different method `bark()`, which takes different parameter - integer `age`. And it prints out `"I am {{ age }} years old."`. In the `main()` function, `py` will bark at age `5`. And let's remove the `pd`:
+```
+class Dog {
+public:
+    void bark(int age) {                                            // here
+        std::cout << "I am " << age << " years old" << std::endl;
+    }
+    virtual void bark(std::string msg = "just a") {
+        std::cout << "Whoof, I am " << msg << " dog." << std::endl;
+    }
+};
+
+class YellowDog : public Dog {
+public:
+    virtual void bark(std::string msg = "a yellow") {
+        std::cout << "Whoof, I am " << msg << " dog." << std::endl;
+    }
+};
+
+int main() {
+    YellogDog* ps = new YellowDog();
+    py->bark(5);                            // here
+}
+```
+When the `py` bark with the parameter `5`, since `YellowDog` doesn't have a `bark()` method with integer parameter, you may think it should invoke the `Dog`'s `bark()` with integer, right? The answer is **NO**, this code won't even compile. The reason is when the compiler see the `bark()` method, do a first search `py` own class for a method with a name `bark()`, in this case, it will search `bark()` method inside the `YellowDog`. If the compiler cannot find the `bark()` method, it will continue searching in `Dog` class. 
+
+However, **if the compiler did find a `bark()` method inside the `YellowDog`, regardless of the parameter and return value type, it will stop searching right there.** As a result, `YellowDog`'s `bark()` method is the only method that the compiler can see. So the two `bark()` methods of `Dog` are not inherited by `YellowDog`. They are shadowed by `YellowDog`'s own `bark()` method. This is not good, because the ***"is-a" relationship*** is broken. The `Dog` can `bark()` with integer, but the `YellowDog` cannot `bark()` with integer.
+
+To maintain the ***"is-a" relationship***, one thing we could do is add this `using Dog::bark` statement. This will again bring the `Dog`'s `bark()` method back to `YellowDog`'s scope. And this code will compile:
+```
+...
+class YellowDog : public Dog {
+public:
+    using Dog::bark;                                    // here
+    virtual void bark(std::string msg = "a yellow") {
+        std::cout << "Whoof, I am " << msg << " dog." << std::endl;
+    }
+};
+...
+```
+
+In summary, to maintain the ***"is-a" relationship*** between the base class and the derived class. There are four things that we need to pay attention to:
+1. Precise definition of classes.
+   
+2. Don't override non-virtual methods.
+   
+3. Don't override default parameter values for virtual functions.
+   
+4. Force inheritance of shadowed functions.
