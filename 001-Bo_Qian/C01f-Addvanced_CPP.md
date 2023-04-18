@@ -467,3 +467,8 @@ T Max(std::vector<T> v) {
 ```
 When function `Max()` is materialized with any different type of `T`, or the operators, such as larger than `>`, the copy assignment `=`, will be invoked with different version of ***operator larger than* - `operator>`** and ***copy assignment* - `operator=(const T&)`**. And because that happens in the compiler time, they called it ***static polymorphism***. This nothing wrong with it. It's just a different definition. I just want to clear up with the concepts, so next time you hear other people talking about ***static polymorphism***, you know which one they are talking about.
 
+
+
+
+# Section 22 - Multiple Inheritance - Devil or Angel
+
