@@ -616,9 +616,64 @@ int main() {
     IOFile f;
 }
 ```
-When `IOFile` is derived from both the `InputFile` and the `OutputFile`, it needs to initialize both `InputFile` and `OutputFile`, which in turns initialize two instances of `File`. That is bad. And C++ provides a solution by defining a rule, the rule states that the initialization of the base virtual class is the responsibility of ***the most derived class***. In our case, the most derived class is the `IOFile`. So `IOFile` in addition to intializing its direct parents, it also needs to initialize the base virtual class - `File`:
+When `IOFile` is derived from both the `InputFile` and the `OutputFile`, it needs to initialize both `InputFile` and `OutputFile`, which in turns initialize two instances of `File`. That is bad. And C++ provides a solution by defining a rule, the rule states that the **initialization of the *base virtual class*** is the responsibility of ***the most derived class***. In our case, the most derived class is the `IOFile`. So `IOFile` in addition to intializing its direct parents, it also needs to initialize the ***base virtual class* - `File`**. And these two instances (`InputFile` and `OutputFile`) of initialization (`File(fname)`) are simply ignored. This is the kind of awkward and non-intuitive, but we have to live it if we want to use multiple inheritance. And this rule applies no matter how far the `IOFile` is from the `File` in the hierarchy. As long as the `IOFile` is the most derived class, it always bears the responsibility of initializing the virtual base class:
 ```
+class InputFile : virtual public File {
+    InputFile(std::string fname) : File(fname) {}
+};
+
+class OutputFile : virtual public File {
+    OutputFile(std::string fname) : File(fname) {}
+}
+
 class IOFile : public InputFile, public OutputFile {
     IOFile(std::string fname) : OutputFile(fname), InputFile(fname), File() {}
 }
 ```
+
+
+### Benefits of Using Multiple Inheritance
+So if the multiple inheritance is so difficult to use, why do we have to use it? The answer to that is ***interface segregation principle***. The interface segregation principle states that if an interface is too large, then split the interface into smaller and most specific ones, so that for clients, will only need to know about the methods that are of interest to them. Say I want to write a program to model a person called `Andy`, and `Andy` is a very complicated person, he can do a lot of things, he can provide a lot of services. So to completely model `Andy`, I might end up having a class that has ***500 APIs***. This will make `Andy` very difficult person to deal with. He has 500 APIs, how am I supposed to talk to him? It turns out it doesn't have to be that difficult. `Andy` is also an `Engineer`. The `Engineer` class provide all the services that the `Engineer` can provide, which is a much smaller number of ***API***, says ***40 APIs***. `Andy` is an `Engineer`, so we can publicly derived from `Engineer`:
+```
+class Engineer {
+    ...40 APIs...
+};
+
+class Son {
+    ...50 APIs...
+}
+
+...
+
+class Andy : public Engineer, Son {
+public:
+    ...500 APIs...
+};
+```
+And I'm a co-worker for `Andy`, so in order to have a happy-time co-working with `Andy`, I only need to know about `Andy`'s `Enginner` APIs. I don't necessarily need to know about any other things that `Andy` does. In other works, I only want to instantiate `Andy` as an `Engineer` and talk to hime through his `Engineer` interface. However, from `Andy`'s parent's point of view, `Andy` is also a `Son`. And they want to instantiate `Andy` as a `Son`, and talk to him through `Son`'s interface, let's say ***50 APIs***. And `Andy` is also derived from `Son` class. And this list and go on and on as `Andy` plays different role in his life.
+
+So as you can see, by applying ***interface segregation principle***, we are making `Andy` a much easier person to deal, because each `Andy`'s client only have have a smaller and more specific interface to know about in order to talk to `Andy`. So in our daily programming, if you end up having a `class` that has a large number of ***APIs*** and then the class is servicing different group of clients, may be it's time for you to use ***interface segregation principle***. And when using ***interface segregation principle***, the ***multiple inheritance*** has a essential role to play.
+
+
+### Pure Abstract Classes
+Now you understand the important of ***multiple inheritance***. The question is how can we use multiple inheritance without getting into all the troubles that we've talked about in previous examples? To answer that question, let me introduce a new concept, it's called ***pure abstract classes***.
+
+C++ standard provides the concept of ***abstract class***. And ***abstract class*** is a class that has one or more ***pure virtual methods***.
+
+A ***pure abstract class*** is a class that contains only ***pure virtual methods***. It has no data, no concrete methods. And here is an example of ***pure abtract classes***:
+```
+class OutputFile {
+public:
+    void write() = 0;
+    void open() = 0;
+}
+```
+In a nutshell, a ***pure abstract class*** is **a class that has no incrementation**, **it only provides interface and it provides zero implementation**. And it turns out all the problems that we've talked about, duplication of data, duplication of the methods, the initialization problems. All the problems will be gone, if we only derived from ***pure abstract classes***. If all the base classes `InputFile`, `OutputFile` and `File` are ***pure abstract classes*** that has no implementation. Then there is no such problem as duplicated implementation and initialization, because there is nothing to duplicate and nothing to initialize anyway. And we don't even need the virtual inheritance anymore.
+
+So all the problems are gone, but we still have the benefits of ***interface segregation principle***, because the ***interface segregation principle*** cares nothing about the implementation. It only cares about the interface. It will work out perfectly fine if `Engineer` and `Son` are ***pure abstract classes***.
+
+
+### Summary
+1. ***Multiple inheritance*** is an important technique to have. One example is ***interface segregation principle* - *ISP***.
+   
+2. If you are using multiple inheritance, it is strongly recommended that you only derived from ***pure abstract classes***.

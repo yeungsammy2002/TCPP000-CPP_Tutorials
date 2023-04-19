@@ -350,7 +350,7 @@ class Dog {
 ```
 Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the **right hand side `Dog` object - `rhs`** are not the same `Dog` object.
 
-However, there is still a problem with code. What happens if the copy constructor **\*here** of the right hand side's `Dog`s `pCollar` throws an ***exception***. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s clan later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog`'s destructor may want to try to delete the `pCollar` again, and the result is undefined:
+However, there is still a problem with code. What happens if the copy constructor **\*here** of the right hand side's `Dog`s `pCollar` throws an ***exception***. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s client later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog`'s destructor may want to try to delete the `pCollar` again, and the result is undefined:
 ```
 class Collar;
 class Dog {
