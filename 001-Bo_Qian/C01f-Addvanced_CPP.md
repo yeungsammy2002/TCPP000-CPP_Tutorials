@@ -618,4 +618,7 @@ int main() {
 ```
 When `IOFile` is derived from both the `InputFile` and the `OutputFile`, it needs to initialize both `InputFile` and `OutputFile`, which in turns initialize two instances of `File`. That is bad. And C++ provides a solution by defining a rule, the rule states that the initialization of the base virtual class is the responsibility of ***the most derived class***. In our case, the most derived class is the `IOFile`. So `IOFile` in addition to intializing its direct parents, it also needs to initialize the base virtual class - `File`:
 ```
+class IOFile : public InputFile, public OutputFile {
+    IOFile(std::string fname) : OutputFile(fname), InputFile(fname), File() {}
+}
 ```
