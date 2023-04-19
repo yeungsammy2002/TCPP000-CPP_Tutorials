@@ -408,6 +408,8 @@ Besides, the `if`-statement checking in ***Solution 1*** is not for free. It wil
 # Section 10 - Resource Acquistion Is Initialization - RAII
 We're going to talk about a special coding technique called ***Resource Acquistion Is Initialization* - *RAII***. What it basically means is using object to manage resources. Resources could be memory, hardware device, network handle...etc.
 
+
+### Locking & Unlocking Mutex using RAII Technique
 Let's look at an example. Here I have a ***mutex*** `mu`. And in `functionA()`, I lock the ***mutex***, and then do a bunch of things, and then unlock ***mutex***:
 ```
 Mutex_t mu = MUTEX_INITIALIZER;
@@ -443,6 +445,7 @@ void functionA() {
 The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects residing on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain **automatic deallocation** and **reclamation**.
 
 
+### `std::shared_ptr` is Example of RAII
 Another good example of ***RAII*** is ***shared pointer***. A ***shared pointer*** is a ***reference counting smart pointer***. It counts the number of pointer points to itself. And when that number reach `0`, the smart pointer will be destroyed. Now in `function_A()`, I created a new `Dog` and assign the new `Dog`'s pointer to a shared pointer `pd`. Once `pd` goes out of scope, or in other words, once there's no more pointer points to `pd`, the new `Dog` will be destroyed:
 ```
 int function_A() {
