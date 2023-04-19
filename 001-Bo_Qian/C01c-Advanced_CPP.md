@@ -385,8 +385,8 @@ class Dog {
 Now we are safe. Even if the `new` operator throws an exception, the `Dog` still holding a pointer that points to a valid `Collar`. So this gives you a small demo of writing exception safe code.
 
 
-### Solution 2 - Deletgation
-Now let's look at our ***Solution 2***. ***Solution 2*** bascially dedicates the assignment operation to the `Collar` class, so I simply copy `*rhs.pCollar` to `*pCollar`. It will either do a **memeber by member copying** of the `Collar` class, or invoke the `Collar` class's ***overloaded assignment operator* `operator=`**:
+### Solution 2 - Delegation
+Now let's look at our ***Solution 2***. ***Solution 2*** bascially delegates the assignment operation to the `Collar` class, so I simply copy `*rhs.pCollar` to `*pCollar`. It will either do a **memeber by member copying** of the `Collar` class, or invoke the `Collar` class's ***overloaded assignment operator* `operator=`**:
 ```
 class Dog {
     Collar* pCollar;
@@ -397,7 +397,7 @@ class Dog {
     }
 };
 ```
-One thing to note is I don't necessarily need to check if `this` `Dog` object and the right hand side's `Dog` object - `rhs` are the same `Dog` object. If they are the same, I will make a copy of itself anyway. This may incur some runtime cost. But since it doesn't cause any serious trouble, I don't want to worry about the runtime cost now until later may profile that helps me that this is important.
+One thing to note is I don't necessarily need to check if `this` `Dog` object and the **right hand side's `Dog` object - `rhs`** are the same `Dog` object. If they are the same, I will make a copy of itself anyway. This may incur some runtime cost. But since it doesn't cause any serious trouble, I don't want to worry about the runtime cost now until later may profile that tells me that this is important.
 
 
 Besides, the `if`-statement checking in ***Solution 1*** is not for free. It will also incur some runtime cost. So removing the `if`-statement will more or less compensate the cost of the ***self-assignment***.
