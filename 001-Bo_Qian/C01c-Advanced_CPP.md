@@ -535,7 +535,7 @@ public:
 };
 ```
 
-Let's look at the example again. I created `Lock` object `L1` from mutex, and then copy construct `L2` from `L1`. By this time, we have two pointers point to `pMutex`, and the ***reference count*** is ***2***. By the time both `L1` and `L2` goes out of scope, the number of pointer points to `pMutex` will become `0`, that means `pMutex`'s ***deleter*** will be invoked. And then the mutex will be unlocked:
+Let's look at the example again. I created `Lock` object `L1` from mutex, and then copy construct `L2` from `L1`. By this time, we have two pointers point to `pMutex`, so the ***reference count*** is ***2***. By the time both `L1` and `L2` goes out of scope, the number of pointer points to `pMutex` will become `0`, that means `pMutex`'s ***deleter*** will be invoked. And then the mutex will be unlocked:
 ```
 Lock L1(&mu);
 Lock L2(L1);
