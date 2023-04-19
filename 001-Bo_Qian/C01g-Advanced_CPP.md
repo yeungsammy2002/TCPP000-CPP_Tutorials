@@ -150,3 +150,21 @@ So both number 2 and number 3 will reduce the number of ***implemenation inherit
 ### Inheritance is Evil
 Some people claim that inheritance is evil, and it should be avoided all together. I'm not convinced of that, but I do agree this statement - ***"Inheritance is often useful, but more often overused"*** (or I should say ***abused***). This is particularly true for ***implementation inheritance***. When ***implementation inheritance*** is used too much, it does make inheritance look like evil. But in the end, inheritance is just a tool for you to use. And like any other tools, when it is used inappropriately, it will hurt you. However, we cannot call a knife evil, because it is used inappropriately and cut your finger. If you can remember all the pitfalls and guideline. ***Inheritance*** in your code should not look like evil.
 
+
+
+
+# Section 24 - Code Reuse - Inheritance vs Composition
+***Software engineering*** is largely about ***code reuse***.
+```
+class BaseDog {
+
+};
+
+class BullDog : public BaseDog {
+
+};
+
+class ShepherdDog : public BaseDog {
+
+};
+```
