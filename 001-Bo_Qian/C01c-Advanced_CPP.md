@@ -315,19 +315,21 @@ dogs[i] = dogs[j];      // looks less silly
 ```
 This is a ***self-assignment*** when `i` and `j` are equal. That is why we need to handle ***self-assignment*** appropriately in our ***assignment operator***.
 
-Now let's look at another example. We have a class `Dog` and `Dog` wears `Collar`. So this `Dog` has a data member `pCollar`, which is a pointer to a `Collar` class. And the `Dog`'s assignment operator will copy everything from the right hand side `Dog` reference `rhs` to itself. And in our case, the main thing to copy over is the `pCollar`. The natural implementation of that is I'll first delete my own `pCollar`, and then I copy construct the new `pCollar` from the right hand side of its `pCollar` - `*rhs.pCollar`:
+
+### Self Assignment Problem in `class` that Contains Pointer Member
+Now let's look at another example. We have a class `Dog`, and `Dog` wears `Collar`. So this `Dog` has a data member `pCollar`, which is a pointer to a `Collar` class. And then the `Dog`'s ***assignment operator* `operator=`** will copy everything from the **right-hand side `Dog` reference `rhs`** to itself. In our case, the main thing to copy over is the `pCollar`. The natural implementation of that is I'll first delete my own `pCollar`, and then I copy construct the new `pCollar` from the right hand side of its `pCollar` - `*rhs.pCollar`:
 ```
 class Collar;
 class Dog {
     Collar* pCollar;
-    Dog& operator=(const Dog& rhs) {
-        delete pCollar;
-        pCollar = new Collar(*rhs.pCollar);
+    Dog& operator=(const Dog& rhs) {            // if `rhs` is equals to `this`,
+        delete pCollar;                         // it'll delete `rhs.pCollar` as well
+        pCollar = new Collar(*rhs.pCollar);     // create `Collar` with deleted `pCollar` object
         return *this;
     }
 }
 ```
-However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog`, in other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar`, I'm accessing an object that is deleted, and the result could be disastrous.
+However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog` object. In other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar`, I'm accessing an object that is deleted, and the result could be disastrous.
 
 
 ### Solution 1 - Checking If there is Self-Assignment 
@@ -337,34 +339,34 @@ class Collar;
 class Dog {
     Collar* pCollar;
     Dog& operator(const Dog& rhs) {
-        if(this == &rhs)                    // here
-            return *this;
+        if(this == &rhs)                    // check if `rhs` is equals to `this`
+            return *this;                   // if true, stop here and return this object
 
         delete pCollar;
         pCollar = new Collar(*rhs.pCollar);
         return *this;
     }
-}
+};
 ```
-Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the **right hand side `Dog` object** are not the same `Dog`. 
+Now we have much better situation, the deleting and the copy constructing only happens when `this` `Dog` object and the **right hand side `Dog` object - `rhs`** are not the same `Dog` object.
 
-However, there is still a problem with code. What happens if the copy constructor of the right hand side's `Dog`s `pCollar` throws an exception. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s client later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog` destructor may want to try to delete the `pCollar` again, and the result is undefined. So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully:
+However, there is still a problem with code. What happens if the copy constructor **\*here** of the right hand side's `Dog`s `pCollar` throws an ***exception***. In that case, the `Dog` has deleted its own `pCollar` but it failed to create a new `pCollar`. So the `Dog` ends up holding a pointer that's pointing to an invalid object. This is a big problem if the `Dog`'s clan later on wants to use the `Dog` more. And even nobody is using the `Dog` anymore, when the `Dog` is destructed, the `Dog`'s destructor may want to try to delete the `pCollar` again, and the result is undefined:
 ```
 class Collar;
 class Dog {
     Collar* pCollar;
-    Dog& operator(const Dog& rhs) {
+    Dog& operator=(const Dog& rhs) {
         if(this == &rhs)
             return *this;
 
-        pCollar = new Collar(*rhs.pCollar);
-        delete pCollar;                     // here
-        return *this;
+        delete pCollar;
+        pCollar = new Collar(*rhs.pCollar);     // if *here throw an exception,
+        return *this;                           // `pCollar` will point to an invalid object
     }
-}
+};
 ```
 
-To achieve that purpose, I need to create a copy of original `pCollar`, and then I create a new `pCollar` if that is successful and I'll delete the original `pCollar`:
+So it seems what we really want to do is delete `pCollar` only after the new `pCollar` is created successfully. To achieve that purpose, I need to create a copy of original `pCollar`, and then I create a new `pCollar` if that is successful and I'll delete the original `pCollar`:
 ```
 class Collar;
 class Dog {
@@ -373,9 +375,9 @@ class Dog {
         if(this == &rhs)
             return *this;
 
-        Collar* pOrigCollar = pCollar;      // here
-        pCollar = new Collar(*rhs.pCollar);
-        delete pOrigCollar;                 // here
+        Collar* pOrigCollar = pCollar;          // copy original `pCollar` address, not memory
+        pCollar = new Collar(*rhs.pCollar);     // if succeed, pCollar will points to another address
+        delete pOrigCollar;                     // delete memory that original `pCollar` address points to
         return *this;
     }
 };
