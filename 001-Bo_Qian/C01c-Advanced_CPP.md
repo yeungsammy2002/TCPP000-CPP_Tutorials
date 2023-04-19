@@ -414,13 +414,13 @@ Mutex_t mu = MUTEX_INITIALIZER;
 
 void functionA() {
     Mutex_lock(&mu);
-    ...                 // Doing a bunch of things
+    ...Doing a bunch of things...
     Mutex_unlock(&mu);  // Will this line always be executed?
 }
 ```
-This is pretty regular looking code, but there is a problem with this code. The problem is the statement of unlocking ***mutex*** may not be executed, because `"Doing a bunch of things"` could return to `functionA()` prematurely. Even if it doesn't return, it may throw an ***exception***. And in either case, the ***mutex*** will be locked forever. So neither way to guarantee that the ***mutex*** will be unlocked once is no longer needed.
+This is pretty regular looking code, but there is a problem with this code. The problem is the statement of unlocking ***mutex*** may not be executed, because `...Doing a bunch of things...` could return to `functionA()` prematurely. Even if it doesn't return, it may throw an ***exception***. And in either case, the ***mutex*** will be locked forever. So neither way to guarantee that the ***mutex*** will be unlocked once is no longer needed.
 
-Let's look at our solution. The solution is to use the ***Resource Acquisition Is Initialization* (RAII) technique**. Here I have a class `Lock`. The class `Lock` have a `private` data member, which is a ***pointer*** to ***mutex***. And in the constructor of the `Lock`, the ***mutex*** will be locked. And in the destructor of the `Lock`, ***mutex*** will be unlocked. Now in `functionA()`, whenever I want to lock the ***mutex***, I construct a `Lock`, and then do whatever things that I want to do. And by the end of `functionA()`, `mylock` will be destroyed from the ***stack***. And then the ***destructor*** of the `Lock` will be invoked. So ***mutex*** will be unlocked:
+Let's look at our solution. The solution is to use the ***Resource Acquisition Is Initialization* (RAII) technique**. Here I have a class `Lock`. The class `Lock` has a `private` data member, which is a ***pointer*** to ***mutex***. And in the constructor of the `Lock`, the ***mutex*** will be locked. And in the destructor of the `Lock`, ***mutex*** will be unlocked. Now in `functionA()`, whenever I want to lock the ***mutex***, I construct a `Lock`, and then do whatever things that I want to do. And by the end of `functionA()`, `mylock` will be destroyed from the ***stack***. And then the ***destructor*** of the `Lock` will be invoked. So ***mutex*** will be unlocked:
 ```
 class Lock {
 private:
@@ -437,10 +437,10 @@ public:
 
 void functionA() {
     Lock mylock(&mu);
-    ...                 // Do a bunch of things
+    ...Doing a bunch of things...
 }   // The mutex will always be released when mylock is destroyed from stack
 ```
-The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects deciding on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain automatic deallocation and reclamation.
+The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects residing on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain **automatic deallocation** and **reclamation**.
 
 
 Another good example of ***RAII*** is ***shared pointer***. A ***shared pointer*** is a ***reference counting smart pointer***. It counts the number of pointer points to itself. And when that number reach `0`, the smart pointer will be destroyed. Now in `function_A()`, I created a new `Dog` and assign the new `Dog`'s pointer to a shared pointer `pd`. Once `pd` goes out of scope, or in other words, once there's no more pointer points to `pd`, the new `Dog` will be destroyed:
