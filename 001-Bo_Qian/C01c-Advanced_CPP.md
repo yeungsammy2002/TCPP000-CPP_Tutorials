@@ -492,23 +492,27 @@ int main() {
 Now our code is thread safe, because the new `Dog` once get created, it will be always assigned to a ***shared pointer***, and it is not impossible to have memory leak.
 
 
-In the last example, what happens when the resource management object is copied? In this example, I create `L1` from a ***mutex*** `mu`, and then copy construct `L2` from `L1`. Usually, the mutex is mutually exclusive, so it cannot be called shared by multiple clients:
+### Avoiding Resource Management Objects being Copied by Disallowing Compiler Generated Methods
+What happens when the resource management object is copied? In this example, I create `L1` from a ***mutex*** `mu`, and then copy construct `L2` from `L1`. **Usually, the *mutex* is mutually exclusive, so it cannot be called shared by multiple clients**:
 ```
 Lock L1(&mu);
-Lock L2(L1);
+Lock L2(L1);        // bad practice, `L1` should be shared
 ```
-So one solution for this is prohibit copying completely. We can do that by disallow the copy constructor and the copy assignment operator from being used by our client. And to see how to do that, please read my another section that is disallow compiler generated functions and we're not going to talk about that in this section.
+One solution for this is prohibit copying completely. We can do that by **disallow the *copy constructor* and the *copy assignment operator* from being used by our client**. And to see how to do that, please read my another section that is ***disallow compiler generated methods*** and we're not going to talk about that in this section.
 
-Here is another solution. Sometimes, the resource can be shared by multiple clients, and in those kind of scenario, all we need to always want to make sure is that resource will be released appropriately once all the clients are done with it. So we need to implement some kind of ***reference count* mechanism** to keep track of the number of clients who is using the resource. And we can do that with the ***shared pointer***.
 
-In previous example, we have seen that shared pointer can take one parameter, which is a newly created object that's starting on heap:
+### Using Reference Count Mechanism if Resource Management Objects Can Be Shared
+Sometimes the resource can be shared by multiple clients. In those kind of scenario, we need to always make sure **all the resources will be released appropriately once all the clients are done with it**. So we need to implement some kind of ***reference count mechanism*** to keep track of the number of clients who are using the resource. We can do that with the ***shared pointer***.
+
+In previous example, we have seen that shared pointer can take one parameter, which is a newly created object that's storing on ***heap***:
 ```
+...
 int main() {
     std::tr1::shared_ptr<Dog> pd(new Dog());
     train(getTrick(pd), getTrick());
 }
 ```
-The shared pointer constructor can take a second parameter, which is a ***deleter***. A ***deleter*** is a function that will be invoked when the shared pointer is destroyed. And the default value for the ***deleter*** is the operator delete:
+The ***shared pointer (`std::shared_ptr`) constructor*** can take a ***second parameter***, which is a ***deleter***. A ***deleter*** is a function that will be invoked when the shared pointer is destroyed. The ***operator delete***, the default value for the ***deleter*** is the ***operator delete***:
 ```
 template<class Other, class D> shared_ptr(Other* ptr, D deleter);
 ```
@@ -518,7 +522,7 @@ So in this example, once the shared pointer `pd` is destroyed, the default value
 ```
 A good thing about the shared pointer is the ***deleter*** can be customized to any function you like. Here we're going to take advantage of that.
 
-Now let's look at the new implementation of the `Lock` class. Now it has private data member `pMutex`, which is a ***shared pointer*** to a ***mutex***. The constructor of the `Lock` initialized the `pMutex` with the ***pointer*** of the ***mutex*** as the first parameter, and then `Mutex_unlock` function at the second parameter, the ***deleter***. In the body of the constructor, it will pre-lock the mutex. So what this means is when `Lock` object is created, it will lock the mutex. And there is no more pointer points to `pMutex`. The mutex will be unlocked.
+Now let's look at the new implementation of the `Lock` class. Now it has private data member `pMutex`, which is a ***shared pointer*** to a ***mutex***. The constructor of the `Lock` initialized the `pMutex` with the ***pointer*** of the ***mutex*** as the first parameter, and then `Mutex_unlock` function at the second parameter, the ***deleter***. In the body of the constructor, it will pre-lock the mutex. So what this means is when `Lock` object is created, it will lock the mutex. When there is no more pointer points to `pMutex`, the mutex will be unlocked:
 ```
 class Lock {
 private:
@@ -531,10 +535,10 @@ public:
 };
 ```
 
-Let's look at the example again. I created `Lock` object `L1` from mutex, and then copy construct `L2` from `L1`. By this time, we have two pointers points to `pMutex`. And the reference count is ***2***. And by the time both `L1` and `L2` goes out of scope, the number of pointer points to `pMutex` will become `0`, that means `pMutex`'s ***deleter*** will be invoked. And then the mutex will be unlocked:
+Let's look at the example again. I created `Lock` object `L1` from mutex, and then copy construct `L2` from `L1`. By this time, we have two pointers point to `pMutex`, and the ***reference count*** is ***2***. By the time both `L1` and `L2` goes out of scope, the number of pointer points to `pMutex` will become `0`, that means `pMutex`'s ***deleter*** will be invoked. And then the mutex will be unlocked:
 ```
 Lock L1(&mu);
 Lock L2(L1);
 ```
-So that completes our solution for our ***Solution 2***, which guarantees the unlocking of mutex once there is no client is using the mutex anymore.
+So that completes our ***Solution 2***, which guarantees the unlocking of mutex once there is no client is using the mutex anymore.
 
