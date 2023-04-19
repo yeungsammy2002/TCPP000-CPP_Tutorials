@@ -514,10 +514,8 @@ To open the file successfully, you have to say `f.OutputFile::open()`, that woul
 Since both `InputFile` and `OutputFile` have the `open()` method, it makes sense for the `InputFile` and `OutputFile` to have a ***common base class***, and move the `open()` method to that ***common base class***. And that is what we are going to do.
 
 
-We have a `File` class, and that the `File` have a `name` of string.
-
-# 22 - 4:19
-
+### Diamand Shape Problem
+We have a `File` class, and the `File` have a `name` of string, and also the `open()` method. Both `InputFile` and `OutputFile` are derived from `File`, and `IOFile` is derived from both `InputFile` and `OutputFile`:
 ```
 class File {                //          File
 public:                     //          /  \
@@ -539,4 +537,85 @@ int main() {
     f.open();
 }
 ```
+Now in the `main()` function, if I `IOFile`'s `open()` method, you may think it should be okay, because we only have one `open()` method available. The compiler will still issue an error and saying *"ambiguous call to the `open()` method"*. The reason is the `InputFile` will inherit the instance of `File`'s `open()` method, and the `OutputFile` will also inherit the instance of `File`'s `open()` method. So the `IOFile` still ends up having two instances of `open()` method. One from the `InputFile`, and another one from the `OutputFile`. That is why the compiler will issue an error saying *"ambiguous call to the `open()` method"*. This is commonly known as a ***diamond shape problem***. Because the classes form a diamond shap of hierarchy:
+```
+          File
+          /  \
+  InputFile  OutputFile
+          \  /
+         IOFile
+```
 
+
+### Virtual Inheritance
+The `IOFile` not only has two instances of `open()` method, it also has two instances of `name` and I can assign a different value to the two names. For example, I can do `f.InputFile::name = "File1"` and `f.OutputFile::name = "File2"`. So this is a problem, why do need two instances of `open()` and two instances of `name`. How to fix this?
+```
+...
+int main() {
+    IOFile f;
+    f.open();
+    f.InputFile::name = "File1";
+    f.OutputFile::name = "File2";
+}
+```
+
+C++ provide a solution called ***virtual inheritance***. I can virtually inherit the `InputFile` from the `File` and virtually inherit `OutputFile` from the `File`. What that means is we're telling the compiler we only need one instance of `name` and one instance of `open()` method during the process of inheritance. And as a result, this two lines of code `f.InputFile::name = "File1"` and `f.OutputFile::name = "File2"` will not compile:
+```
+class File {
+public:
+    std::string name;
+    void open();
+};  
+
+class InputFile : virtual public File {         // here
+};
+
+class OutputFile : virtual public File {        // here
+};
+
+class IOFile : public InputFile, public OutputFile {
+};      // Diamond shape of hierarchy
+
+int main() {
+    IOFile f;
+    f.open();
+    f.InputFile::name = "File1";                // Error
+    f.OutputFile::name = "File2";               // Error
+}
+```
+But the `f.open()` will compile successfully:
+```
+...
+int main() {
+    IOFile f;
+    f.open();
+}
+```
+Okay, the virtual base class is good, it solves our problem. However, it introduces another problem, which is the problem of ***initialization***.
+
+Suppose we have defined a constructor for `File`, which takes a string parameter of file name `fname`. Since we have defined a ***non default constructor*** for `File`, the compiler will not generate the ***default constructor*** for us, which means all the `File`'s children have to explicitly initialize the `File` in their constructor. And the `IOFile` will initialize both `OutputFile` and `InputFile`. This will work out okay, if it is a ***single inheritance***. When I create an `IOFile` object `f`, `IOFile` will initialize an `OutputFile` object, which in turns initialize a `File` object. However, this is a problem for ***multiple inheritance***:
+```
+class File {
+public:
+    File(std::string fname);
+};
+
+class InputFile : virtual public File {
+    InputFile(std::string fname) : File(fname) {}
+};
+
+class OutputFile : virtual public File {
+    OutputFile(std::string fname) : File(fname) {}
+};
+
+class IOFile : public InputFile, public OutputFile {
+    IOFile(std::string fname) : OutputFile(fname), InputFile(fname) {}
+};
+
+int main() {
+    IOFile f;
+}
+```
+When `IOFile` is derived from both the `InputFile` and the `OutputFile`, it needs to initialize both `InputFile` and `OutputFile`, which in turns initialize two instances of `File`. That is bad. And C++ provides a solution by defining a rule, the rule states that the initialization of the base virtual class is the responsibility of ***the most derived class***. In our case, the most derived class is the `IOFile`. So `IOFile` in addition to intializing its direct parents, it also needs to initialize the base virtual class - `File`:
+```
+```
