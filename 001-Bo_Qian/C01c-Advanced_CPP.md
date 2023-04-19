@@ -445,7 +445,7 @@ void functionA() {
 The conclusion we can take from this example is the only code that can guaranteed to be executed after exception is thrown at the destructor of the objects residing on ***stack***. So in this example, the destructor of `mylock` is guaranteed to be executed. So our resource management needs to be tied to the lifespan of a suitable objects in order to gain **automatic deallocation** and **reclamation**.
 
 
-### `std::shared_ptr` is Example of RAII
+### `std::shared_ptr` is using RAII Technique
 Another good example of ***RAII*** is ***shared pointer***. A ***shared pointer*** is a ***reference counting smart pointer***. It counts the number of pointer points to itself. And when that number reach `0`, the smart pointer will be destroyed. Now in `function_A()`, I created a new `Dog` and assign the new `Dog`'s pointer to a shared pointer `pd`. Once `pd` goes out of scope, or in other words, once there's no more pointer points to `pd`, the new `Dog` will be destroyed:
 ```
 int function_A() {
