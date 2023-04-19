@@ -456,6 +456,7 @@ int function_A() {
 Note that `std::tr1::shared_ptr` is equivalent to `std::stared_ptr` in ***C++11*** standard. `tr1` stands for ***Technical Report 1***.
 
 
+### Avoiding Memory Leak when Initializing Shared Pointer `std::shared_ptr`
 Let's look at another example. I have a class `Dog`, a class `Trick` and a function `train()`, which train a `Dog` with some kind of dog trick. I have a function `getTrick()` which returns a `Trick` object. Now, in the `main()` function, I invoke the `train()` function with the parameter `Dog` is created from a new `Dog`. And the parameter `dogTrick` is get from the `getTrick()` function:
 ```
 class Dog;
@@ -469,14 +470,14 @@ int main() {
 ```
 Now, do you see any problem with this kind of code? Let's examine on what happens in the `train()` function parameter passing, more specifically, this part of the code `std::tr1::shared_ptr<Dog> pd(new Dog()), getTrick()`.
 
-There are three things happening, one is creating a new `Dog`. Second thing is invoking the `getTrick()` function. Lastly, construct a ***shared pointer*** and assign a `Dog` to the ***shared pointer***:
+There are three things happening, one is creating a new `Dog`. Second thing is invoking the `getTrick()` function. Lastly, construct a ***shared pointer*** and assign the `Dog` to the ***shared pointer***:
 1. `new Dog();`
 2. `getTrick();`
 3. construct `std::tr1::shared_ptr<Dog>`.
 
-In C++, the order of the three operations are **NOT fixed**. It is completely determined by the compiler. So if the compiler decide to execute the three operations in this order, then there is a problem. The `getTrick()` function might throw an exception, and if that happen, we have created a new `Dog`, and the new `Dog` has not being assigned to a ***shared pointer*** yet. So the memory of the new `Dog` will be leaked.
+In C++, the order of the three operations are **NOT fixed**. It is completely determined by the compiler. So if the compiler decide to execute the three operations in this order, then there is a problem. The `getTrick()` function might throw an ***exception***. If that happen, when we have created a new `Dog` and the new `Dog` has not being assigned to a ***shared pointer*** yet, the memory of the new `Dog` will be leaked.
 
-The conclusion we can take from this example is don't combine the operation of storing objects in a ***shared pointer*** with any other statement. In other words, put the storing objects in shared pointer statement to a standalone statement. So in this example, we'll extract this part of the code `std::tr1::shared_ptr<Dog> pd(new Dog())` in `trick()` call and do something like this:
+The conclusion we can take from this example is don't combine the operation of storing objects in a ***shared pointer*** with any other statement. In other words, **put the storing objects in shared pointer statement to a *standalone statement* \*here**. So in this example, we'll extract this part of the code `std::tr1::shared_ptr<Dog> pd(new Dog())` in `trick()` call and do something like **\*this**:
 ```
 class Dog;
 class Trick;
@@ -484,8 +485,8 @@ void train(std::tr1::shared_ptr<Dog> pd, Trick dogTrick);
 Trick getTrick();
 
 int main() {
-    std::tr1::shared_ptr<Dog> pd(new Dog());
-    train(getTrick(pd), getTrick());
+    std::tr1::shared_ptr<Dog> pd(new Dog());        // *here
+    train(pd, getTrick());                          // *this
 }
 ```
 Now our code is thread safe, because the new `Dog` once get created, it will be always assigned to a ***shared pointer***, and it is not impossible to have memory leak.
