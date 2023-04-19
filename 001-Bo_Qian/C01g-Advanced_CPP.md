@@ -154,17 +154,68 @@ Some people claim that inheritance is evil, and it should be avoided all togethe
 
 
 # Section 24 - Code Reuse - Inheritance vs Composition
-***Software engineering*** is largely about ***code reuse***.
+***Software engineering*** is largely about ***code reuse***. In C++, there are mainly **two ways** of **code reuse**, one is ***inheritance***, and another one is ***composition***. So which one should we use? We had a light touch on this topic in previous sections. We're going to dive deeper into it.
+
+Let's look at our example. We have a class `BaseDog`. `BullDog` and `ShepherdDog` are derived from the `BaseDog`. The `BaseDog` defines some common activities, and `BullDog` and `ShepherdDog` will call this common activities to perform more task. I have seen this kind of code structure in a lot of places, and honestly, I don't like it. The problem I have is the name `BaseDog`. Almost every C++ program that I have seen, there is always a class, or even a bunch of classes which are named `Base{{something}}`. With inheritance, the class name should symbolize the ***"is-a" relationship*** between the ***base class*** and the ***derived class***. In our example, the `BullDog` is a `BaseDog`, which doesn't make any sense, what is a `BaseDog` anyway. Besides, the name `BaseDog` is not extendable, what if later on I design to create a new class, and derive `BaseDog` from that new class, what should I name the new class? Should I name it `BaseBaseDog`? I guess the biggest problem I have with the name `BaseDog` is it refuse the implementation detail. It will reveals the fact that this class `BaseDog` is used to derive other classes. A class name is part of the interface, and when the interface reveals the implementation details, we're losing all the benefits of abstraction. However, this is not a problem if the `BaseDog` is only an internal class, and not expose on the interface. 
 ```
 class BaseDog {
-
+    ...common activities...
 };
 
 class BullDog : public BaseDog {
-
+    ...call the common activities to perform more tasks...
 };
 
 class ShepherdDog : public BaseDog {
-
+    ...call the common activities to perform more tasks...
 };
 ```
+
+
+### Code Reuse with Inheritance
+So instead of call it `Base{{something}}` why don't we just call it `{{something}}`. Instead of calling it `BaseDog`, why don't we just call it `Dog`? `BullDog` is a kind of `Dog`, `ShepherdDog` is another kind of `Dog`. It makes much more sense this way. And it's extendable, a `Dog` can be derived from an `Animal`, `Animal` can be derived from `Organism`, so on and so forth:
+```
+class Dog {
+    ...common activities...
+};
+
+class BullDog : public Dog {
+    ...call the common activities to perform more tasks...
+};
+
+class ShepherdDog : public Dog {
+    ...call the common activities to perform more tasks...
+};
+```
+Some people may argue ***"Yeah, yeah, but these are names, there are cosmetic chanages"***. In software engineering, good naming is not cosmetic. Good naming is a critical element of a good software design. We should always strive for precise and self-explaining names for our classes, our functions and our variables.
+
+The `Dog` defines some common activities. And `BullDog`, `ShepherdDog` reuse these common activites to perform more tasks. So this is an example of ***code reuse with inheritance***. And let's look at how we can achieve the same kind of code with composition.
+
+
+### Code Reuse with Composition
+We have a new class `ActivityManager`, and all the common activities that originally defined in `Dog` are moved to the `ActivityManager`. Every `Dog` have a pointer to the `ActivityManager` - `pActMngr`, and then they reuse the code of the common activities through the `pActMngr`. This is code reuse with ***composition structure***. How does it look comparing to the inheritance example. On the surface, it seems like the composition is worse, because it has more lines of code, and it introduces a new class. However, the composition is actually a much better structure for code reuse. Let's discuss why.
+```
+class ActivityManager {
+    ...common activities...    
+};
+
+class Dog {
+    ...
+};
+
+class BullDog : public Dog {
+    ActivityManager* pActMngr;
+    ...call the common activities through pActMngr...
+};
+
+class ShepherdDog : public Dog {
+    ActivityManager* pActMngr;
+    ...call teh common activites through pActMngr...
+};
+```
+
+# 24 - 4:49
+
+### Code Reuse - Composition is Better than Inheritance
+1. Less code coupling between reused code and reuser of the code
+2. 
