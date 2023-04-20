@@ -462,9 +462,36 @@ int main() {
 ```
 This code will prints out `" calling A::g()"`, this is no question about that. However, if I remove `A::` and only calling `g(x1)`, what will happen?
 ```
+namespace A {
+    struct X {};
+    void g(X x) {
+        std::cout << " calling A::g() \n";
+    }
+}
+
+int main() {
+    A::X x1;
+    g(x1);          // still prints out " calling A::g()"
+}
+```
+You may expect that the compiler will error out and saying *"cannot find the function called `g()`"*, because the function `g()` is only defined inside the namespace `A`. However, this code will not only compiler, it will still printing out `" calling A::g()"`. It turns out when the compiler see the function `g()`, it will not only search the function `g()` in the current scope and the global scope. It will also search the function in the scope where its parameter type is defined. In this case, the type of its parameter is `X`, and `X` is defined in namespace `A`, so the compiler will search the `g()` function in the namespace `A`. That is how this `g()` function (in namespace `A`) is found. This phenomenon is called ***Koening Lookup*** or ***Argument Dependent Lookup* (ADL)**.
+
+With ***Koening lookup***, we have increased the function name search scope, so if I have another global function also called `g()`, this code `g(x1)` will not compile, because there are two `g()` functions visible inside the `main()` function:
+```
+namespace A {
+    struct X {};
+    void g(X x) {
+        std::cout << " calling A::g() \n";
+    }
+}
+
+void g(X x) {
+    std::cout << " calling global g() \n";
+}
+
 int main() {
     A::X x1;
     g(x1);
 }
 ```
-You may expect that the compiler will error out and saying *"cannot find the function called `g()`"*, because the function `g()` is only defined inside the namespace `A`. However, this code will not only compiler, it will still printing out `" calling A::g()"`.
+
