@@ -44,7 +44,7 @@ boVector v{ 0, 2, 3, 4 };
 
 
 ## Uniform Initialization
-***C++03*** allows me to initialize an **\**aggregate class*** or `struct` with ***curly braces enclosed list***. This is called ***aggregate initialization***.
+***C++03*** allows me to initialize an **\**aggregate class*** or `struct` with ***curly braces enclosed list***. This is called ***aggregate initialization***:
 ```
 class Dog {
 public:
@@ -54,6 +54,44 @@ public:
 
 Dog d1 = { 5, "Henry" };    // Aggregate Initialization
 ```
+
+***C++11*** extended the scope of curly brace initialization to any classes, so as long as the `Dog` has a constructor that takes an integer and a string, it can also be initialized with the same format of ***curly braces enclosed list***:
+```
+class Dog {
+public:
+    Dog(int age, std::string name) { ... };
+};
+
+Dog d1 = { 5, "Henry" }
+```
+So the regular constructor initialization, the aggregate initialization and the initializer list initialization, they all take on the same format of ***curly brace enclosed list***. That is why they are called ***uniform initialization***.
+
+However, in the eyes of the compiler, the three kinds of initialization are not seen as equal. They have different priorities. The ***uniform initialization*** will take **`std::initializer_list` constructor** as its **first choice**. And a ***regular constructor*** as the **second choice**. And an ***aggregate initializer*** as the **last choice**.
+
+#### Uniform Initialization Search Order:
+1. `std::initializer_list` cosntructor
+2. Regular constructor that takes the appropriate parameters.
+3. Aggregate initializer.
+
+So when the compile see a `Dog` is initialized with curly brace `3`. The first thing we will do is search the class `Dog` for `std::initializer_list` constructor like **\*this**. If that is found, it will take `3` as a single item array and pass it over to the `std::initializer_list`:
+```
+Dog d1{ 3 };
+
+class Dog {
+public:
+    int age;
+
+    Dog(int a) {
+        age = a;
+    }
+
+    Dog(const std::initializer_list<int>& vec) {        // *this
+        age = *(vec.begin());
+    }
+};
+```
+
+# 1 - 3:44
 
 ---
 **\*Aggregate class** is a class that has no user-declared constructors, no private or protected non-static data members, no base classes, and no virtual functions.
@@ -76,4 +114,3 @@ Point p  { 1, 2 };
 In this example, the `Point` object `p` is initialized using an initializer list, which is allowed because `Point` is an aggregate class.
 
 ---
-
