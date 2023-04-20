@@ -216,6 +216,24 @@ class ShepherdDog : public Dog {
 
 
 ### Code Reuse - Composition is Better than Inheritance
-1. Composition has less code coupling between the reused code and reuser of the code. Inheritance implies more code coupling between the child class and the parent class. The reasons are:
+1. ***Less Code Coupling*** - ***Composition*** has less code coupling between the reused code and reuser of the code. Inheritance implies more code coupling between the child class and the parent class. The reasons are:
    - The child class automatically inherits ALL the parent class's public members. So whether you like it or not, the child class's interface is bloated with the parent class's interface. However, with the ***composition***, you can pick the things that you want to use and bring that into your interface.
-   - The child class can access parent class's protected members. In other words, 
+   - The child class can access parent class's protected members. In other words, it can access the parent's internal. So in a sense, the ***inheritance* breaks *encapsulation***. There are two big enemies on encapsulation in C++, number one is `friend`s, number two is ***inheritance***. So friends and children, biggest enemies in your privacy, it is a philosophy of life.
+
+2. ***Dynamic Binding*** - The second reason why the ***composition*** is better than the ***inheritance*** is ***dynamic binding***. The ***inheritance relationship*** is bound at ***compile time***. Once you pass the ***compile time***, the relationship cannot be changed anymore. However, the ***composition relationship*** can be bound either at ***compile time*** or at ***runtime*** through the ***polymorphism*** and the ***dynamic binding***. Say we have an `OutdoorActivityManager` class and an `IndoorActivityManager` class, both of them are derived from the `ActivityManager` class:
+   ```
+   class OutdoorActivityManager : public ActivityManager { ... }
+   class IndoorActivityManager : public ActivityManager { ... }
+   ```
+   Since each `Dog` has a pointer to `ActivityManager`, we can switch between `OutdoorActivityManager` and `IndoorActivityManager` easily during the ***runtime***.
+
+3. ***Flexible Code Construct*** - Lastly, ***composition*** has more flexible code construct. Say you have many types of `Dog` and many types of `ActivityManager`. With ***composition***, we can arbitrary combination of the `Dog`s and the `ActivityManager`s. There is no limit on how you can combine the `Dog` with an `ActivityManager`. If you really want, one `Dog` can either multiple instances of `ActivityManager` at the same time. With inheritance, you can only have one instance of the parent at a time:
+   ```
+   Dog              ActivityManager
+
+   BullDog          OutdoorActivityManager
+   ShepherdDog      IndoorActivityManager
+   ```
+
+So combine those three - ***less code coupling***, ***dynamic binding*** and ***flexible code construct***. We declare the ***composition*** is a better structure for ***code reuse*** than ***inheritance***. ***Inheritance*** is good for other things, but **NOT** for ***code reuse***.
+
