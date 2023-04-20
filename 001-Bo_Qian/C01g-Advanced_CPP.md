@@ -450,8 +450,8 @@ Say we have a namespace `A`. Inside `A`, we've define a `struct` called `X` and 
 ```
 namespace A {
     struct X {};
-    void g(X x) {
-        std::cout << " calling A::g() \n";
+    void g(X) {
+        std::cout << "calling A::g() \n";
     }
 }
 
@@ -460,12 +460,12 @@ int main() {
     A::g(x1);
 }
 ```
-This code will prints out `" calling A::g()"`, this is no question about that. However, if I remove `A::` and only calling `g(x1)`, what will happen?
+This code will prints out `"calling A::g()"`, this is no question about that. However, if I remove `A::` and only calling `g(x1)`, what will happen?
 ```
 namespace A {
     struct X {};
-    void g(X x) {
-        std::cout << " calling A::g() \n";
+    void g(X) {
+        std::cout << "calling A::g() \n";
     }
 }
 
@@ -474,19 +474,19 @@ int main() {
     g(x1);          // still prints out " calling A::g()"
 }
 ```
-You may expect that the compiler will error out and saying *"cannot find the function called `g()`"*, because the function `g()` is only defined inside the namespace `A`. However, this code will not only compiler, it will still printing out `" calling A::g()"`. It turns out when the compiler see the function `g()`, it will not only search the function `g()` in the current scope and the global scope. It will also search the function in the scope where its parameter type is defined. In this case, the type of its parameter is `X`, and `X` is defined in namespace `A`, so the compiler will search the `g()` function in the namespace `A`. That is how this `g()` function (in namespace `A`) is found. This phenomenon is called ***Koening Lookup*** or ***Argument Dependent Lookup* (ADL)**.
+You may expect that the compiler will error out and saying *"cannot find the function called `g()`"*, because the function `g()` is only defined inside the namespace `A`. However, this code will not only compiler, it will still printing out `"calling A::g()"`. It turns out when the compiler see the function `g()`, it will not only search the function `g()` in the current scope and the global scope. It will also search the function in the scope where its parameter type is defined. In this case, the type of its parameter is `X`, and `X` is defined in namespace `A`, so the compiler will search the `g()` function in the namespace `A`. That is how this `g()` function (in namespace `A`) is found. This phenomenon is called ***Koening Lookup*** or ***Argument Dependent Lookup* (ADL)**.
 
-With ***Koening lookup***, we have increased the function name search scope, so if I have another global function also called `g()`, this code `g(x1)` will not compile, because there are two `g()` functions visible inside the `main()` function:
+With ***Koening lookup***, we have increased the function name search scope, so if I have another global function also called `g()`, this code `g(x1)` will not compile, because there are two `g()` functions visible inside the `main()` function although one of them is inside namespace `A`:
 ```
 namespace A {
     struct X {};
-    void g(X x) {
-        std::cout << " calling A::g() \n";
+    void g(X) {
+        std::cout << "calling A::g() \n";
     }
 }
 
 void g(A::X x) {
-    std::cout << " calling global g() \n";
+    std::cout << "calling global g() \n";
 }
 
 int main() {
@@ -496,4 +496,223 @@ int main() {
 ```
 
 
+In this example, we have a class `C`. Inside `C`, we have a public `struct` member `Y`, static method `h()`. In the `main()` function, I define a `C::Y` object `y` and call `C::h(y)`. This will prints out `"calling C::h()"`:
+```
+class C {
+public:
+    struct Y {};
+    static void h(Y) {
+        std::cout << "calling C::h() \n";
+    }
+};
+
+int main() {
+    C::Y y;
+    C::h(y);        // prints out "calling C::h()"
+}
+```
+
+However, if I remove `C::` from `h(y)` **\*here**, what will happen? 
+```
+int main() {
+    C::Y y;
+    h(y);           // *here
+}
+```
+You may think since we have ***Koening lookup***, when the compiler see the function `h()`, it will search function in the scope where the type of its parameter is defined. So it will search inside `C` and find `h(y)`. No, actually **the *Koening lookup* only applies to *namespace***, it cannot reach its tentacles into a `class`. So this is an error:
+```
+class C {
+public:
+    struct Y {};
+    static void h(Y) {
+        std::cout << "calling C::h() \n";
+    }
+};
+
+int main() {
+    C::Y y;
+    h(y);           // Compiler error
+}
+```
+
+In this example, now we have two namespaces. Namespace `A` - same as before, has a `struct` `X`, and a method `g()`. Namespace `C` - also has a method `g()`. In the method `j()`, I create an `A::X` object `x`, and call `g(x)`. The `main()` function will invoke the function `C::j()`. What will happen?
+```
+namespace A {
+    struct X {};
+    void g(X) {
+        std::cout << "calling A::g() \n";
+    }
+}
+
+namespace C {
+    void g(A::X) {
+        std::cout << "calling C::g() \n";
+    }
+    void j() {
+        A::X x;
+        g(x);
+    }
+}
+
+int main() {
+    C::j();
+}
+```
+This code will not compile. When the compiler try to resolve the function call of `g()`, it definitely can see this function `g()` (in namespace `C`). However, because of ***Koening lookup***, it can also see this function `g()` (in namespace `A`). So the compiler doesn't know which one to call. It is an ambiguous call to function `g()`.
+
+If I change `C` from a namesapce to a `class`, and calling `j()` from a `C` object. Now what will happen?
+```
+namespace A {
+    struct X {};
+    void g(X) {
+        std::cout << "calling A::g() \n";
+    }
+}
+
+class C {
+public:
+    void g(A::X) {
+        std::cout << "calling C::g() \n";
+    }
+    void j() {
+        A::X x;
+        g(x);
+    }
+};
+
+int main() {
+    C c;
+    c.j();
+}
+```
+This code will compile, and prints out `"calling C::g()"`. Why? Because when the compiler tries to find the method `g()`, it will first search inside class `C`. If the method `g()` is found, it will stop searching. Only when the `g()` is not found inside the class `C`, the compiler will look at the ***global scope*** and use ***Koening lookup***.
+
+So if `g(A::X)` method is not defined inside the class `C`, `j()` method will still compile, but prints out `"calling A::g()"`:
+```
+namespace A {
+    struct X {};
+    void g(X) {
+        std::cout << "calling A::g() \n";
+    }
+}
+
+class C {
+public:             // g(A::x) method removed
+    void j() {
+        A::X x;
+        g(x);
+    }
+};
+
+int main() {
+    C c;
+    c.j();          // prints out "calling A::g()"
+}
+```
+So the conclusion we can draw from this example is **the class member methods are more tightly bound with each other than with any other functions**.
+
+Now let's say we have another class `B`, `g(A::X)` has been moved to `B`. And class `C` is publicly derived from `B`. Now what will happen?
+```
+namespace A {
+    struct X {};
+    void g(X) {
+        std::cout << "calling A::g() \n";
+    }
+}
+
+class B {
+public:
+    void g(A::X) {
+        std::cout << "calling B::g() \n";
+    }
+};
+
+class C : public B {
+public:
+    void j() {
+        A::X x;
+        g(x);
+    }
+};
+
+int main() {
+    C c;
+    c.j();
+}
+```
+This code will compile, and prints out `"calling B::g()"`. So the conclusion is a **member method from *parent class* also has a higher priority than any outside functions.**
+
+
+### Name Hiding for Namespaces
+We're going to talk about **name hiding for *namespaces***.
+
+In this example, we have a namespace `A`. Inside `A`, we have a `g()` function, which an integer parameter. And inside `A`, there is a nested namespace `C`, `C` also has a `g()` function, but this `g()` function has no parameter. And the `j()` function invoke `g(8)`. And ultimatly the `A::C::j()` function is invoked:
+```
+namespace A {
+    void g(int) {                                   // *here
+        std::cout << "calling A::g() \n";
+    }
+
+    namespace C {
+        void g() {
+            std::cout << "calling C:g() \n";
+        }
+        void j() {
+            g(8);
+        }
+    }
+}
+
+int main() {
+    A::C::j();
+}
+```
+You may expect when the compiler see `g(8)`, it should invoke this `g()` function (inside namespace `A` **\*here**), because they are all under the umbrella of namespace `A`. So this `g()` function should be visible inside namespace `C`. But actually, it is not. This code will not compile, because this `g()` function (inside namespace `A` **\*here**) is shadowed by `C`'s own `g()` function, even though they have different parameter signature. This is ***name hiding***.
+
+To overcome ***name hiding***, you need to use **`using` declaration** like **\*this**. Now this code will compile:
+```
+namespace A {
+    void g(int) {
+        std::cout << "calling A::g() \n";
+    }
+
+    namespace C {
+        void g() {
+            std::cout << "calling C::g() \n";
+        }
+        void j() {
+            using A::g;                         // *this
+            g(8);
+        }
+    }
+}
+
+int main() {
+    A::C::j();
+}
+```
+So far, the above example is very similar to the `class` example of ***name hiding*** that we've talked about last time. Now let me bring something different.
+
+Let's say the `A` has a `struct` `X`, and `g()` is taking `X` as a parameter. Inside namespace`C`'s `j()` method, let's remove the **`using` declaration**, define `X` object `x` and call `g(x)`:
+```
+namespace A {
+    struct X {};
+    void g(X) {
+        std::cout << "calling A::g() \n";
+    }
+
+    namespace C {
+        void g() {
+            std::cout << "calling C::g() \n";
+        }
+        void j() {
+            X x;
+            g(x);
+        }
+    }
+}
+```
+Now according to ***name hiding* rule**, this `g()` function (inside namespace `A`) will be hidden by `C`'s own `g()` function
+
+# 26 - 8:02
 
