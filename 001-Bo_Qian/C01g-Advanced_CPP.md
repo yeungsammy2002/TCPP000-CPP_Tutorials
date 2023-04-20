@@ -281,5 +281,82 @@ public:
     using B::f;                 // case 2c: `using` declaration for class member
 };
 ```
-**`using` directive** and **`using` declaration**, when working with namespaces, they can be used either under ***global scope*** like `case 1` & `case 2` or in the ***local function scope*** like `case 1b` & `case 2b`. `case 3` is **`using` declaration for `class` member**. It brings the method `f()` from the parent class `B` into current class `D` with ***public access***.
+**`using` directive** and **`using` declaration**, when working with namespaces, they can be used either under ***global scope*** like `case 1` & `case 2` or in the ***local function scope*** like `case 1b` & `case 2b`. 
+
+`case 2c` is **`using` declaration for `class` member**. It brings the method `f()` from the parent class `B` into current class `D` with ***public access***. You might be wondering why do we need to do that? Isn't the method `f()` inherited by `D` already? The class `D` is ***privately*** derived from `B`, which means `B`'s public method becomes `D`'s private method. So `f()` is `D`'s private method.
+
+If I don't use the **`using` declaration**, then I create a `D` object `d`, and call `d.(8)`. This code will not compile, because `f()` is a private method:
+```
+...
+class B {
+public:
+    void f(int a);
+};
+
+class D : private B {
+public:
+    void g() {
+        using namespace std;
+        cout << "From D: \n";
+    }
+    void h() {
+        using std::cout;
+        cout << "From E: \n";
+    }
+};
+
+int main() {
+    D d;
+    d.f(8);             // Compiler error, f() is private method
+}
+```
+
+However, after using the **`using`  declaration for method `f()`**, `d.f(8)` will compile:
+```
+...
+class D : private B {
+public:
+    void g() {
+        using namespace std;
+        cout << "From D: \n";
+    }
+    void h() {
+        using std::cout;
+        cout << "From E: \n";
+    }
+    using B::f;         // `using` declaration for f()
+};
+
+int main() {
+    D d;
+    d.f(8);             // OK
+}
+```
+You may have notice the **`using` declaration for class member** is used in **`class` scope**. It cannot be used in a ***local scope***, it cannot be used in a ***global scope***. So `using B::f` can only be used in ***class scope***.
+
+So if I have a **`using` declaration of a class member** in a ***global scope***, this is illegal:
+```
+...
+/* global scope */
+using B::f;             // illegal
+```
+
+Similarly, if I have an **`using` declaration of namespace member** in a ***class scope***, this is also illegal:
+```
+...
+class D : private B {
+public:
+    void g() {
+        using namespace std;
+        cout << "From D: \n";
+    }
+    void h() {
+        using std::cout;
+        cout << "From E: \n";
+    }
+    using B::f;
+    using std::cout;            // illegal
+};
+...
+```
 
