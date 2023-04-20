@@ -193,7 +193,7 @@ The `Dog` defines some common activities. And `BullDog`, `ShepherdDog` reuse the
 
 
 ### Code Reuse with Composition
-We have a new class `ActivityManager`, and all the common activities that originally defined in `Dog` are moved to the `ActivityManager`. Every `Dog` have a pointer to the `ActivityManager` - `pActMngr`, and then they reuse the code of the common activities through the `pActMngr`. This is code reuse with ***composition structure***. How does it look comparing to the inheritance example. On the surface, it seems like the composition is worse, because it has more lines of code, and it introduces a new class. However, the composition is actually a much better structure for code reuse. Let's discuss why.
+We have a new class `ActivityManager`, and all the common activities that originally defined in `Dog` are moved to the `ActivityManager`. Every `Dog` have a pointer to the `ActivityManager` - `pActMngr`, and then they reuse the code of the common activities through the `pActMngr`. This is code reuse with ***composition structure***. How does it look comparing to the inheritance example. On the surface, it seems like the ***composition*** is worse, because it has more lines of code, and it introduces a new `class`. However, the ***composition*** is actually a much better structure for code reuse. Let's discuss why.
 ```
 class ActivityManager {
     ...common activities...    
@@ -214,8 +214,8 @@ class ShepherdDog : public Dog {
 };
 ```
 
-# 24 - 4:49
 
 ### Code Reuse - Composition is Better than Inheritance
-1. Less code coupling between reused code and reuser of the code
-2. 
+1. Composition has less code coupling between the reused code and reuser of the code. Inheritance implies more code coupling between the child class and the parent class. The reasons are:
+   - The child class automatically inherits ALL the parent class's public members. So whether you like it or not, the child class's interface is bloated with the parent class's interface. However, with the ***composition***, you can pick the things that you want to use and bring that into your interface.
+   - The child class can access parent class's protected members. In other words, 
