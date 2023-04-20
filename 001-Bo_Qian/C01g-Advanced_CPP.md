@@ -711,8 +711,34 @@ namespace A {
         }
     }
 }
-```
-Now according to ***name hiding* rule**, this `g()` function (inside namespace `A`) will be hidden by `C`'s own `g()` function
 
-# 26 - 8:02
+int main() {
+    A::C::j();
+}
+```
+Now according to ***name hiding* rule**, this `g()` function (inside namespace `A`) will be hidden by `C`'s own `g()` function. So you may think this code will not compile. Wrong, this code will compile and prints out `"calling A::g()"`. It is true that this `g()` function (inside namespace `A`) will be hidden by its `g()` function according to the ***name hiding* rule**. However, there's another rule that kicks in, which is the ***Koening lookup***. With ***Koening lookup***, the compiler will look for the `g()` function in the space where `X` is defined (in this case, namespace `A`). So this code will compile even though we don't have the **`using` declaration**. This is something different from the class example.
+
+
+### Summary of Name Lookup Sequence
+When working with ***namespaces***, a compiler will first search a name under ***current scope***, then go to next enclosed scope, and then next enclosed scope, until finally it goes to the ***global scope*** to search the name:
+```
+With namespaces:
+current scope => next enclosed scope => ... => global scope
+```
+
+When working with ***classes***, the compiler will first search in ***current class scope***, and then ***parent class scope***, and the ***grandparent scope***, and finally go to the ***global scope***:
+```
+With classes:
+current class scope => parent scope => ... => global scope
+```
+
+***Name hiding*** will happen **when a higher priority scope defines a function with the same name as a function in the lower priority scope**.
+
+To override the sequence of name lookup, or to bring some hidden name back to current scope, with ***namespaces***, there are two ways to do it:
+1. ***Qualifier*** or **`using` declaration**
+   
+2. ***Koening lookup***
+
+With classes, there's only one way to do it, which is the ***qualifier***, or **`using` declaration**. You cannot use ***Koening lookup*** for classes.
+
 
