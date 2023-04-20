@@ -485,15 +485,15 @@ namespace A {
     }
 }
 
-void g(X x) {
+void g(A::X x) {
     std::cout << " calling global g() \n";
 }
 
 int main() {
     A::X x1;
-    g(x1);
+    g(x1);          // Compiler error: call of overloaded 'g(A::X&)' is ambiguous
 }
 ```
 
-# 26 - 2:13
+
 
