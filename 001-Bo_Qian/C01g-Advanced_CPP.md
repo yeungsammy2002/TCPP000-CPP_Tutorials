@@ -237,3 +237,49 @@ class ShepherdDog : public Dog {
 
 So combine those three - ***less code coupling***, ***dynamic binding*** and ***flexible code construct***. We declare the ***composition*** is a better structure for ***code reuse*** than ***inheritance***. ***Inheritance*** is good for other things, but **NOT** for ***code reuse***.
 
+
+
+
+# Section 25 - Namespace and Keyword - `using`
+We're going to talk about the ***namespace*** and the ***name lookup***. We'll start with some basics, and then move on to some more advanced stuff.
+
+***C++ namespace*** has an important keyword - `using`. This keyword can be used in two ways. 
+1. **`using` directive** - it is to bring all namespace members into current scope. So that you can use them without the qualifier in front of them. If I have using `namespace std`, I'm bring every name under `std` into current scope:
+   ```
+   using namespace std;
+   ```
+   
+2. **`using` declaration** - **`using` declaration** itself can be used in two ways:
+   - It brings one specific namespace member to current scope. So if I have using `std::cout`, after that I can use `cout` without the ***qualifier***:
+        ```
+        using std::cout;
+        cout << "Hello world.\n";
+        ```
+   - It brings a member from base class to current class's scope. So this is working with `class`, **NOT *namespace***. **`using` directive** can only work with ***namespace***, **`using` declaration** can work with either ***namespace*** or **`class`**.
+
+
+Now let's look at an example with `class`es in it. We have a class `B`, which has a public method `f()`. We have a class `D`, which is derived from `B`, and it has public methods `g()` and `h()`:
+```
+using namespace std;            // case 1: `using` directive in global scope
+using std::cout;                // case 2: `using` declaration in global scope
+
+class B {
+public:
+    void f(int a);
+};
+
+class D : private B {
+public:
+    void g() {
+        using namespace std;    // case 1b: `using` directive in local scope
+        cout << "From D: \n";
+    }
+    void h() {
+        using std::cout;        // case 2b: `using` declaration in local scope
+        cout << "From E: \n";
+    }
+    using B::f;                 // case 2c: `using` declaration for class member
+};
+```
+**`using` directive** and **`using` declaration**, when working with namespaces, they can be used either under ***global scope*** like `case 1` & `case 2` or in the ***local function scope*** like `case 1b` & `case 2b`. `case 3` is **`using` declaration for `class` member**. It brings the method `f()` from the parent class `B` into current class `D` with ***public access***.
+
