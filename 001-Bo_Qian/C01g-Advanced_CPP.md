@@ -444,4 +444,27 @@ int main() {
 
 
 # Section 26 - Koening Lookup - Argument Dependent Lookup (ADL)
+We're going to talk about ***Koening Lookup***.
 
+Say we have a namespace `A`. Inside `A`, we've define a `struct` called `X` and a function `g()`. In the `main()` method, I have defined a `A::X` object `x1` and then invoke `g(x1)`:
+```
+namespace A {
+    struct X {};
+    void g(X x) {
+        std::cout << " calling A::g() \n";
+    }
+}
+
+int main() {
+    A::X x1;
+    A::g(x1);
+}
+```
+This code will prints out `" calling A::g()"`, this is no question about that. However, if I remove `A::` and only calling `g(x1)`, what will happen?
+```
+int main() {
+    A::X x1;
+    g(x1);
+}
+```
+You may expect that the compiler will error out and saying *"cannot find the function called `g()`"*, because the function `g()` is only defined inside the namespace `A`. However, this code will not only compiler, it will still printing out `" calling A::g()"`.
