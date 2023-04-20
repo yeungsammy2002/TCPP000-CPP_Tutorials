@@ -341,7 +341,7 @@ So if I have a **`using` declaration of a class member** in a ***global scope***
 using B::f;             // illegal
 ```
 
-Similarly, if I have an **`using` declaration of namespace member** in a ***class scope***, this is also illegal:
+Similarly, if I have an **`using` declaration of namespace member** in a ***class scope***, this is also illegal. If I have an **`using` directive** in a ***class scope***, this is also illegal:
 ```
 ...
 class D : private B {
@@ -356,7 +356,92 @@ public:
     }
     using B::f;
     using std::cout;            // illegal
+    using namespace std;        // illegal
 };
 ...
 ```
+
+### Methods from Parent won't Do Function Overloading because Name Hiding
+In this example, again, we have the base class `B` and the derived class `D`. Now `D` is publicly derived from `B`, so it will inherit `B`'s public method `f()` as its own public method. The `B` has a method `f()`, with the integer parameter `a`. `D` has a method `f()` with no parameter. In the `main()` function, I create a `D` object `d`, and then called `d.f(8)`. You would expect the method `f()` of `B`, which takes an integer parameter will be invoked, but it will not. This code will not compile:
+```
+class B {
+public:
+    void f(int a);
+};
+
+class D : public B {
+public:
+    void f();
+};
+
+int main() {
+    D d;
+    d.f(8);             // Compiler error
+}
+```
+
+This turns out `B`'s method `f()` is shadowed by `D`'s own method `f()`. This is called ***name hiding***. To overcome name hiding, we could use **`using` declaration for class member**. Now this code will compile:
+```
+class B {
+public:
+    void f(int a);
+};
+
+class D : public B {
+public:
+    using B::f;         // `using` declaration for class member
+    void f();
+};
+
+int main() {
+    D d;
+    d.f(8);             // OK
+}
+```
+
+
+### Anonymous Namespace
+***Anonymous namespace*** is a **namespace that doesn't have a name**. As a result, everything inside of the namespace can be accessed within the same file. So in the `main()` function, I can call the `h()` function as if **`using` directive** is included implicitly for the ***anonymous namespace***. However, you cannot call the `h()` function from another file:
+```
+namespace {
+    void h() {
+        std::cout << "h()\n";
+    }
+}
+
+int main() {
+    h();
+}
+```
+
+So this is effectively similar to having defined a ***global static function*** of `h()`:
+```
+// equivalent to this
+static void h() {
+    std::cout << "h()\n";
+}
+```
+
+However, there is an additional benefit of using ***anonymous namespace***. For example, if I have a global version of function `g()` and also have another function `g()` inside the ***anonymous namespace***. When `h()` function called `g()`, it will call the **local version of `g()`**, **NOT** the global version:
+```
+void g();
+
+namespace {
+    void g();
+
+    void h() {
+        std::cout << "h()\n";
+        g();                    // call local version `g()`
+    }
+}
+
+int main() {
+    h();
+}
+```
+
+
+
+
+# Section 26 - Koening Lookup - Argument Dependent Lookup (ADL)
 
