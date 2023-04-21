@@ -5,6 +5,8 @@ Let's look at our example. We have two classes `Cat` and `Dog`.
 
 Let's first look at `Dog.h`. `Dog` has a private data member `_name`, which is the name of the `Dog`. And it also has a `bark()` method, and a constructor that takes a ***string* `name`** as parameter:
 ```
+/* Dog.h */
+
 #include <string>
 
 class Dog {
@@ -16,6 +18,8 @@ public:
 ```
 In `Dog.cpp`, the `bark()` method of the `Dog` prints out `"Dog rules! My name is {{ _name }}"`. And the constructor of the `Dog` prints out `"Constructing Dog {{name}}"`, and then assign the `name` to the private data member `_name`:
 ```
+/* Dog.cpp */
+
 #include "Dog.h"
 
 void Dog::bark() {
@@ -29,6 +33,8 @@ Dog::Dog(char* name) {
 ```
 The `Cat` class is very similar to the `Dog` class. But instead of having `bark()` method, it has a `meow()` method. Here is the `Cat.h`:
 ```
+/* Cat.h */
+
 #include <string>
 
 class Cat {
@@ -40,6 +46,8 @@ public:
 ```
 In `Cat.cpp`, the print out message is slightly different, it prints out `"Cat rules! My name is {{ _name }}"`:
 ```
+/* Cat.cpp */
+
 #include "Cat.h"
 #include "Dog.h"
 #include <iostream>
@@ -69,6 +77,8 @@ Dog rules! My name is Gunner
 
 Now let's say I want to create another global variable in `Dog.cpp`. It's a `Cat` object `c` with the name of `"Smokey"`. And inside the `Dog`'s constructor. I'm going to call `c.meow()`:
 ```
+/* Dog.cpp */
+
 #include "Dog.h"
 
 Cat c("Smokey");
@@ -103,6 +113,8 @@ Dog::Dog(char* name) {
 ```
 And in the `Cat`'s constructor (`Cat.cpp`), we call `d.bark()`, and we also need to add `extern Dog d;` because `d` is defined in another source file:
 ```
+/* Cat.cpp */
+
 #include "Cat.h"
 #include "Dog.h"
 #include <iostream>
@@ -127,6 +139,8 @@ To solve this problem, there are different ways to solve this problem, but the m
 ### Singleton Design Pattern
 I have created another class `Singleton` (`Singleton.h`), and then the `Singleton` has a `Dog`'s pointer `pd`, a `Cat`'s pointer `pc`, a destructor, a `getDog()` method, and a `getCat()` method:
 ```
+/* Singleton.h */
+
 class Dog;
 class Cat;
 
@@ -143,6 +157,8 @@ public:
 ```
 In the `Singleton` source file `Singleton.cpp`, both `pd` and `pc` are initialized to `0`. The `getDog()` method will check if `pd` is `0`, if `pd` is `0`, it create a new `Dog` object with a name `"Gunner"`, and then return `pd`. And next time when the `getDog()` method called, it will not create a new `Dog`, it will return the same `Dog` object `pd`. This is called ***initialized upon first usage idiom***. The same thing for the `Cat`. The `Cat` will be initialized only when it needs to be used:
 ```
+/* Singleton.cpp */
+
 #include "Singleton.h"
 #include "Dog.h"
 #include "Cat.h"
@@ -179,6 +195,8 @@ int main() {
 ```
 And in the `Cat`'s constructor (`Cat.cpp`), I'll call `Singleton::getDog()->bark()`:
 ```
+/* Cat.cpp */
+
 #include "Cat.h"
 #include "Dog.h"
 #include <iostream>
@@ -195,6 +213,8 @@ Cat::Cat(char* name) {
 ```
 And we don't need any global variable of `Cat` anymore. We should always call `getCat()` when we need a `Cat`:
 ```
+/* Dog.cpp */
+
 #include "Dog.h"
 
 void Dog::bark() {

@@ -117,6 +117,9 @@ So with that, I'm introducing an important ***engineering principle***.
 ### Engineering Principle
 The principle says:
 1. Functions that operate on class `C`, and in a same namespace with `C` are part of `C`'s interface.
-2. Vice-versa, functions that are part of `C`'s interface should be in the same namespace as `C`.
-
-# 27 - 5:36
+2. Vice-versa, functions that are part of `C`'s interface should be in the same namespace as `C`. Say I have defined an `C` object `c`. Since the syntax said I `C`'s member method without using a qualifier, I should also be able to invoke a non-member function that operate on `C` without a qualifier. If that function comes from the same namespace as `C`, because both functions belongs to the interface of `C`. This is the ?? reason behind ***Koening lookup***
+```
+A::C c;
+c.f();
+h(c);
+```
