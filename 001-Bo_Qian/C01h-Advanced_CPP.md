@@ -174,3 +174,56 @@ int main() {
 ```
 This is why we need to remember the principle and apply them during our daily coding.
 
+
+
+
+# Section 28 - Demystifying Operator `new`/`delete`
+We're going to talk about **operator `new`** and **operator `delete`**. What do they do? And how to overload them?
+
+### `new` Operator
+Let's start with the basic. I'm create a `Dog` on the ***heap***. What would happen as a result of this code?
+```
+Dog* pd = new Dog();
+```
+There are 3 things that would happen, and they happened in the fix order.
+- **Step 1.** operator `new` is called to allocate memory for `Dog` object.
+  
+- **Step 2.** `Dog`'s constructor is called to create `Dog`.
+  
+- **Step 3.** If ***Step 2***, `Dog`'s constructor, throw an exception, call operator `delete` to free the memory allocated in ***Step 1***. However, if the ***Step 1***, operator `new`, throws an exception, the operator `delete` will not be invoked to free the memory, because C++ will assume the allocation of memory has not been successfully. So you need to keep that in mind when you write your own operator `new`.
+
+
+### `delete` Operator
+```
+delete pd;
+```
+`delete pd;` will do the opposite thing:
+- **Step 1.** The `Dog`'s destructor is called to destroy `Dog`.
+  
+- **Step 2.** operator `delete` is called to free the memory.
+
+
+### Simplified Version of Operator `new`
+Note that `std::new_handler` and `std::set_new_handler()` are defined in `<new>`.
+
+This is the simplified version of operator `new` that I used to demonstrate what the standard operator `new` typically does. Before going to the details, let me introduce `std::new_handler`. `std::new_handler` is a function that invoked when operator `new` failed to allocate memory. By default, a `new` handler is a ***null pointer***, which means there is no `std::new_handler`. But you can always set a `std::new_handler` with the `std::set_new_handler()` function. `std::set_new_handler()` function not only installs a `std::new_handler`, it also returns an old `std::new_handler`, or the current `std::new_handler`. `operator new()` takes one parameter, which the `size` of the memory to be allocated, and it throws a `std::bad_alloc` exception. Inside the `operator new()`, there is an infinity loop. Inside of the loop, the first thing it does is to allocate the memory of this `size`. If the memory allocation is successful, it returns the memory and it's done. Mission complele:
+```
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+    while(true) {
+        void* pMem = malloc(size);              // Allocate memory
+        if(pMen)
+            return pMem;                        // Return the memory if successful
+    }
+
+    std::new_handler Handler = std::set_new_handler(0);     // Get new handler
+    std::set_new_handler(Handler);
+
+    if(Handle)
+        (*Handler)();                           // Invoke new handler
+    else
+        throw bad_alloc();                      // If new handler is null, throw exception
+}
+```
+
+# 28 - 2:50
+
