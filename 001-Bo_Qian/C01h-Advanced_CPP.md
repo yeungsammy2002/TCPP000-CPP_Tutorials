@@ -117,9 +117,54 @@ So with that, I'm introducing an important ***engineering principle***.
 ### Engineering Principle
 The principle says:
 1. Functions that operate on class `C`, and in a same namespace with `C` are part of `C`'s interface.
-2. Vice-versa, functions that are part of `C`'s interface should be in the same namespace as `C`. Say I have defined an `C` object `c`. Since the syntax said I `C`'s member method without using a qualifier, I should also be able to invoke a non-member function that operate on `C` without a qualifier. If that function comes from the same namespace as `C`, because both functions belongs to the interface of `C`. This is the ?? reason behind ***Koening lookup***
+2. Vice-versa, functions that are part of `C`'s interface should be in the same namespace as `C`. Say I have defined an `C` object `c`. Since the syntax said I `C`'s member method without using a qualifier, I should also be able to invoke a non-member function that operate on `C` without a qualifier. If that function comes from the same namespace as `C`, because both functions belongs to the interface of `C`. This is the theroetical reason behind ***Koening lookup***:
 ```
 A::C c;
 c.f();
 h(c);
 ```
+
+Now suppose I'm a little suspicious about this principle. What will happen if i have a non member function that should belongs to this interface but not in the same namespace as `C`? Will it bite me? Let's look at an example.
+
+We have a namespace `A`, and inside `A`, we have a class `C`. Then we define an `operator+` that works on `C`. This operator really should belongs to the interface of `C`, but it is not in the same namespace as `C`. In the `main()` function, I have create an array of `C`, and then call the standard library function `std::accumulate()` on the array:
+```
+namespace A {
+    class C {};
+}
+
+int operator+(A::C, int n) {
+    return n + 1;
+}
+
+int main() {
+    A::C arr[3];
+    std::accumulate(arr, arr + 3, 0);       // return 3
+}
+```
+And here is the definition of the function `std::accumulate()`. You can ignore most of the function. What's important to us is belongs to namespace `std`. And the `std::accumulate()` function will invoke the `operator+`. Since we've already define `operator+` for `C`, apparently this is what we want to use:
+```
+// Defined in C++ standard library <numeric>
+namespace std {
+    template <class InputIterator, class T>
+        T accumlate(InputIterator first, InputIterator last, T init) {
+            while(first != last)
+                init = init + *first++;
+            return init;
+        }
+}
+```
+Now the question is when the compiler see the `operator+`. Can it find our `operator+` successfully? The answer is probably **NOT**. It depends on what header files you have included. Remember the ***name hiding* rule**? When the compiler see the `operator+`, it will first search the `operator+` in the current scope. If it cannot find one, it will go to the global scope and search for it. However, if the compiler did find the `operator+` in current scope, regardless of the types of the parameter that `+` is taking, it will stop searching. That is really bad, because there are bunch of `operator+` that's defined in the namespace `std`. And then it could easily include some header files, and our own `operator+` is hidden.
+
+So as you can see, **\*this** could indeed bite me. And the solution is follow the principle, and put the `operator+` in this same namespace `A` as `C`. Now the compiler will be able to our `operator+` because of the ***Koening lookup***:
+```
+namespace A {
+    class C {};
+    int operator+(A::C, int n) {
+        return n + 1;
+    }
+}
+
+...
+```
+This is why we need to remember the principle and apply them during our daily coding.
+
