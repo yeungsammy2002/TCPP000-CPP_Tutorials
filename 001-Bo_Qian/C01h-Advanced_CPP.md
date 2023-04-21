@@ -204,9 +204,9 @@ delete pd;
 
 
 ### Simplified Version of Operator `new`
-Note that `std::new_handler` and `std::set_new_handler()` are defined in `<new>`.
+Note that `std::new_handler`, `std::set_new_handler()` and `std::bad_alloc` are defined in `<new>`.
 
-This is the simplified version of operator `new` that I used to demonstrate what the standard operator `new` typically does. Before going to the details, let me introduce `std::new_handler`. `std::new_handler` is a function that invoked when operator `new` failed to allocate memory. By default, a `new` handler is a ***null pointer***, which means there is no `std::new_handler`. But you can always set a `std::new_handler` with the `std::set_new_handler()` function. `std::set_new_handler()` function not only installs a `std::new_handler`, it also returns an old `std::new_handler`, or the current `std::new_handler`. `operator new()` takes one parameter, which the `size` of the memory to be allocated, and it throws a `std::bad_alloc` exception. Inside the `operator new()`, there is an infinity loop. Inside of the loop, the first thing it does is to allocate the memory of this `size`. If the memory allocation is successful, it returns the memory and it's done. Mission complele:
+This is the simplified version of operator `new` that I used to demonstrate what the standard operator `new` typically does. Before going to the details, let me introduce `std::new_handler`. `std::new_handler` is a function that invoked when operator `new` failed to allocate memory. By default, a `new` handler is a ***null pointer***, which means there is no `std::new_handler`. But you can always set a `std::new_handler` with the `std::set_new_handler()` function. `std::set_new_handler()` function not only installs a `std::new_handler`, it also returns an old `std::new_handler`, or the current `std::new_handler`. `operator new()` takes one parameter, which the `size` of the memory to be allocated, and it throws a `std::bad_alloc` exception. Inside the `operator new()`, there is an infinity loop. Inside of the loop, the first thing it does is to allocate the memory of this `size`. If the memory allocation is successful, it returns the memory and it's done, mission complele. If the memory allocation is not successful, it will fetch the current `std::new_handler` `Handler` and check if the `Handler` is ***null***. If it is not ***null***, invoke the `std::new_handler` function `(*Handler)()`. After that, go back to the loop and try to allocate memory again:
 ```
 void* operator new(std::size_t size) throw(std::bad_alloc) {
     while(true) {
@@ -221,9 +221,182 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
     if(Handle)
         (*Handler)();                           // Invoke new handler
     else
-        throw bad_alloc();                      // If new handler is null, throw exception
+        throw std::bad_alloc();                      // If new handler is null, throw exception
 }
 ```
+So you might have gussed, the purpose of the `std::new_handler` `Handler` is to make more memory available so that next run of memory allocation could be successful. If the `Handler` is a ***null pointer***, which means there is nothing I can do to free the memory. Then it will just throw a `std::bad_alloc()` exception. These are the things that standard operator `new` typically does. You can overload the operator `new` to do whatever things that you want to do, but it is generally a good practice to follow the same format of the standard operator `new`, such as a `while`-loop, a `std::bad_alloc()` exception.
 
-# 28 - 2:50
 
+### Memmber Operator `new`
+You may have notice that in the previous example we are defining a **global operator `new`**. Sometimes you don't want to overload the **global operator `new`**, you only want to overload the **operator `new`** for your own class. 
+
+Here we are defining a **member operator `new`** for our class `Dog`.The **member operator `new`** also takes one parameter of `std::size_t`, and also throw a `std::bad_alloc` exception. Inside the operator `new`, I call a function `customNewForDog()`, which create this `size` of the memory for `Dog`. Now I have a `YellowDog`, which is derived from `Dog`. In the `main()` function, I create new `YellowDog` on the ***heap***. Now do you smell any problem from this code?
+```
+class Dog {
+    ...
+public:
+    static void* operator new(std::size_t size) throw(std::bad_alloc) {
+        customNewForDog(size);
+    }
+};
+
+class YellowDog : public Dog {
+    int age;
+};
+
+int main() {
+    YellowDog* py = new YellowDog();
+}
+```
+The `Dog`'s operator `new` is a public method, that means it will be inherited by its child, `YellowDog`. So when I create a `YellowDog` on the ***heap***. It will actually call the `Dog`'s operator `new`, not the standard operator `new`. As a result, I will be calling `customeNewForDog()` to allocate a memory for `YellowDog`, which may or may not be what I have in mind.
+
+Suppose I don't want that, what can I do? Creating a new `YellowDog` invokes the `Dog`'s operator `new`. However, what parameter will be positive to the `Dog`'s operator `new`? Will be the `Dog`'s `size`? Or the `YellowDog`'s `size`? Fortunately, it's the `YellowDog`'s `size`. So inside the `Dog`, operator `new` for `Dog`. I could do some check based on that **\*here**. If the `size` is equals to `Dog`'s `size`, I will call `customNewForDog()`. Otherwise, I will call the standard operator `new` for `YellowDog`:
+```
+class Dog {
+    ...
+public:
+    static void* operator new(std::size_t size) throw(std::bad_alloc) {
+        if(size == sizeof(Dog))                 // *here
+            customNewForDog(size);
+        else
+            ::operator new(size);               // call the standard operator `new` for `YellowDog`
+    }
+    ...
+};
+
+class YellowDog : public Dog {
+    int age;
+};
+
+int main() {
+    YellowDog* py = new YellowDog();
+}
+```
+So this is one solution.
+
+Here is another solution. Since I have defined a customize operator `new` for `Dog`, maybe I could define a customize operator `new` for `YellowDog` too:
+```
+class Dog {
+    ...
+public:
+    static void* operator new(std::size_t size) throw(std::bad_alloc) {
+        if(size == sizeof(Dog))                 // *here
+            customNewForDog(size);
+        else
+            ::operator new(size);               // call the standard operator `new` for `YellowDog`
+    }
+    ...
+};
+
+class YellowDog : public Dog {
+    int age;
+    static void* operator new(std::size_t size) throw(std::bad_alloc) {
+        ...
+    }
+};
+
+int main() {
+    YellowDog* py = new YellowDog();
+}
+```
+So this is the second solution.
+
+
+### Similarly for operator `delete`
+Now let's look at the operator `delete`. operator `delete` expect one parameter, which is a pointer to the memory to be deleted `pMemory`, and it is not suppose to throw any exception. **\*Here** I have overload the operator `delete` for `Dog`, and **\*here2** overload the operator `delete` for `YellowDog`. So the problem of the previous example will not exist here. In the `main()` function, I create a new `YellowDog` on the ***heap***, and assigns a pointer to a `Dog`'s pointer `pd`. Later on, I delete `pd`. Do you see any problem with this code?
+```
+class Dog {                                                 // *Here
+    static void operator delete(void* pMemory) throw() {
+        std::cout << "Bo is deleting a dog, \n";
+        customDeleteForDog();
+        free(pMemory);
+    }
+};
+
+class YellowDog : public Dog {
+    static void operator delete(void* pMemory) throw() {
+        std::cout << "Bo is deleting a yellowdog, \n";
+        customDeleteForYellowDog();
+        free(pMemory);
+    }
+};
+
+int main() {
+    Dog* pd = new YellowDog();
+    delete pd;
+}
+```
+When I delete `pd`, which operator `delete` will be invoked? It's the `Dog`'s operator `delete` will be invoked. So I end up using the `Dog`'s operator `delete` to deallocate the memory that is being allocated for `YellowDog`, which smell trouble. So what can I do? You may immediately suggest that making the operator `delete` a virtual method. Then the correct operator should be invoked, right?
+```
+class Dog {
+    virtual static void operator delete(void* pMemory) throw() {
+        std::cout << "Bo is deleting a dog, \n";
+        customDeleteForDog();
+        free(pMemory);
+    }
+};
+...
+```
+This is certainly will **NOT** work. You cannot define a method to be both `virtual` and `static`, because a method being `static` specify the behavior of the `class`. It is not directly tied to the object. And a method being `virtual` specify the behavior of the object. So `static` and `virtual` belongs to different world. That is why it is forbidden in C++ to define a method to be both `virtual` and `static`. What is our solution?
+
+If you remember what previous section we have talked about, if a `class` is meant to be used polymorphically, it should have a ***virtaul destructor***. That rules applied here also. We need to define a ***virutal destructor*** even though the ***virtual destructor*** doesn't do anything:
+```
+class Dog {
+    static void operator delete(void* pMemory) throw() {
+        std::cout << "Bo is deleting a dog, \n";
+        customDeleteForDog();
+        free(pMemory);
+    }
+    ~Dog() {}
+}
+...
+```
+Now when I delete `pd`, it will invoke the `YellowDog`'s destructor, and magically invoke the `YellowDog`'s operator `delete`.
+
+
+### Customize `new` & `delete`
+Now let's talk about why and when we want to customize `new` and `delete`. Here I have listed some of the scenarios when you want to customize `new` and `delete`, but this is far from complete list:
+
+1. ***Usage Error Detection***
+    - ***Memory Leak Detection/Garbage Collection*** - If I keep in the operator `new`. I keep a record of all the memory being allocated, and in the operator `delete`, I remove the memory from the record. I will have a list of the memory being leak. And possibly, I can also implement my own ***garbage collection mechanism***.
+    - ***Array Index Overrun/Underrun*** - In the operator `new`, if I assign a special signature to the first item of an array and another signature to the last item of the array, then I will be able to detect array overrun and underrun.
+
+2. ***Improve Efficiency***
+    - ***Clustering related objects to reduce page fault*** - I could clustering related objects to the same place and to reduce page fault. 
+    - ***Fixed Size Allocation*** - I could use fixed size allocation, which is good for application with many small objects.
+    - ***Align similar size objects to same places to reduce fragmentation***
+
+3. ***Perform Additional Tasks***
+    - ***Fill the deallocated memory with `0`'s - security*** - If my program is dealling with high security information, it is a good idea to fill the deallocated memory with zeros to prevent those information to be leaked to the outside world.
+    - ***Collect Usage Statistics*** - I could use the operator `new` to collect usage statistics of the memory. For example, what's the average size of dynamically allocated memory, what's the biggest size of the memory, how often the memory allocation is performed...etc
+
+
+### Writing a Good Manager is Hard
+The last thing to keep in mind is it is easy to write an operator `new` and an operator `delete` that works, but it is very hard to write a good memory manager. So before you start off writing your own version of `new` and `delete`, there are two alternative you can consider:
+1. **Tweak you compiler toward your needs** - Read your compiler's document carefully, and see if there is something you can use that the compiler already provided.
+2. **Search for memory management library** - There are many good memory management library out there, for example, the ***Pool library*** from ***Boost***.
+
+If these two alternatives doesn't work for you, then it's a time for your own version of the `new` and `delete`.
+
+
+
+
+# Section 29 - How to Define New Handler
+
+```
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+    while(true) {
+        void* pMem = malloc(size);
+        if(pMem)
+            return pMem;
+
+        new_handler Handler = set_new_header(0);
+        set_new_handler(Handler);
+
+        if(Handler)
+            (*Handler)();
+        else
+            throw bad_alloc();
+    }
+}
+```

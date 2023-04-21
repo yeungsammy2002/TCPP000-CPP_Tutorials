@@ -243,7 +243,7 @@ So to make sure that both the `Dog` and `Cat` will be deleted, we only need to c
 # Section 12 - `struct` & `class`
 We'll talk about the difference between `struct` and `class`.
 
-Here we have a `struct` of `Person_t`, and it has a string `name`, and an unsigned integer `age`. And we also has a `class` of `Person`, and it also has a string `name_`, and an unsigned integer `age_`. Now what is the different between these two:
+Here we have a `struct` of `Person_t`, and it has a string `name`, and an unsigned integer `age`. And we also has a `class` of `Person`, and it also has a string `name_`, and an unsigned integer `age_`. Now what is the difference between these two:
 ```
 struct Person_t {
     std::string name;

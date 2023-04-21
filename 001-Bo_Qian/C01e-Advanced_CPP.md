@@ -93,7 +93,7 @@ YellowDog py = dynamic_cast<YellowDog*>(pd);
 ```
 ***Dynamic cast*** can only work on ***pointers*** or ***references***. It cannot work on an ***object***. And they convert from one type to a related type, and typically it will be used in ***down cast***, which means it casts an object from its ***base class*** to a ***derived class***. In this case, from a `Dog` to a `YellowDog`.
 
-Another different from the static cast is the dynamic in additional to perform the type casting also perform a runtime time check. It will check if the types are compatible for the casting to succeed. In this case, it will check if `pd` is pointing to a `YellowDog`, and not just a `Dog`. If the casting succeed, the `py` will become `pd`. If it failed, `py` will equals to `0`, which is a ***null pointer***.
+Another difference from the static cast is the dynamic in additional to perform the type casting also perform a runtime time check. It will check if the types are compatible for the casting to succeed. In this case, it will check if `pd` is pointing to a `YellowDog`, and not just a `Dog`. If the casting succeed, the `py` will become `pd`. If it failed, `py` will equals to `0`, which is a ***null pointer***.
 
 Finally, ***dynamic cast*** requires the two types to be polymorphic, which means they need to at least have one virtual method.
 
@@ -322,7 +322,7 @@ public:
 ```
 Now I have successfully changed the data member of `Dog` inside the `Dog`'s `const` method.
 
-This is the table that summarizes all the castings that we've talked about so far, and there are a lot of information in this table. So I hope I will not put you into sleep. First of all, I have grouped all the casting into two groups, one is ***object casting***, and another one is ***pointer and reference casting***, because these two are so much different from each other in terms of the behavior.
+This is the table that summarizes all the castings that we've talked about so far, and there are a lot of information in this table. So I hope I will not put you into sleep. First of all, I have grouped all the casting into two groups, one is ***object casting***, and another one is ***pointer and reference casting***, because these two are so much difference from each other in terms of the behavior.
 
 There are four columns. First one is ***Generate_Code***, it indicates whether the casting will generate a substantial vulnerable code that will get executed during one time. ***Generate_data*** indicates whether the casting will generate a different data object and saved in memory. Here I don't count a ***pointer*** as a data only the "pointee" counts. ***risk_level*** indicates how risky is it to the ***cast***. ***data_type*** indicates what kind of data type can the cast perform.
 

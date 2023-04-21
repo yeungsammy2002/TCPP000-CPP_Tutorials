@@ -691,7 +691,7 @@ int main() {
     A::C::j();
 }
 ```
-So far, the above example is very similar to the `class` example of ***name hiding*** that we've talked about last time. Now let me bring something different.
+So far, the above example is very similar to the `class` example of ***name hiding*** that we've talked about last time. Now let me bring something difference.
 
 Let's say the `A` has a `struct` `X`, and `g()` is taking `X` as a parameter. Inside namespace`C`'s `j()` method, let's remove the **`using` declaration**, define `X` object `x` and call `g(x)`:
 ```
@@ -716,7 +716,7 @@ int main() {
     A::C::j();
 }
 ```
-Now according to ***name hiding* rule**, this `g()` function (inside namespace `A`) will be hidden by `C`'s own `g()` function. So you may think this code will not compile. Wrong, this code will compile and prints out `"calling A::g()"`. It is true that this `g()` function (inside namespace `A`) will be hidden by its `g()` function according to the ***name hiding* rule**. However, there's another rule that kicks in, which is the ***Koening lookup***. With ***Koening lookup***, the compiler will look for the `g()` function in the space where `X` is defined (in this case, namespace `A`). So this code will compile even though we don't have the **`using` declaration**. This is something different from the class example.
+Now according to ***name hiding* rule**, this `g()` function (inside namespace `A`) will be hidden by `C`'s own `g()` function. So you may think this code will not compile. Wrong, this code will compile and prints out `"calling A::g()"`. It is true that this `g()` function (inside namespace `A`) will be hidden by its `g()` function according to the ***name hiding* rule**. However, there's another rule that kicks in, which is the ***Koening lookup***. With ***Koening lookup***, the compiler will look for the `g()` function in the space where `X` is defined (in this case, namespace `A`). So this code will compile even though we don't have the **`using` declaration**. This is something difference from the class example.
 
 
 ### Summary of Name Lookup Sequence
