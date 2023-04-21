@@ -124,15 +124,15 @@ c.f();
 h(c);
 ```
 
-Now suppose I'm a little suspicious about this principle. What will happen if i have a non member function that should belongs to this interface but not in the same namespace as `C`? Will it bite me? Let's look at an example.
+Now suppose I'm a little suspicious about this principle. What will happen if I have a non member function that should belongs to this interface but not in the same namespace as `C`? Will it bite me?
 
-We have a namespace `A`, and inside `A`, we have a class `C`. Then we define an `operator+` that works on `C`. This operator really should belongs to the interface of `C`, but it is not in the same namespace as `C`. In the `main()` function, I have create an array of `C`, and then call the standard library function `std::accumulate()` on the array:
+Let's look at an example. We have a namespace `A`. Inside `A`, we have a class `C`. Then we define an `operator+()` that works on `C` **\*here**. This operator really should belongs to the interface of `C`, but it is not in the same namespace as `C`. In the `main()` function, I create an array of `C`, and then call the standard library function `std::accumulate()` on the array `arr`:
 ```
 namespace A {
     class C {};
 }
 
-int operator+(A::C, int n) {
+int operator+(A::C, int n) {                // *here
     return n + 1;
 }
 
@@ -141,30 +141,36 @@ int main() {
     std::accumulate(arr, arr + 3, 0);       // return 3
 }
 ```
-And here is the definition of the function `std::accumulate()`. You can ignore most of the function. What's important to us is belongs to namespace `std`. And the `std::accumulate()` function will invoke the `operator+`. Since we've already define `operator+` for `C`, apparently this is what we want to use:
+
+And here is the definition of the function `std::accumulate()`. You can ignore most of the function. What's important to us is belongs to namespace `std`, and the `std::accumulate()` function will invoke the `operator+` **\*here2**. Since we've already define `operator+` for `C`, apparently this is what we want to use. Now the question is when the compiler see the operator `+` **\*here2**. Can it find our `operator+` successfully **\*here**?
 ```
 // Defined in C++ standard library <numeric>
 namespace std {
     template <class InputIterator, class T>
         T accumlate(InputIterator first, InputIterator last, T init) {
             while(first != last)
-                init = init + *first++;
+                init = init + *first++;         // *here2
             return init;
         }
 }
 ```
-Now the question is when the compiler see the `operator+`. Can it find our `operator+` successfully? The answer is probably **NOT**. It depends on what header files you have included. Remember the ***name hiding* rule**? When the compiler see the `operator+`, it will first search the `operator+` in the current scope. If it cannot find one, it will go to the global scope and search for it. However, if the compiler did find the `operator+` in current scope, regardless of the types of the parameter that `+` is taking, it will stop searching. That is really bad, because there are bunch of `operator+` that's defined in the namespace `std`. And then it could easily include some header files, and our own `operator+` is hidden.
+The answer is probably **NOT**. It depends on what header files you have included. Remember the ***name hiding* rule**? When the compiler see the operator `+` **\*here2** , it will first search the `operator+` in the ***current scope***. If it cannot find one, it will go to the ***global scope*** and search for it. 
 
-So as you can see, **\*this** could indeed bite me. And the solution is follow the principle, and put the `operator+` in this same namespace `A` as `C`. Now the compiler will be able to our `operator+` because of the ***Koening lookup***:
+However, if the compiler did find the `operator+` in current scope, regardless of the types of the parameter that `+` is taking, it will stop searching. That is really bad, because there are bunch of `operator+` that's defined in the namespace `std`. And then you could easily include some header files, and our own `operator+` **\*here** is hidden.So as you can see, **\*here** could indeed bite me.
+
+The solution is follow the principle, and put the `operator+` in this same namespace as `C` **\*here**. Now the compiler will be able to our `operator+`  because of the ***Koening lookup***:
 ```
 namespace A {
     class C {};
-    int operator+(A::C, int n) {
+    int operator+(A::C, int n) {            // *here
         return n + 1;
     }
 }
 
-...
+int main() {
+    A::C arr[3];
+    std::accumulate(arr, arr + 3, 0);
+}
 ```
 This is why we need to remember the principle and apply them during our daily coding.
 
