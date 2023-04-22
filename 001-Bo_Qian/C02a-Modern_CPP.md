@@ -300,7 +300,8 @@ public:
 
 
 
-## C++11 Features - Override
+## C++11 Features 9 - Overriding Virtual Methods using `override`
+Say we have a class `Dog`, and `Dog` has a virtual method `A` and a virtual `const` method `B`. `YellowDog` is derived from `Dog`, and in `YellowDog`, I want to override the method `A` of `Dog` and the method `B` of `Dog`. But I accidentally give the `YellowDog`'s `A` method a `float`, and I accidentally lost the `const` keyword for the `YellowDog`'s `B` method. In this case, both the `YellowDog`'s methods `A` and `B` will not override the `Dog`'s methods `A` and `B`. They will methods of their own `YellowDog`. There is very bad because during the runtime, when you expect the polymorphism to happen, it doesn't.
 ```
 class Dog {
     virtual void A(int);
@@ -308,8 +309,53 @@ class Dog {
 };
 
 class YellowDog : public Dog {
-    virtual void A(float);          // Created a new function
-    virtual void B();               // Created a new function
+    virtual void A(float);          // Created a new method
+    virtual void B();               // Created a new method
+};
+```
+
+***C++11*** gives you a new keyword `override`, which allows you to specifically tell the compiler that this method is an override method of its base class. If the method has a different signature from the base class's method, the compiler will error out. So both `YellowDog`'s methods `A` and `B` will be error out. `YellowDog`'s method `C` will also be error out, because it's not a virtual method at all:
+```
+class Dog {
+    virtual void A(int);
+    virtual void B() const;
+    void C();
+};
+
+class YellowDog : public Dog {
+    virtual void A(float) override;     // Error: no method to override
+    virtual void B() ovrride;           // Error: no method to override
+    void C() override;                  // Error: no method to override
+};
+```
+
+
+
+## C++11 Feature 10 - Stopping Inheritance from `class` & Method using `final`
+By make a `Dog` class `final`, it means no class can be derived from `Dog` anymore:
+```
+class Dog final {                   // No class can be derived from `Dog`
+    ...
+};
+```
+
+Similarly, by making `Dog`'s vitural method `bark()` a `final` vitural method, it means no child of `Dog` can override the `bark()` method:
+```
+class Dog {
+    virtual void bark() final;      // no class can override bark()
 }
 ```
 
+
+
+## C++11 Feature 11 - Force Compiler Generated Default Constructor by using `default`
+
+# 2 - 1:49
+
+The compiler will generate
+```
+class Dog {
+    Dog(int age);
+    Dog() = default;
+}
+```
