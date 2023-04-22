@@ -146,6 +146,9 @@ public:
 ...
 ```
 
+
+
+## Summary
 In summary, to maintain the ***"is-a" relationship*** between the base class and the derived class. There are four things that we need to pay attention to:
 1. Precise definition of classes.
    
