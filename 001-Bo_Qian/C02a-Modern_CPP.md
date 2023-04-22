@@ -233,4 +233,67 @@ As you can see, the `enum class` and the `nullptr` have made the C++ more strong
 
 
 
-## C++11 Feature 7 - `static_asert`
+## C++11 Feature 7 - `static_asert()`
+We are all familiar with assertion, at any ***runtime*** of the program. We can assert a certain condition is `true`. In this example, I assert that `myPointer` is not `NULL`:
+```
+assert(myPointer != NULL);
+```
+***C++11*** provide a `static_assert`, which allows you to make a assertion during the ***compile time***. In this example, I statically assert that the size of integer is equal to `4`, which means the following code will not work if the integer size is not `4`:
+```
+static_assert(sizeof(int) == 4);
+```
+
+
+
+## C++11 Feature 8 - Delegating Constructor
+It is very common for the constructors to share the same code. So sometimes it is desirable to have this kind of code as below. I have defined a first constructor. And then define a second constructor, which reuse the code of the first constructor, and then do something else. However, this code can only work in ***Java***. It won't work in ***C++***. At least it won't work as you expected. It typically will create two `Dog`s instead of one:
+```
+class Dog {
+public:
+    Dog() { ... }
+    Dog(int a) {
+        Dog();
+        doOtherThings(a);
+    }
+    ...
+};
+```
+
+So in ***C++***, we often come ends up having code like below. It define a `init()` method, and the `init()` method will be invoked at different constructors:
+```
+class Dog {
+    void init() { ... }
+public:
+    Dog() {
+        init();
+    }
+    Dog(int a) {
+        init();
+        doOtherThings();
+    }
+    ...
+}
+```
+The downside of this kind of implementation is, first of all, it's cumbersome. Comparing to the first code snippet, I have to define additional method. And this additional method will be duplicated in each constructor. Secondly, the `init()` method is a regular method, it could be invoked by any other methods, which means the `init()` method needs to take care of the additional complexity of being invoked at the different life state of the object, not just the construction stage of the object.
+
+***C++11*** provides a new way to share the code of the constructors. The first constructor can be called at the initialization list section of the second constructor. This allows the first constructor to be invoked before the second constructor starts. The limitation here is the first constructor cannot be invoked in the middle of the second constructor, or in the end of the second cosntructor:
+```
+class Dog {
+public:
+    Dog() { ... }
+    Dog(int a) : Dog() {
+        doOtherThings();
+    }
+}
+```
+***C++11*** also allows ***in-class data memeber initialization***. So if the `Dog` has a data member `age`, I can initialize over **\*here** with 9. As a result, `age` will be initialized at every constructor:
+```
+class Dog {
+    int age = 9;            // *here
+public:
+    Dog() { ... }
+    Dog(int a) : Dog() {
+        doOtherThings();
+    }
+}
+```
