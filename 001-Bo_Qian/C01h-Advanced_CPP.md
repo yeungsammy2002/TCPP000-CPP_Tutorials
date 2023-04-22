@@ -381,22 +381,128 @@ If these two alternatives doesn't work for you, then it's a time for your own ve
 
 
 
-# Section 29 - How to Define New Handler
+# Section 29 - Define New Handler
+Note that `std::malloc()` is defined in `<cstdlib>`, `std::bad_alloc` is defined in `<new>`.
 
+We are going to talk about how to define you own ***new handler***. Last section we have talked about how to customize the operator `new` and the operator `delete`, and briefly talked about what ***new handler*** is. Now let's start a review.
+
+### New Handler
+***New handler*** is a function that invoke when the operator `new` failed to allocate memory. Its main purpose is to help memory allocation to success. The function `std::set_new_handler()` installs a ***new handler*** and returns current ***new handler***.
+
+This is an example of operator `new` implementation that we have talked about in previous section to demostrate what the operator `new` typically does. Inside the function, there is an infinite loop. The first thing it try to do is allocate the memory of the size `size`. If the allocation is succeed, it will return the memory and it's done. Otherwise, it will fetch a new handler. And then check if the new handler `Handler` is not a ***null pointer***. If it is not a ***null pointer***, it will just invoke the new handler `Handler`. Hopefully it can do something nice to free up the memory, and then go back to the loop and try to allocate memory again. If the new handler is a null pointer, a `std::bad_alloc()` exception is throw:
 ```
 void* operator new(std::size_t size) throw(std::bad_alloc) {
     while(true) {
-        void* pMem = malloc(size);
+        void* pMem = std::malloc(size);                     // Allocate memory
+        if(pMem)
+            return pMem;                                    // Return the memory if successful
+
+        new_handler Handler = set_new_header(0);            // Get new handler
+        set_new_handler(Handler);
+
+        if(Handler)
+            (*Handler)();                                   // Invoke new handler
+        else
+            throw std::bad_alloc();                         // If new handler is null, throw exception
+    }
+}
+```
+New handler can do a lot of things, but one it must do is to exit the infinite loop. There are three exit from the infinite loop. One is return the memory `pMem`, and second thing is throw `std::bad_alloc()` exception, lastly, the new handler `Handler` itself can be thrown the exception or terminate the program immediately.
+
+These are the 5 options that our new handler must do one of the things:
+1. ***Make more memory available*** - So that next run of memory allocation could be succeed.
+2. ***Install a different new handler*** - If the current new handler cannot do anything to free up the memory, maybe a different handler could.
+3. ***Uninstall the new handler (passing a null pointer)*** - That means I cannot do anything about the memory anymore, so it will just throw `std::bad_alloc()` exception.
+4. ***Throw an exception `std::bad_alloc` or it descendent*** - Instead of let the operator `new` to throw the exception, the new handler itself can throw the exception that is derived from `std::bac_alloc()` 
+5. ***Terminate the program***
+
+Let's look at some examples.
+
+In this example, in the `main()` function, I try to create a gigantic array of integers. And of course, my host machine cannot handle that. So it will print out through exception. So what's happening here is because I haven't installed any new handler, and by default, the new handler is ***null***:
+```
+int main() {
+    int* pGiant = new int[10000000000L];
+    delete[] pGiant;
+}
+```
+So when the operator `new` test **\*here**, when the new handler is null, it just throw exceptions So the output will be **`terminate called after throwing instances of 'std::bad_alloc'`**:
+```
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+    while(true) {
+        void* pMem = std::malloc(size);
         if(pMem)
             return pMem;
 
         new_handler Handler = set_new_header(0);
         set_new_handler(Handler);
 
-        if(Handler)
+        if(Handler)                                   // *here
             (*Handler)();
         else
-            throw bad_alloc();
+            throw std::bad_alloc();
     }
 }
 ```
+
+In this second example, I define a new function called `NoMoreMem()`. In the `main()` function, I install the `NoMoreMem()` function to be the new handler. And then as before, I create a gigantic integer array, and this time because I've already set a new handler, and what the new handler does is prints out some message and then terminate the program, the last option. 
+```
+void NoMoreMem() {
+    std::cerr << "Unable to allocate memory, Bo." << std::endl;
+    abort();
+}
+
+int main() {
+    std::set_new_handler(NoMoreMem);
+    int* pGiant = new int[10000000000L];
+    delete[] pGiant;
+}
+```
+So the output will be `Unable to allocate memory, Bo`:
+```
+Unable to allocate memory, Bo.
+```
+What I have done here is I set a global new handler to be a `NoMoreMem`, which means any memory allocation fail will this handler `NoMoreMem`. One question you might want to ask is *"Can I set a class specific new handler? A new handler can invoked only when the memory allocation for a particular class failed"* The answer is yes, we can implement that in C++ by overloading the operator `new`.
+
+In this example, my `Dog` class hava a method `NoMemForDog()`, and I've overloaded the operator `new` over **\*here**. This is how the class specific new handler can be implement:
+```
+class Dog {
+    int hair[10000000000L];
+    std::new_handler origHandler;
+public:
+    static void NoMemForDog() {
+        std::cerr << "No more memory for doggy, Bo." << std::endl;
+        throw std::bad_alloc;
+    }
+    void* operator new(std::size_t size) throw(std::bad_alloc) {    // *here
+        origHandler = std::set_new_handler(NoMemForDog);            // *here2
+        void* pV = ::operator new(size);                            // Call global operator `new`
+        std::set_new_handler(origHandler);                          // Restore old handler
+        return pV;
+    }
+};
+```
+The main purpose of the operator `new` overloading is because of three thing:
+1. I set the new handler to be `NoMemForDog` **\*here**.
+2. Secondly, I called the operator `new` as before, as usual. This will allocate memory for `Dog`.
+3. Lastly, I restore the new handler to whatever that was before, because the `NoMemForDog` new handler is only for `Dog`. So anybody else after that should use whatever was that new handler before.
+
+However, there is a small problem with this program. The problem is when the operator `new` fail to allocate the memory, it will invoke the new handler, which is the `NoMemForDog`. And then `NoMemForDog` will throw exceptions. So that means the original new handler will not be restored. So we need to copy this statement `std::set_new_handler(origHandler);` to `NoMemForDog()` method **\*here**:
+```
+class Dog {
+    int hair[10000000000L];
+    std::new_handler origHandler;
+public:
+    static void NoMemForDog() {
+        std::cerr << "No more memory for doggy, Bo." << std::endl;
+        origHandler = std::set_new_handler(NoMemForDog);            // *here
+        throw std::bad_alloc;
+    }
+    void* operator new(std::size_t size) throw(std::bad_alloc) {
+        origHandler = std::set_new_handler(NoMemForDog);
+        void* pV = ::operator new(size);
+        std::set_new_handler(origHandler);
+        return pV;
+    }
+};
+```
+In the `NoMemForDog()` method, before I throw exception, I want to restore the original handler. That will complete the implementation.
