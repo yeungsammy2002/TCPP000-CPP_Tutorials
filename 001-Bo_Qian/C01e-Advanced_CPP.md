@@ -322,19 +322,19 @@ public:
 ```
 Now I have successfully changed the data member of `Dog` inside the `Dog`'s `const` method.
 
-This is the table that summarizes all the castings that we've talked about so far, and there are a lot of information in this table. So I hope I will not put you into sleep. First of all, I have grouped all the casting into two groups, one is ***object casting***, and another one is ***pointer and reference casting***, because these two are so much difference from each other in terms of the behavior.
+This is the table that summarizes all the castings that we've talked about so far, and there are a lot of information in this table. So I hope I will not put you into sleep. First of all, I have grouped all the casting into two groups, one is ***object casting***, and another one is ***pointer and reference casting***, because these two are so much different from each other in terms of the behavior.
 
 There are four columns. First one is ***Generate_Code***, it indicates whether the casting will generate a substantial vulnerable code that will get executed during one time. ***Generate_data*** indicates whether the casting will generate a different data object and saved in memory. Here I don't count a ***pointer*** as a data only the "pointee" counts. ***risk_level*** indicates how risky is it to the ***cast***. ***data_type*** indicates what kind of data type can the cast perform.
 
 
 ### C++ Style - Object Casting Summary Table
-| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
-| - | - | - | - | - |
-| `static_cast` | yes | yes | 2 | any types (as long as type conversion is defined) |
+| Cast_Type     | Generate_Code | Generate_data | risk | data_type                                         |
+| ------------- | ------------- | ------------- | ---- | ------------------------------------------------- |
+| `static_cast` | yes           | yes           | 2    | any types (as long as type conversion is defined) |
 
 There is only one cast can be used on an object, which is `static_cast`. 
 
-The `static_cast` for an object always generate code, it will invoke either will invoke either the type conversion function, or the constructor of the casted type, so it will generate a substantial runnable code. 
+The `static_cast` for an object always generate code, it will invoke either the type conversion function, or the constructor of the casted type, so it will generate a substantial runnable code. 
 
 The `static_cast` of object will generate a new data to be used.
 
@@ -344,12 +344,12 @@ You can perform `static_cast` on any types, as long as the type conversion is de
 
 
 ### C++ Style - Pointer Casting / Reference Casting Summary Table
-| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
-| - | - | - | - | - |
-| `static_cast` | no | no | 4 | related types |
-| `dynamic_cast` | yes | no | 3 | related types (down-cast) |
-| `const_cast` | no | no | 1 | same type |
-| `reintepret_cast` | no | no | 5 | any types |
+| Cast_Type         | Generate_Code | Generate_data | risk | data_type                 |
+| ----------------- | ------------- | ------------- | ---- | ------------------------- |
+| `static_cast`     | no            | no            | 4    | related types             |
+| `dynamic_cast`    | yes           | no            | 3    | related types (down-cast) |
+| `const_cast`      | no            | no            | 1    | same type                 |
+| `reintepret_cast` | no            | no            | 5    | any types                 |
 
 All four types of castings can be used on a ***pointer and reference casting***. 
 
@@ -364,17 +364,17 @@ All four types of castings can be used on a ***pointer and reference casting***.
 
 
 ### C Style - Object Casting Summary Table
-| Cast_Type | Generate_Code | Generate_data | risky_level | data_type |
-| - | - | - | - | - |
-| - | yes | yes | 5 | any types (as long as type conversion is defined) |
+| Cast_Type | Generate_Code | Generate_data | risky_level | data_type                                         |
+| --------- | ------------- | ------------- | ----------- | ------------------------------------------------- |
+| -         | yes           | yes           | 5           | any types (as long as type conversion is defined) |
 
 ***C-style casting*** is a mixture of a `static_cast`, `const_cast` and `reinterpret_cast`. So based on that, you can get the answers for the table based on the content of previous table.
 
 
 ### C Style - Pointer Casting / Reference Casting Summary Table
 | Cast Type | Generate_Code | Generate_data | risky_level | data_type |
-| - | - | - | - | - |
-| - | no | no | 5 | any types |
+| --------- | ------------- | ------------- | ----------- | --------- |
+| -         | no            | no            | 5           | any types |
 
 
 I've uploaded the notes to my personal website and you can download notes and save it for future reference if you like:
