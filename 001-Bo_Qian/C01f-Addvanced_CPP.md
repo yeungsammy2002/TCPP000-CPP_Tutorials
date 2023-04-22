@@ -2,7 +2,8 @@
 In the last section, we have talked about the ***public inheritance*** indicates the ***"is-a" relationship*** between the ***base class*** and the ***derived class***. So the ***derived class*** should be able to do everything the ***base class*** can do. Although the ***derived class*** can do those things in a different way, it has to offer some way to do this things to maintain the ***"is-a" relationship***. However, in real world programming, sometimes it is not so easy to maintain that ***"is-a" relationship***. 
 
 
-### Maintain *"is-a"* Relationship Semantically
+
+## Maintain *"is-a"* Relationship Semantically
 For example, we have a class `Bird`, and we have another class `Penguin`, which is derived from `Bird`. And we know a `Bird` can fly, so in the class `Bird`, I can declare a method called `fly()`:
 ```
 class Bird {
@@ -32,7 +33,8 @@ class Penguin : public Bird {};
 So as you can see, there are subtle things that need to be taking care of to maintain ***"is-a" relationship***.
 
 
-### Never Overwrite Non-Virtual Methods
+
+## Never Overwrite Non-Virtual Methods
 Now let's look at the second example. We have a class `Dog` and the `Dog` can barks `"I am just a dog."`. And the `YellowDog` is derived from `Dog`, and it barks `"I am a yellow dog."`. And in the `main()` function, I create a `YellowDog`, and let's it bark. And then I assign a `YellowDog`'s pointer to a `Dog`'s pointer. And then let it bark again:
 ```
 class Dog {
@@ -66,7 +68,8 @@ So the same `Dog` calling the same method resulted in different behavior. This i
 So as much as we need a royal honest `Dog`, we need an object with consistent behavior in C++. So the conclusion we get from this example is **never overwrite non-virtual methods**. If there is a method that you really want to overwrite, make that method virtual.
 
 
-### Never Overwrite Default Parameter Value for Virtual Methods
+
+## Never Overwrite Default Parameter Value for Virtual Methods
 Let's look at a different example. We've learned the lesson, we'll only overwrite virtual method. So the `Dog` has a virtual method `bark()`, and given the default value for message `msg` is `"just a"`. A `YellowDog` derived from `Dog`, and have a virtual method `Bark()` with the default value of message `msg` - `"a YellowDog"`. In the `main()` function, I'm doing the exact same thing as previous example. I create a `YellowDog`, and let it `bark()`, and assign it to a `Dog`'s pointer, and let it `bark()` again. What's the output of this program:
 ```
 class Dog {
@@ -100,7 +103,8 @@ We know that virtual method is bound at ***runtime***. However, the default valu
 So the lesson we can take from this example is **never overwrite the default parameter value for virtual method**.
 
 
-### Parent's Overloading Methods are Shadowed by Child's Methods with Same Name
+
+## Parent's Overloading Methods are Shadowed by Child's Methods with Same Name
 Now suppose the `Dog` has a different method `bark()` **\*here**, which takes different parameter - integer `age`. And it prints out `"I am {{ age }} years old."`. In the `main()` function, `py` will bark at age `5`, and let's remove the `pd`:
 ```
 class Dog {
