@@ -639,11 +639,11 @@ class InputFile : virtual public File {
 
 class OutputFile : virtual public File {
     OutputFile(std::string fname) : File(fname) {}
-}
+};
 
 class IOFile : public InputFile, public OutputFile {
     IOFile(std::string fname) : OutputFile(fname), InputFile(fname), File() {}
-}
+};
 ```
 
 
@@ -656,7 +656,7 @@ class Engineer {
 
 class Son {
     ...50 APIs...
-}
+};
 
 ...
 
@@ -681,7 +681,7 @@ class OutputFile {
 public:
     void write() = 0;
     void open() = 0;
-}
+};
 ```
 In a nutshell, a ***pure abstract class*** is **a class that has no incrementation**, **it only provides interface and it provides zero implementation**. And it turns out all the problems that we've talked about, duplication of data, duplication of the methods, the initialization problems. All the problems will be gone, if we only derived from ***pure abstract classes***. If all the base classes `InputFile`, `OutputFile` and `File` are ***pure abstract classes*** that has no implementation. Then there is no such problem as duplicated implementation and initialization, because there is nothing to duplicate and nothing to initialize anyway. And we don't even need the virtual inheritance anymore.
 

@@ -14,7 +14,7 @@ class Dog {
 public:
     void bark();
     Dog(char* name);
-}
+};
 ```
 In `Dog.cpp`, the `bark()` method of the `Dog` prints out `"Dog rules! My name is {{ _name }}"`. And the constructor of the `Dog` prints out `"Constructing Dog {{name}}"`, and then assign the `name` to the private data member `_name`:
 ```
@@ -42,7 +42,7 @@ class Cat {
 public:
     void meow();
     Cat(char* name);
-}
+};
 ```
 In `Cat.cpp`, the print out message is slightly different, it prints out `"Cat rules! My name is {{ _name }}"`:
 ```
@@ -59,7 +59,7 @@ void Cat::meow() {
 Cat::Cat(char* name) {
     std::cout << "Constructing Cat " << name << std::endl;
     _name = name;
-}
+};
 ```
 In the `main()` function, I created a global variable `d`, which is a `Dog` object with the name of `"Gunner"`. And inside the `main()` function, I call `d.bark()`:
 ```
@@ -109,7 +109,7 @@ Dog::Dog(char* name) {
     std::cout << "Constructing Dog " << name << std::endl;
     _name = name;
     // c.meow();
-}
+};
 ```
 And in the `Cat`'s constructor (`Cat.cpp`), we call `d.bark()`, and we also need to add `extern Dog d;` because `d` is defined in another source file:
 ```
@@ -153,7 +153,7 @@ public:
 
     static Dog* getDog();
     static Cat* getCat();
-}
+};
 ```
 In the `Singleton` source file `Singleton.cpp`, both `pd` and `pc` are initialized to `0`. The `getDog()` method will check if `pd` is `0`, if `pd` is `0`, it create a new `Dog` object with a name `"Gunner"`, and then return `pd`. And next time when the `getDog()` method called, it will not create a new `Dog`, it will return the same `Dog` object `pd`. This is called ***initialized upon first usage idiom***. The same thing for the `Cat`. The `Cat` will be initialized only when it needs to be used:
 ```
@@ -248,12 +248,12 @@ Here we have a `struct` of `Person_t`, and it has a string `name`, and an unsign
 struct Person_t {
     std::string name;
     unsigned age;
-}
+};
 
 class Person {
     std::string name_;
     unsigned age_;
-}
+};
 ```
 The difference is for `struct`, its data member are ***public*** by default. For `class`, its data member are ***private*** by default. So this is the only difference between `struct` and `class` as far as the language is concerned.
 
@@ -268,7 +268,7 @@ struct Person_t {
     unsigned age;
 private:
     int height;
-}
+};
 ```
 And nothing can stop you from giving a `class` public data - integer `height`:
 ```
@@ -277,7 +277,7 @@ class Person {
     unsigned age_;
 public:
     int height;
-}
+};
 ```
 
 However, this is a good to follow the convention, and you'd better follow it unless you have some special reason. Another convention is the **`class` data member are usually named with a trailing underscore** and the `struct` data member are named as the same way you name a regular variable.
@@ -367,7 +367,7 @@ public:
 
 private:
     std::string* pName_;
-}
+};
 
 int main() {
     std::vector<Person> persons;

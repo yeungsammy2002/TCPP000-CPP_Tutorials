@@ -272,7 +272,7 @@ public:
         doOtherThings();
     }
     ...
-}
+};
 ```
 The downside of this kind of implementation is, first of all, it's cumbersome. Comparing to the first code snippet, I have to define additional method. And this additional method will be duplicated in each constructor. Secondly, the `init()` method is a regular method, it could be invoked by any other methods, which means the `init()` method needs to take care of the additional complexity of being invoked at the different life state of the object, not just the construction stage of the object.
 
@@ -284,7 +284,7 @@ public:
     Dog(int a) : Dog() {
         doOtherThings();
     }
-}
+};
 ```
 ***C++11*** also allows ***in-class data memeber initialization***. So if the `Dog` has a data member `age`, I can initialize over **\*here** with 9. As a result, `age` will be initialized at every constructor:
 ```
@@ -295,5 +295,21 @@ public:
     Dog(int a) : Dog() {
         doOtherThings();
     }
+};
+```
+
+
+
+## C++11 Features - Override
+```
+class Dog {
+    virtual void A(int);
+    virtual void B() const;
+};
+
+class YellowDog : public Dog {
+    virtual void A(float);          // Created a new function
+    virtual void B();               // Created a new function
 }
 ```
+

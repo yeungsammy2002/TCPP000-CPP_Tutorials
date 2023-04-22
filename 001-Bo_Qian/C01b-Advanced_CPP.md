@@ -25,7 +25,7 @@ public:
     Dog& operator=(const Dog& rhs) { ... };     // Copy assignment operator
 
     ~Dog() { ... };                             // Destructor
-}
+};
 ```
 You imagine that the compiler generated methods are empty methods that doing nothing. For this particular case, they are doing nothing because the `Dog` class is so trivial. But for any real world class, they will not be empty, they'll do their jobs.
 

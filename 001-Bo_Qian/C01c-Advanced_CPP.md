@@ -327,7 +327,7 @@ class Dog {
         pCollar = new Collar(*rhs.pCollar);     // create `Collar` with deleted `pCollar` object
         return *this;
     }
-}
+};
 ```
 However, there is a problem with this implementation. The problem arises when `this` `Dog` and right hand side `Dog` - `rhs` are the same `Dog` object. In other words, this is a ***self-assginment***. If that is the case, when I delete the `pCollar`, I'm also deleting the `pCollar` of the right hand side `Dog` - `rhs`. Then when I copy construct the `Collar` from the right hand side's `pCollar` - `*rhs.pCollar`, I'm accessing an object that is deleted, and the result could be disastrous.
 

@@ -348,7 +348,7 @@ class Dog {
         free(pMemory);
     }
     ~Dog() {}
-}
+};
 ...
 ```
 Now when I delete `pd`, it will invoke the `YellowDog`'s destructor, and magically invoke the `YellowDog`'s operator `delete`.

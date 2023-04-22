@@ -122,7 +122,7 @@ public:
     void setAge(int& a) {
         age = a;
     }
-}
+};
 
 int main() {
     Dog d;
@@ -144,7 +144,7 @@ public:
         age = a;
         a++;                        // increment `a` by 1
     }
-}
+};
 
 int main() {
     ...
@@ -167,7 +167,7 @@ public:
         age = a;
         a++;
     }
-}
+};
 
 int main() {
     ...
@@ -409,7 +409,7 @@ public:
         const_cast<BigArray*>(this)->accessCounter++;
         return v[index];
     }
-}
+};
 
 int main() {
     BigArray b;
