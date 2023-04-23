@@ -8,8 +8,8 @@ There are different courses here:
 1. **Advanced C++**
 2. **Modern C++**
 3. **C++ Standard Library**
-4. **Concurrent Programming with C++11**
-5. **Advanced STL**
+4. **Advanced STL**
+5. **Concurrent Programming with C++11**
 6. **C++ Unit Test**
 7. **Practical Programming Algorithms**
 8. **Boost Library**
