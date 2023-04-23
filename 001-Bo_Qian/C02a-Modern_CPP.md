@@ -1,4 +1,4 @@
-# Section 1 - Initializer List & Uniform Initialization
+# Section 1 - C++11 Features Part 1
 In this section, I'm going to give you an introduction to ***C++11* standard**. What are the new features? Are they really useful?
 
 
@@ -297,6 +297,11 @@ public:
     }
 };
 ```
+
+
+
+
+# Section 2 - C++11 Features Part 2
 
 
 
