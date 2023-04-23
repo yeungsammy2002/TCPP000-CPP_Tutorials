@@ -495,5 +495,12 @@ int main() {
 ```
 This is called ***functional programming***, it is completely different programming model than the traditional programming model that we are used.
 
-Lambda function can even access local variables, say I have a `y`.
+Lambda function can even access local variables, say I initialize `y` with `4`. And inside of the lambda function, I can check if `x` is greater then `y`. All I need to do is add the **reference sign `&`** inside the **square brackets `[]`**, which tells the compiler that we want variable capture. So the output is `5 6`:
+```
+int main() {
+    int y = 4;
+    filter([&](int x) { return (x > y); }, v);       // 5 6
+}
+```
+This is a very powerful technique, think how you can do the same kind of thing in ***C++03***. It's very very difficult.
 
