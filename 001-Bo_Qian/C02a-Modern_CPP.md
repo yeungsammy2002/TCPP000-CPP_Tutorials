@@ -349,13 +349,151 @@ class Dog {
 
 
 ## C++11 Feature 11 - Force Compiler Generated Default Constructor by using `default`
+The compiler will generate a default constructor for you if you haven't defined any constructor at all. In this case, since I have already defined a constructor that takes an ***integer*** for `Dog`. The compiler will not generate a default constructor for me. So when I try to create a `Dog` object `d1` without any parameter, it will error out because the compiler cannot find a default constructor.
+```
+class Dog {
+    Dog(int age) {}
+};
 
-# 2 - 1:49
+Dog d1;                     // Error: compiler will not generate the default constructor
+```
 
-The compiler will generate
+***C++11*** allows me to force the compiler to generate a default constructor even I have already defined any other constructor. This could comes in handy sometimes if the compiler generated default constructor is exactly what you want.
 ```
 class Dog {
     Dog(int age);
-    Dog() = default;
+    Dog() = default;        // Force compiler to generate the default constructor
 }
 ```
+
+
+### C++11 Feature 12 - `delete` Could be Assigned to Methods
+***In C++11***, `delete` keyword could be used for **deleting methods**.
+
+For example, my class `Dog` has a constructor which takes an integer parameter. So when I do `Dog a(2)`, it will work. `Dog b(3.0)` will also work because `.0` can be converted from `double` to integer. `a = b` will work to because the compiler generates the ***copy assignment operator*** for me:
+```
+class Dog {
+    Dog(int age) {}
+}
+
+Dog a(2);
+Dog b(3.0);     // 3.0 is converted from double to int
+a = b;          // Compiler generated assignment operator
+```
+Sometimes you want to disallow your client to use your interface in a certain way. In this case, say I only want my client to create a `Dog` object with an integer only. I don't want them to pass over a parameter of `float` or `double`. And I don't want them to make a copy of the `Dog`, maybe because the `Dog` is holding some "unshareable" resource like a ***mutex***.
+
+***C++11*** provides an easier way to do that, I can simply define a `Dog(double) = delete` and `Dog& operator(const Dog&) = delete`. As a result, both `Dog b(3.0);` and `a = b;` will generate compile-time error, because **\*these** two methods has been deleted:
+```
+class Dog {
+    Dog(int age) {}
+    Dog(double) = delete;                       // *these
+    Dog& operator=(const Dog&) = delete;        // *these
+}
+
+Dog a(2);
+Dog b(3.0);     // Compiler error
+a = b;          // Compiler error
+```
+
+
+### C++11 Feature 13 - Constant Expression `constexpr`
+`int arr[6]` is creating a 6 item array. Say I have a function `A()`, which return a constant `3`. This is equivalent of creating a 6 item array, but it will not compile, because the compiler doesn't know that the function `A()` will always return a constant:
+```
+int arr[6];             // OK
+int A() {
+    return 3;
+}
+int arr[A() + 3];       // Compile error
+```
+
+***C++11*** provides a keyword `constexpr`, which tells the compiler that the function `A()` will always a constant, so the compiler will compute the function during the compile time. As a result, I can a 6 item array like this `int arr[A() + 3];`:
+```
+constexpr int A() {             // Forces the computation to happen at compile time
+    return 3;
+}
+int arr[A() + 3];               // Create an array of size 6
+```
+
+The constant expression sometimes can help you to write fast function. For example, I have a function `cubed()`, which computes the `x` cubed. If I know that `cubed()` function will be always working with a constant parameter, I can add a constant expression `constexpr` in front of it. As a result, when the `cubed()` function is used, the result of this function will be computed at compile-time. In other words, this function will not consume any cycles during the runtime. How fast is that:
+```
+constexpr int cubed(int x) {
+    return x * x * x;
+}
+
+int y = cubed(1789);            // computed at compile time
+```
+
+
+### C++11 Feature 14 - New String Literals
+The below statement is usually how you define a string literal in ***C++03***:
+```
+char* a = "string";
+```
+
+***C++11*** provides a better support for ***unicode***. For example, this statement defines a ***UTF-8 string***:
+```
+char* a = u8"string";           // to define an UTF-8 string
+```
+
+There are also new types, `char16_t*` type and `char32_t*` type.
+
+***UTF-16 string*** is identified by **lowercase `u`**:
+```
+char16_t* b = u"string";        // to define an UTF-16 string
+```
+
+***UTF-32 string*** is identified by **uppercase `U`**:
+```
+char32_t* c = U"string";        // to define an UTF-32 string
+```
+
+You can also define a ***raw string***. In this string example, the `\\` will be intepreted as two slashes `\\` instead of one slash `\`, because the first slash is not seen as an escape characted anyone due to the ***raw string identifier* `R`**.
+```
+char* d = R"string \\";         // to define raw string
+```
+
+
+## C++11 Feature 15 - Lambda Functions
+***Lambda function*** basically is an ***anonymous function***. You can think of it as a function that is not defined as a regular function.
+
+This lambda function takes two parameters `x` and `y`, and it return the sum of `x` and `y`. `3` and `4` are passed as parameters to the lambda function. So the output of this code is `7`:
+```
+std::cout << [](int x, int y) { return x + y; } (3, 4) << std::endl;       // 7
+```
+You can also save the lambda function to a variable `f`, and invoke the function with `f`:
+```
+auto f = [](int x, int y) { return x + y; };
+std::cout << f(3, 4) << std::endl;
+```
+
+
+- ### Lambda Function for Functional Programming
+Lambda function is very useful in functional programming. For example, I have a function `filter()`, which takes a parameter of function `f` and a parameter of vector `arr`. Then I perform the function `f()` on each item of the array. If the function return `true`, I will print out the item `i`. 
+```
+template<typename func>
+void filter(func f, std::vector<int> arr) {
+    for(auto i : arr) {
+        if(f(i))
+            std::cout << i << " ";
+    }
+}
+```
+
+In the `main()` function, I create a vector `v` of `1, 2, 3, 4, 5, 6`. Then I invoke the `filter()` function with a lambda function. This lambda function will check if `x` is larger than `3`. And this lambda function will be performed on each item of the vector `v`. If the function returns `true`, the item will be printed out. So the output of this code is `4 5 6`. Later on I can invoke the `filter()` again with a different lambda function. It checks if `x` is larger than `2` and `x` is less than `5`. So the output is `3 4`:
+```
+int main() {
+    std::vector<int> v = { 1, 2, 3, 4, 5, 6 };
+
+    filter([](int x) {              // 4 5 6
+        return (x > 3);
+    }, v);
+    ...
+    filter([](int x) {              // 3 4
+        return ( x > 2 && x < 5);
+    }, v);
+}
+```
+This is called ***functional programming***, it is completely different programming model than the traditional programming model that we are used.
+
+Lambda function can even access local variables, say I have a `y`.
+
