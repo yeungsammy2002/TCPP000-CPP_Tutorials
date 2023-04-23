@@ -164,15 +164,15 @@ In summary, to maintain the ***"is-a" relationship*** between the base class and
 # Section 20 - Understanding *l-value* & *r-value*
 We're going to talk about ***l-value*** and ***r-value***.
 
-***l-value*** and ***r-value*** are not something that learn into very often. Some people have programmed C++ for years, and they still don't have good understanding of what the ***l-value*** and the ***r-value*** are.
+***l-value*** and ***r-value*** are not something that learn into very often. Some people have programmed C++ for years, but they still don't have good understanding of what the ***l-value*** and the ***r-value*** are.
 
-So the question to ask is, why do I care? ***l-value*** and ***r-value*** are actually very important concept in C++ core language. Having a good knowledge of them will help you understand C++ construct, and to explain some simliar strang behavior of C++. It also can help you to decipher compiler errors and warnings, because these two terms appears quite often in the compiler messages.
+So the question to ask is, why do I care? ***l-value*** and ***r-value*** are actually very important concept in ***C++ core language***. Having a good knowledge of them will help you understand C++ construct, and to explain some simliar strange behavior of C++. It also can help you to decipher compiler errors and warnings, because these two terms appear quite often in the compiler messages.
 
-A second reason that you should care about them is ***C++11*** introduce the new feature called ***r-value reference***. If you don't have a good grasp of ***r-value*** and ***l-value***, it will be impossible for you to learn ***r-value reference***.
+A second reason that you should care about them is ***C++11*** introduce a new feature called ***r-value reference***. If you don't have a good grasp of ***r-value*** and ***l-value***, it will be impossible for you to learn ***r-value reference***.
 
 
 ### Definition of *l-value* & *r-value*
-What are the ***l-value*** and ***r-value***? It is hard to give a rigorous definition of what they are. Instead, here I am give you a simplified definition, which is generally accepted and it should serve you well in the 99% of the time.
+What are the ***l-value*** and ***r-value***? It is hard to give a rigorous definition of what they are. Instead, here I am giving you a simplified definition, which is generally accepted and it should serve you well in the 99% of the time.
 
 - ***l-value*** is an object that occupies some identifiable location in memory. So the keyword here is something in ***memory***, not something in the ***register***. Secondly it has an ***identifiable address***.
   
