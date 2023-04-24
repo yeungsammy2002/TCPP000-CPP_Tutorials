@@ -367,8 +367,8 @@ If you cannot remember everything that I've talked about ***r-value*** and ***l-
 
 
 
-# Section 21 - Static Polymorphism
-We're going to talk about ***static polymorphism***. When we talk about ***polymorphism***, by default, we are talking about ***dynamic polymorphism***, because ***dynamic polymorphism*** is such an important part of ***object-oriented programming***.
+# Section 21 - Curiously Recurring Template Pattern - CRTP
+We're going to talk about ***curiously recurring template pattern***. When we talk about ***polymorphism***, by default, we are talking about ***dynamic polymorphism***, because ***dynamic polymorphism*** is such an important part of ***object-oriented programming***.
 
 Here I am giving you an example of ***dynamic polymorphism***. This is an example of tree parsing. We have a class `Generic_Parser`, and `Generic_Parser` has a publlic member method `parse_preorder()`, which does the preorder parsing of the tree. And while passing on the tree, it invoke a private member method `process_node()`, which does certain specific things to this particular node. However, the `Generic_Parser`'s `process_node()` method is an empty method, which does nothing. `EmployeeChart_Parser` is a specialized parser, and it's derived from the `Generic_Parser`. It overwrites the `process_node()` method, and it doesn't customize thing for the ***employee chart***. In the `main()` function, an `EmployeeChart_Parser` object `ep` is created, and the `ep` will call the `.parse_preorder()` method from its base class. The `.parse_preorder()` method will call `.process_node()` becasue the `.process_node()` method is a virtual method. So it will actually call the `EmployeeChart_Parser`'s `process_node()`. So the generic algorithm of `parse_preorder()` is customized by `EmployeeChart_Parser` own `process_node()` method. This is a typical example of polymorphism:
 ```
@@ -417,7 +417,9 @@ Before going to the solution, let's take a look of what are the things that we w
    
 3. The "generic" algorthim is customized by the derived class. In this example, that is done with the `process_node()` method.
 
-Having these three things in mind. Let's look at our solution. The first thing you might notice is the base class `Generic_Parser` now has become a template class of type `T`. `parse_preorder()` method is the same as before. However, the `process_node()` method is changed. Instead of doing nothing like before, it will statically casted `this` object into the type of `T`. And it invoke the `process_node()` method of the type `T`. Now here is the tricky part, the `EmployeeChart_Parser` class is publicly derived from `Generic_Parser`, and then the `Generic_Parser` is a template class with a template type of `EmployeeChart_Parser`. The rest of the code is the same, the `process_node()` will do some customize thing for the ***employee chart***. In the `main()` function is also the same, it will create an `EmployeeChart_Parser` object and invoke the `parse_preorder()` method for the ***employee chart***. The `.parse_preorder()` method is the method of the `Generic_Parser` **\*overhere**. It will invoke the `process_node()` method. Please note that the `.process_node()` method is no longer a virtual method. So the `Generic_Parser` will call itself a `.process_node()` method, not the `EmployeeChart_Parser`'s `process_node()` method. However, the `Generic_Parser`'s `process_node()` method will case `this` object into type of `T` and invoke `T`'s `process_node()` method. In this example, the type `T` is actually `EmployeeChart_Parser`. So eventually, it is `EmployeeChart_Parser`'s `process_node()` method that got invoked. Thus the polymorphism is achieved:
+Having these three things in mind. Let's look at our solution. The first thing you might notice is the base class `Generic_Parser` now has become a template class of type `T`. `parse_preorder()` method is the same as before. However, the `process_node()` method is changed. Instead of doing nothing like before, it will statically casted `this` object into the type of `T`. And it invoke the `process_node()` method of the type `T`.
+
+Now here is the tricky part, the `EmployeeChart_Parser` class is publicly derived from `Generic_Parser`, and then the `Generic_Parser` is a template class with a template type of `EmployeeChart_Parser`. The rest of the code is the same, the `.process_node()` will do some customize thing for the ***employee chart***. In the `main()` function is also the same, it will create an `EmployeeChart_Parser` object and invoke the `.parse_preorder()` method for the ***employee chart***. The `.parse_preorder()` method is the method of the `Generic_Parser` **\*overhere**. It will invoke the `.process_node()` method. Please note that the `.process_node()` method is no longer a virtual method. So the `Generic_Parser` will call itself a `.process_node()` method, not the `EmployeeChart_Parser`'s `.process_node()` method. However, the `Generic_Parser`'s `.process_node()` method will case `this` object into type of `T` and invoke `T`'s `.process_node()` method. In this example, the type `T` is actually `EmployeeChart_Parser`. So eventually, it is `EmployeeChart_Parser`'s `.process_node()` method that got invoked. Thus the polymorphism is achieved:
 ```
 template<typename T> class Generic_Parser {
 public:
@@ -454,11 +456,11 @@ Now let's review the three elements that we want to simulate:
    
 3. The ***"generic" algorithm*** is customized by the ***derived class***. And here is done by the `process_node()`, it's also true.
 
-So we're getting all the benefits of polymorphism, but we're not paying any price for it. Another thing to note is from our kind point of view, they can use our class as if it is a true polymorphism. They don't even care whether it is real or simulated polymorphism. This is called ***curiously recurring template pattern* - *CRTP***, is also called ***static polymorphism***, or ***simulated polymorphism***. It is very popular in the library code, because in the most of the application code, you don't really care about the cost of the ***virtual table*** and the ***dynamic binding*** unless your profile tell you that is important. But in the library code, often time you want to squeeze every bit of performance out of your code.
+So we're getting all the benefits of polymorphism, but we're not paying any price for it. From our point of view, they can use our class as if it is a true polymorphism. They don't even care whether it is ***real*** or ***simulated polymorphism***. This is called ***curiously recurring template pattern* - *CRTP***, or ***simulated polymorphism***. It is very popular in the library code, because in the most of the application code, you don't really care about the cost of the ***virtual table*** and the ***dynamic binding*** unless your profile tell you that is important. But in the library code, often time you want to squeeze every bit of performance out of your code.
 
-So we are getting all the benefits of polymorphism, but we are not paying price for it. It's like a free launch, right? No, nothing is free in this world. Everything comes in with the price. So what is the price we are paying here?
+So we are getting all the benefits of polymorphism, but we are not paying price for it. It's like a free lunch, right? No, nothing is free in this world. Everything comes in with the price. So what is the price we are paying here?
 
-Suppose I create another parser, which is called `MilitaryChart_Parser`, and the `MilitaryChart_Parser` will be derived from the `Generic_Parser` of the template type of `MilitaryChart_Parser`. Note that the `Generic_Parser` of `EmployeeChart_Parser` and the `Generic_Parser` of `MilitaryChart_Parser` are two different classes. They are distinguished classes that occupies their own space in the program image. Now you realized that the launch is not free. This is a typical trade off between a program image size and a program performance. Whether the trade off is worth it, it totally depends on your application:
+Suppose I create another parser, which is called `MilitaryChart_Parser`, and the `MilitaryChart_Parser` will be derived from the `Generic_Parser` of the template type of `MilitaryChart_Parser`. Note that the `Generic_Parser` of `EmployeeChart_Parser` and the `Generic_Parser` of `MilitaryChart_Parser` are two different classes. They are distinguished classes that occupies their own space in the program image. Now you realized that the lunch is not free. This is a typical trade off between a ***program image size*** and a ***program performance***. Whether the trade off is worth it, it totally depends on your application:
 ```
 int main() {
     ...
@@ -466,9 +468,22 @@ int main() {
     ...
 }
 ```
-Another thing is want to point out is this is also a small demo of ***Template Metaprogramming* - *TMP***. The idea of ***template metaprogramming*** is it moves part of computation, which typical happens during ***runtime*** up front to the ***compile time***. Therefore, improve the efficiency of your program. And that is exactly what our ***static polymorphism*** does, although ***static polymorphism*** only improve the efficiency a little bit. Sometimes, by using the ***TMP technique***, you can make much bigger improvements to your program.
+Another thing I want to point out is this is also a small demo of ***Template Metaprogramming* - *TMP***. The idea of ***template metaprogramming*** is it moves part of computation, which typical happens during ***runtime*** up front to the ***compile time***. Therefore, improve the efficiency of your program. And that is exactly what our ***CRTP*** does, although ***CRTP*** only improve the efficiency a little bit. But sometimes by using the ***TMP technique***, you can make much bigger improvements to your program.
 
-The last thing that I want to point out is when some people talk about ***static polymorphism***, they are actually referring to the template itself. In this example, I have a template function `Max()`, which go through every element of the vector `v` and find the largest one and return it:
+
+
+## Curiously Recurring Template Pattern is NOT Static Polymorphism
+***Static polymorphism*** and the ***Curiously Recurring Template Pattern (CRTP)*** are not exactly equivalent concepts, although they are related.
+
+***Static polymorphism*** refers to the use of templates in ***C++*** to achieve polymorphism at compile time. This is also sometimes called ***"template-based polymorphism"*** or ***"compile-time polymorphism"***. In ***static polymorphism***, the compiler generates code for each template instantiation, and the resulting code is specific to the template arguments used.
+
+On the other hand, the ***CRTP*** is a specific design pattern in ***C++*** that uses templates to achieve a similar effect to ***static polymorphism***. The ***CRTP*** involves defining a class template that inherits from a base class, where the base class is parameterized by the derived class itself. The derived class then implements the functionality of the base class, effectively "injecting" its own behavior into the base class.
+
+So, while the ***CRTP*** uses templates to achieve a form of ***static polymorphism***, it is a specific pattern that is distinct from the more general concept of ***static polymorphism***.
+
+
+### Static Polymorphism
+When some people talk about ***static polymorphism***, they are actually referring to the template itself. In this example, I have a template function `Max()`, which go through every element of the vector `v` and find the largest one and return it:
 ```
 template<typename T>
 T Max(std::vector<T> v) {
@@ -486,9 +501,9 @@ When function `Max()` is materialized with any different type of `T`, or the ope
 
 
 # Section 22 - Multiple Inheritance - Devil or Angel
-We're going to talk about ***multiple inheritance***. ***Multiple inheritance*** is where **a class is directly derived from more than one *base classes***. Poeple have different opinions with the ***multiple inheritance***. Some people says if ***single inheritance*** is good, then ***multiple inheritance*** must be better. And some people says ***multiple inheritance*** brings too much trouble and subtlety. And its benefits are not worth by the trouble it has made. So I'm going to show you all the benefits and the subtlety with ***multiple inheritance***. In the end, I'll layout my position on this and you decide for your own position.
+We're going to talk about ***multiple inheritance***. ***Multiple inheritance*** is where **a class is directly derived from more than one *base classes***. People have different opinions with the ***multiple inheritance***. Some people says if ***single inheritance*** is good, then ***multiple inheritance*** must be better. And some people says ***multiple inheritance*** brings too much trouble and subtlety. And its benefits are not worth by the trouble it has made. So I'm going to show you all the benefits and the subtlety with ***multiple inheritance***. In the end, I'll layout my position on this and you decide for your own position.
 
-Let's look at an example. We a class `InputFile`, which opens a file to read. So it has a public `read()` method. We have an `OutputFile` class, it open the file to write, and of course, it has a `write()` method. And later on, it turns out I need to open a file for both reading and writing. It makes sense that we create another class called `IOFile`, which inherit both `InputFile` and `OutputFile`. And as a result, `IOFile` can do both ***reading*** and ***writing***. So far so good, multiple inheritance has served its purpose. Now in order to read a file, we must open the file first. So the `InputFile` needs another method called `open()`. And for the same reason, the `OutputFile` also need a method `open()`. In the `main()` function, I create an `IOFile` object `f`, and I call `f.open()`:
+Let's look at an example. We a class `InputFile`, which opens a file to read. So it has a public `read()` method. We have an `OutputFile` class, it open the file to write, and of course, it has a `write()` method. And later on, it turns out I need to open a file for both reading and writing. It makes sense that we create another class called `IOFile`, which inherit both `InputFile` and `OutputFile`. And as a result, `IOFile` can do both ***reading*** and ***writing***. So far so good, ***multiple inheritance*** has served its purpose. Now in order to read a file, we must open the file first. So the `InputFile` needs another method called `open()`. And for the same reason, the `OutputFile` also need a method `open()`. In the `main()` function, I create an `IOFile` object `f`, and I call `f.open()`:
 ```
 class InputFile {
 public:
@@ -648,7 +663,7 @@ class IOFile : public InputFile, public OutputFile {
 
 
 ### Benefits of Using Multiple Inheritance
-So if the multiple inheritance is so difficult to use, why do we have to use it? The answer to that is ***interface segregation principle***. The interface segregation principle states that if an interface is too large, then split the interface into smaller and most specific ones, so that for clients, will only need to know about the methods that are of interest to them. Say I want to write a program to model a person called `Andy`, and `Andy` is a very complicated person, he can do a lot of things, he can provide a lot of services. So to completely model `Andy`, I might end up having a class that has ***500 APIs***. This will make `Andy` very difficult person to deal with. He has 500 APIs, how am I supposed to talk to him? It turns out it doesn't have to be that difficult. `Andy` is also an `Engineer`. The `Engineer` class provide all the services that the `Engineer` can provide, which is a much smaller number of ***API***, says ***40 APIs***. `Andy` is an `Engineer`, so we can publicly derived from `Engineer`:
+So if the ***multiple inheritance*** is so difficult to use, why do we have to use it? The answer to that is ***interface segregation principle***. The interface segregation principle states that if an interface is too large, then split the interface into smaller and most specific ones, so that for clients, will only need to know about the methods that are of interest to them. Say I want to write a program to model a person called `Andy`, and `Andy` is a very complicated person, he can do a lot of things, he can provide a lot of services. So to completely model `Andy`, I might end up having a class that has ***500 APIs***. This will make `Andy` very difficult person to deal with. He has 500 APIs, how am I supposed to talk to him? It turns out it doesn't have to be that difficult. `Andy` is also an `Engineer`. The `Engineer` class provide all the services that the `Engineer` can provide, which is a much smaller number of ***API***, says ***40 APIs***. `Andy` is an `Engineer`, so we can publicly derived from `Engineer`:
 ```
 class Engineer {
     ...40 APIs...
@@ -671,7 +686,7 @@ So as you can see, by applying ***interface segregation principle***, we are mak
 
 
 ### Pure Abstract Classes
-Now you understand the important of ***multiple inheritance***. The question is how can we use multiple inheritance without getting into all the troubles that we've talked about in previous examples? To answer that question, let me introduce a new concept, it's called ***pure abstract classes***.
+Now you understand the important of ***multiple inheritance***. The question is how can we use ***multiple inheritance*** without getting into all the troubles that we've talked about in previous examples? To answer that question, let me introduce a new concept, it's called ***pure abstract classes***.
 
 C++ standard provides the concept of ***abstract class***. And ***abstract class*** is a class that has one or more ***pure virtual methods***.
 
@@ -683,7 +698,7 @@ public:
     void open() = 0;
 };
 ```
-In a nutshell, a ***pure abstract class*** is **a class that has no incrementation**, **it only provides interface and it provides zero implementation**. And it turns out all the problems that we've talked about, duplication of data, duplication of the methods, the initialization problems. All the problems will be gone, if we only derived from ***pure abstract classes***. If all the base classes `InputFile`, `OutputFile` and `File` are ***pure abstract classes*** that has no implementation. Then there is no such problem as duplicated implementation and initialization, because there is nothing to duplicate and nothing to initialize anyway. And we don't even need the virtual inheritance anymore.
+In a nutshell, a ***pure abstract class*** is **a class that has no incrementation**, **it only provides interface and it provides zero implementation**. And it turns out all the problems that we've talked about, duplication of data, duplication of the methods, the initialization problems. All the problems will be gone, if we only derived from ***pure abstract classes***. If all the base classes `InputFile`, `OutputFile` and `File` are ***pure abstract classes*** that has no implementation. Then there is no such problem as duplicated implementation and initialization, because there is nothing to duplicate and nothing to initialize anyway. And we don't even need the ***virtual inheritance*** anymore.
 
 So all the problems are gone, but we still have the benefits of ***interface segregation principle***, because the ***interface segregation principle*** cares nothing about the implementation. It only cares about the interface. It will work out perfectly fine if `Engineer` and `Son` are ***pure abstract classes***.
 
@@ -692,3 +707,4 @@ So all the problems are gone, but we still have the benefits of ***interface seg
 1. ***Multiple inheritance*** is an important technique to have. One example is ***interface segregation principle* - *ISP***.
    
 2. If you are using multiple inheritance, it is strongly recommended that you only derived from ***pure abstract classes***.
+
