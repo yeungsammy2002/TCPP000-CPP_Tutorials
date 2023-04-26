@@ -158,9 +158,6 @@ int main() {
 }
 ```
 Since we are already using ***C++11*** and we have defined a ***move constructor*** for our object, so this kind of function `foo_by_value(boVector v)`, we shouldn't call it `foo_by_value` because when this function is taking a ***r-value*** as a parameter, it will actually call the ***move constructor*** to move the object. So we'll just call it `foo()` **\*here**. Suppose that the `reusable` will no longer be reused, so after this `foo(reusable)` function call, reusable will be destroyed. Even though `reusable` is a ***l-value***, we don't want to make a copy of it. And pass it to `foo()`, we want to reuse the object for the `foo()` function. What can we do? We can call `foo()`, and then call the standard library function `std::move()`. This will move the object of `reusable` to the `foo()` function with the ***move constructor***. But you need to be very careful that after you call the `std::move()` function with the `reusable`, the `reusable`'s member `reusable.arr_` is equal to `nullptr`. So you really shouldn't be using the object of `reusable` again after call the `std::move()` function on it. When the `reusable` is destroyed, it will call its destructor, which will delete the array. In this case, it is just deleting a `nullptr`.
-
-# 3 - 10:51
-
 ```
 class boVector {
     int size;
@@ -193,9 +190,51 @@ int main() {
     foo(reusable);                          // *here
     foo(std::move(reusable));
     // reusable is destroyed here
-
-    foo_by_ref(createBoVector());
 }
 ```
+
+There is one last thing that I want to talk about in this example, suppose we have another function call `foo_by_ref(reusable)`, so now we have three function calls. This one `foo(reusable)` will call the ***copy constructor***. And this one `foo(std::move(reusable))` will call the ***move constructor***. And this funtcion `foo_by_ref(reusable)` will call no constructor, it won't call any constructor at all:
+```
+...
+int main() {
+    boVector reusable = createBoVector();
+
+    foo_by_ref(reusable);               // Call no constructor
+    foo(reusable);                      // Call copy constructor
+    foo(std::move(reusable));           // Call move constructor
+}
+```
+If you look at the efficiency of these three function calls, this one `foo_by_ref(reusable)` is the most efficient function call. And this one `foo(std::move(reusable))` is almost as efficient as the first one `foo_by_ref(reusable)`. The second function call is the most expensive function call.
+
+
+A couple of things to note:
+- **Note 1**: The most useful place for ***r-value reference*** is overloading ***copy consntructor*** and ***copy assignment operator***, to achieve ***move semantics***. You are already seen an example of overloading ***copy constructor*** with a ***move constructor***. Similarly, we can overload the ***copy assignment operator*** with a ***move assignment operator***.
+    ```
+    X& X::operator=(X const& rhs);
+    X& X:operator=(X&& rhs);
+    ```
+
+- **Note 2**: Move semantics has already been implemented for **all *STL containers***, which means two things:
+  - If you are using ***STL containers*** and you move to ***C++11***, your code might get faster without changing a single line of code. This is because all the unnecessary copy construction of ***STL containers*** will be automatically replaced with ***move construction***.
+
+  - ***Passing-by-value*** can always be used for ***STL containers***. For example, we have a `foo()` function, which returns a vector by value. This is perfectly fine. And then the `hoo()` function pass over a parameter of string `s` by value, and this is okay no matter how big the string is. The only place you want to use pass by reference is when you want the function to return a certain value through its parameter like the case of the `goo` function:
+    ```
+    std::vector<int> foo() {
+        ...
+        return myvector;
+    }
+
+    void hoo(std::string s);
+
+    void goo(std::vector<int>& arg);        // Pass by reference if you use `arg` to carry
+                                            // data back from goo()
+    ```
+
+
+## Summary
+The main purpose of move constructor and move assignment operator is to conveniently avoid costly and unnecessary ***deep copying***:
+1. They are particularly powerful where **passing by reference** and **passing by value** are both needed for your object. If you know that your object will always be passed by reference, then this is not necessary to create the move semantics for your object.
+   
+2. They give you finer control of which part of your object to be moved. Basically you can do anything you want in the ***move constructor*** and the ***move assignment operator***.
 
 
