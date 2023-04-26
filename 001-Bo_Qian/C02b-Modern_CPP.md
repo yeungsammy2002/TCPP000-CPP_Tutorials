@@ -128,7 +128,7 @@ class boVector {
     int size;
     double* arr_;                       // A big array
 public:
-    boVector(boVector& rhs) {    // Copy constructor
+    boVector(boVector& rhs) {           // Copy constructor
         size = rhs.size;
         arr_ = new double[size];
         for(int i = 0; i < size; i++) {
@@ -157,7 +157,45 @@ int main() {
     foo_by_ref(createBoVector());
 }
 ```
-Since we are already using ***C++11*** and we have defined a ***move constructor*** for our object, so this kind of function `foo_by_value(boVector v)`, we shouldn't call it `foo_by_value` because when this function is taking a ***r-value*** as a parameter, it will actually call the ***move constructor*** to move the object. So we'll just 
+Since we are already using ***C++11*** and we have defined a ***move constructor*** for our object, so this kind of function `foo_by_value(boVector v)`, we shouldn't call it `foo_by_value` because when this function is taking a ***r-value*** as a parameter, it will actually call the ***move constructor*** to move the object. So we'll just call it `foo()` **\*here**. Suppose that the `reusable` will no longer be reused, so after this `foo(reusable)` function call, reusable will be destroyed. Even though `reusable` is a ***l-value***, we don't want to make a copy of it. And pass it to `foo()`, we want to reuse the object for the `foo()` function. What can we do? We can call `foo()`, and then call the standard library function `std::move()`. This will move the object of `reusable` to the `foo()` function with the ***move constructor***. But you need to be very careful that after you call the `std::move()` function with the `reusable`, the `reusable`'s member `reusable.arr_` is equal to `nullptr`. So you really shouldn't be using the object of `reusable` again after call the `std::move()` function on it. When the `reusable` is destroyed, it will call its destructor, which will delete the array. In this case, it is just deleting a `nullptr`.
 
-# 3 - 9:29
+# 3 - 10:51
+
+```
+class boVector {
+    int size;
+    double* arr_;
+public:
+    boVector(boVector& rhs) {
+        size = rhs.size;
+        arr_ = new double[size];
+        for(int i = 0; i < size; i++) {
+            arr_[i] = rhs.arr_[i];
+        }
+    }
+    boVector(const boVector&& rhs) {
+        size = rhs.size;
+        arr_ = rhs.arr_;
+        rhs-arr_ = nullptr;
+    }
+    ~boVector() {
+        delete arr_;
+    }
+};
+
+void foo(boVector v);                       // *here
+void foo_by_ref(boVector& v);
+
+boVector createBoVector();
+
+int main() {
+    boVector reusable = createBoVector();
+    foo(reusable);                          // *here
+    foo(std::move(reusable));
+    // reusable is destroyed here
+
+    foo_by_ref(createBoVector());
+}
+```
+
 
