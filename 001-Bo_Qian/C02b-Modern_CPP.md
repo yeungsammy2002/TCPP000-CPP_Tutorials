@@ -238,3 +238,7 @@ The main purpose of move constructor and move assignment operator is to convenie
 2. They give you finer control of which part of your object to be moved. Basically you can do anything you want in the ***move constructor*** and the ***move assignment operator***.
 
 
+
+
+# Section 4 - *r-value* Reference - Perfect Fowarding
+
