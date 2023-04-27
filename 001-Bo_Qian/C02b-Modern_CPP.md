@@ -241,4 +241,14 @@ The main purpose of move constructor and move assignment operator is to convenie
 
 
 # Section 4 - *r-value* Reference - Perfect Fowarding
+We are going to talk about the second usage of ***r-value reference***, which is called ***perfect forwarding***.
 
+Let's look at our example:
+```
+void foo(boVector arg);
+
+template<typename T>
+void relay(T arg) {
+    foo(arg);
+}
+```
