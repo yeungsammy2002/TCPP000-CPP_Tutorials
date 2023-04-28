@@ -430,8 +430,54 @@ ratio = 3.4cm / 2.1mm;          // ratio 3.4 * 10 / 2.1
 ```
 However, ***C++*** doesn't support this kind of syntax. And even if ***C++*** does support this kind of syntax, some people may not like it, because the ***unit translation*** means ***runtime cost***. And they don't like runtime cost, they prefer to use their brain to do the job for the machine. And they have good reason for doing that, especially when the unit translation needs to happen many many times during the program execution.
 
-To solve this problem, ***C++11*** provides
+To solve this problem, ***C++11*** provides the new feature of ***user-defined literals***. 
 
-# 5 - 3:52
+Let's look at some example. Here I have the ***user-defined literals*** to define the unit of ***centimeter* `_cm`**, ***meter* `_m`** and ***milimeter* `_mm`**. `operator""` means this is the declaration of ***user-defined literals***. `_cm` is the ***identifier***, the ***suffix***. It takes a `long double x` as a parameter, and then multiply `x` by `10`, and then return the result as a `long double`. For `_m`, which means ***meter***, `x` is multiplied by `1000`. For ***millimeter***, `x` is returned as is. So the final unit is ***millimeter***. Both ***centimeter*** and ***meter*** will be translated into ***millimeter***:
+```
+long double operator"" _cm(long double x) {
+    return x * 10;
+}
+long double oeprator"" _m(long double x) {
+    return x * 1000;
+}
+long double operator"" _mm(long double x) {
+    return x;
+}
 
+int main() {
+    long double height 3.4_cm;
+    std::cout << height << std::endl;
+}
+```
+In this `main()` function, I intitialized `height` to `3.4_cm`, which means it is 3.4 centimeter, and then I print out the `height`. Let's run the program:
+```
+34
+```
+It prints out `34`. So the ***centimeter value*** is translated into ***millimeter value***.
 
+Now let's say I print out `height + 13.0_m`:
+```
+int main() {
+    long double height = 3.4_cm;
+    std::cout << (height + 13.0_m) << std::endl;
+}
+```
+Let's see what happen:
+```
+13034
+```
+It prints out `13034`. Since the unit of the `13.0` is meter, so `13.0` needs to multiply by thousand and then plus the height. The result is `13034`.
+
+Now let's print out ***130 millimeters*** divided by ***13 meters***:
+```
+int main() {
+    std::cout << (130.0_mm / 13.0_m) << std::endl;
+}
+```
+Let's run the program:
+```
+0.01
+```
+It prints out `0.01`.
+
+# 5 - 6:05
