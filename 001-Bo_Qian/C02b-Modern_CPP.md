@@ -335,14 +335,102 @@ If `relay()` function is invoked with ***l-value*** `x`, regardless of `x` is an
 // T&& variable is initialized with l-value => l-value reference
 relay(x);       // => T = int& => T&& = int& && = int&
 ```
-As you can see, by give the function `relay()` a `T&&` type of argument, we are give the function `relay()` an enormous power to take on any kind of argument. It can take on ***r-value***, ***l-value***, `const`, non-`const`...anything. This is what ***\*Scott Meyers*** called a ***universal reference***. It's ***universal***.
+As you can see, by give the function `relay()` a `T&&` type of argument, we are give the function `relay()` an enormous power to take on any kind of argument. It can take on ***r-value***, ***l-value***, `const`, non-`const`...anything. This `T&&` is what ***\*Scott Meyers*** called a ***universal reference***, it's ***universal***.
 
-Someone may say
+Someone may say *"Hey Bo, now you are confusing me. At first you say `&&` means a r-value reference. And now you say `&&` means a universal reference. How do I know which one it is?"* It turns out that `T&&` is an ***universal reference*** only if the following two conditions are met:
+1. First, `T` is a ***template type***. As we see in our `relay()` function, `T` is a ***template type***, **NOT** a regular type like integer or `double`.
+   ```
+   template<typename T>
+    void relay(T&& arg) {
+        ...
+    }
+   ```
+   
+2. Secondly, the ***type deduction***, in this case, the ***reference collapsing*** happens to `T`. As we see in this example also:
+   ```
+    // T&& variable is initialized with r-value => r-value reference
+    relay(9);       // => T = int&& => T&& = int&& && = int&&
+
+    // T&& variable is initialized with l-value => l-value reference
+    relay(x);       // => T = int& => T&& = int& && = int& 
+   ```
+   So what this typically mean is `T` is a ***function template type***, not a ***class template type***.
+
+So `T&&` is ***universal reference*** only when these two conditions are met. In any other case, when you see `T&&` is a ***r-value reference***.
 
 ---
 ***\*Scott (Douglas) Meyers*** (born April 9, 1959) is an American author and software consultant, specializing in the C++ computer programming language. He is known for his Effective C++ book series.
 
 ---
 
-# 4 - 8:03
+Now we are well equipped to tackle the ***perfect forwarding problem***. Here is the complete solution of ***perfect forwarding***. The `relay()` function will take a universal reference of `arg`, and then it perform the `std::forward<T>()` function on `arg`, and then pass it over to `foo()`:
+```
+template<typename T>
+void relay(T&& arg) {
+    foo(std::forward<T>(arg));
+}
+```
+Here is the implementation of `forward()` function. What it essentially does is cast `arg` to the type of `T&&`. In other words, the `relay()` function will cast the `arg` back to the type of `T&&`, and then pass it over to `foo()`. So the `relay()` function and the `foo()` function will have the exact same type of argument of `arg`:
+```
+template<class T>
+T&& forward(typename remove_reference<T>::type& arg) {
+    return static_cast<T&&>(arg);
+}
+```
+If function `relay()` gets a ***l-value***, function `foo()` will get a ***l-value***. If function `relay()` gets a ***r-value***, function `foo()` will get a ***r-value***. This is how ***perfect forwarding*** is achieved.
+
+
+
+## `std::move<T>()` vs `std::forward<T>()`
+Some people, especially beginners are confused by the function `std::move<T>()` and the function `std::forward<T>()`. They have similarity, they both perform static casting of their argument to a certain type. But the difference are the function `std::move<T>()` turns its argument into a ***r-value*** type. And function `std::forward<T>()` turns its argument to type of `T&&`, whatever the `T&&` is:
+```
+std::move<T>(arg);          // Turn `arg` into a r-value type
+std::forward<T>(arg);       // Turn `arg` to type of `T&&`
+```
+
+
+
+## Summary
+The main usage of ***r-value reference*** is in two places:
+1. The first one is to achieve ***move semantics***. It's typically done by overloading the ***copy constructor***, and the ***copy assignment operator*** with different parameter type of ***r-value reference*** and ***l-value reference***.
+2. The second usage is the argument for ***perfect forwarding***, or the parameter for perfect forwarding.
+
+
+
+
+# Section 5 - User Defined Literals
+We are going to talk about a new feature in ***C++11*** called ***user defined literals***.
+
+What are ***literals***? ***Literals*** are ***constants***. ***C++*** has 4 kinds of ***literals***:
+1. ***Integer literal***        - such as `45`
+2. ***Floating point literal*** - such as `4.5`
+3. ***Character literal***      - such as `'z'`
+4. ***String literal***         - such as `"Dog"`
+
+A ***literal*** can have a ***suffix*** to specify an exact ***type*** of the ***literal***. So `45` means the type is `int`, `45u` means `unsigned int`, `45l` means it is a `long`:
+```
+45;     // int literal
+45u;    // unsigned int (suffix specifies type)
+45l;    // long
+```
+
+And then the ***user defined literals*** are allow us to define our own ***suffix***, so that this whole thing `45u` can be treated as **new type of *literal***. Why do we want to do that? Let's look at an example.
+
+Say we are using the older C++ standard and we want to define a variable `height`, which is of the type of `long double`. And we set `height` to `3.4`:
+```
+// C++99
+long double height = 3.4;       // Metres? Centimeters? Inches?
+```
+What does this mean? ***3.4 metres***, ***3.4 cenimeters***, or ***3.4 inches***? We don't know. This is one of the thing that make our code right only. Only the writer of the code understand what the code is doing. If you are going to work on this project for a long time, somebody might be nice enough to tell you that they always use ***metres*** for height, and they always use ***kilo hertz* - *kHz*** for frequency... so on and so forth. Otherwise, if you are not the usual author of the code, then you have to fumble around thousands of line of code and to figure out what the units are, and wish yourself a good luck of that. So `long double height = 3.4;` is not a nice way of writing clean code, but we have been doing this for a long time. We just wished all the developers will stick to the convention, and always use the same units for the same kinds of values. But unfortunately, people does mess up with the units.
+
+So ideally, we should have something like this. `height` is set to `3.4cm`. `ratio` set to `3.4cm` divided by `2.1mm`. Since `3.4cm` and `2.1mm` have different units, unit translationis required. So we translate `3.4cm` from `cm` to `mm`, and then divided by `2.1`. So this is how the code should be look like ideally:
+```
+height = 3.4cm;
+ratio = 3.4cm / 2.1mm;          // ratio 3.4 * 10 / 2.1
+```
+However, ***C++*** doesn't support this kind of syntax. And even if ***C++*** does support this kind of syntax, some people may not like it, because the ***unit translation*** means ***runtime cost***. And they don't like runtime cost, they prefer to use their brain to do the job for the machine. And they have good reason for doing that, especially when the unit translation needs to happen many many times during the program execution.
+
+To solve this problem, ***C++11*** provides
+
+# 5 - 3:52
 
