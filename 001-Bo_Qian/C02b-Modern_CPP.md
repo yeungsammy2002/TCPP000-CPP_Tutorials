@@ -316,10 +316,33 @@ remove_reference<int>::type i;      // int i;
 ```
 
 
-Now let's go back the solution of function `relay()` that I give you. The function `relay()` takes a parameter of `T&&`:
+Now let's go back the solution of function `relay()` that I give you. The function `relay()` takes a parameter of `T&&`. What is `T&&`? I have kept telling you that ***r-value reference*** is specified with `{{ type }}&&`, but doesn't `{{ type }}&&` always indicate it's a r-value reference? The answer is no. The type of `T&&` depends on how `arg` is initialized. If `arg` is initialized with a ***r-value***, then `T&&` is ***r-value reference***. If it initialized with ***l-value***, then `T&&` is a ***l-value reference***. How does it happen?
 ```
 template<typename T>
 void relay(T&& arg) {
     ...
 }
 ```
+
+Say we invoke `relay()` function on an integer `9`, `9` is a ***r-value***. Then `T` will be replaced with `int&&`. Then `T&&` will become `int&& &&`. Applying the ***reference collapsing rule***, it becomes `int&&`. So `T&&` is equivalent to `int&&`, it's a ***r-value reference***:
+```
+// T&& variable is initialized with r-value => r-value reference
+relay(9);       // => T = int&& => T&& = int&& && = int&&
+```
+
+If `relay()` function is invoked with ***l-value*** `x`, regardless of `x` is an ***integer*** or ***integer reference*** `int&`, as far as the type deduction is concerned, `T` will be replaced with `int&`. So `T&&` becomes `int& &&`, which is applying a ***reference collapsing rule*** `int&`. So `T&&` is ***integer reference*** `int&`, which is a ***l-value reference***:
+```
+// T&& variable is initialized with l-value => l-value reference
+relay(x);       // => T = int& => T&& = int& && = int&
+```
+As you can see, by give the function `relay()` a `T&&` type of argument, we are give the function `relay()` an enormous power to take on any kind of argument. It can take on ***r-value***, ***l-value***, `const`, non-`const`...anything. This is what ***\*Scott Meyers*** called a ***universal reference***. It's ***universal***.
+
+Someone may say
+
+---
+***\*Scott (Douglas) Meyers*** (born April 9, 1959) is an American author and software consultant, specializing in the C++ computer programming language. He is known for his Effective C++ book series.
+
+---
+
+# 4 - 8:03
+
