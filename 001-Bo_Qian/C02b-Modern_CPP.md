@@ -243,7 +243,7 @@ The main purpose of move constructor and move assignment operator is to convenie
 # Section 4 - *r-value* Reference - Perfect Fowarding
 We are going to talk about the second usage of ***r-value reference***, which is called ***perfect forwarding***.
 
-Let's look at our example:
+Let's look at our example. We have a function `foo()`, which takes a `boVector` as an argument, and as we know that, `boVector` has both ***move constructor*** and ***copy constructor*** defined. We have a second function `relay()`, which is template function, it will take its argument and pass the argument over to the function `foo()`. This is called ***argument forwarding***. The `relay()` function will be invoked with a ***l-value*** or with a ***r-value***. As we talked about in previous section, when the `relay()` function is invoked with ***l-value***, then the `boVector`'s copy constructor will be invoked. When the `relay()` function is invoked with ***r-value***, then the ***move constructor*** of `boVector` will be invoked. That's the whole purpose of ***moving semantics***:
 ```
 void foo(boVector arg);
 
@@ -251,4 +251,48 @@ template<typename T>
 void relay(T arg) {
     foo(arg);
 }
+
+int main() {
+    boVector reusable = createBoVector();
+    relay(reusable);
+    ...
+    relay(createBoVector());
+}
 ```
+Now let's take a closer look at the parameter forwarding that happens inside the `relay()` function. In the ideal world, how should the `relay()` function pass over its argument to `foo()` function.
+
+There are at least two requirements that need to be met:
+1. First one is no costly and unnecessary copy construction of `boVector` is made. The costly copy construction of `boVector` should be made only when it's necessary.
+   
+2. Secondly, the argument that's being passed to function `relay()`, should have the same type of the argument that being forwarded to function `foo()`. Specifically, if a ***r-value*** is being passed over to `relay()` function, a ***r-value*** should be passed over to `foo()` function. If a ***l-value*** is passed over to `relay()` function, a ***l-value*** should be passed over to `foo()`. So only then, we can called it ***perfect forwarding*** of the parameter. In other words, ***r-value*** is forwarded as ***r-value***, and ***l-value*** is forwarded as ***l-value***.
+
+Our Solution is actually quite simple, all we need to do is rewrite the `relay()` function like this. The `relay()` function will a parameter `T&&`, and it will call the standard library's `std::forward<T>()` function to the argument before passing the argument over to function `foo()`:
+```
+template<typename T>
+void relay(T&& arg) {
+    foo(std::forward<T>(arg));
+}
+```
+If all you want is a solution, you can even stop here. You already know the syntax, you know how to achieve perfect forwarding parameter. However, I do encourage you to finish the entire section because the rest of this section will not only dive into the detail how the perfect forwarding is achieved. It also will give you an introduction of some other important feature of ***C++11***.
+
+
+## Reference Collapsing Rules (***C++11***)
+Let's look at ***reference collapsing rules***. ***C++11*** defined a ***reference collapsing rules*** for ***type deduction***:
+
+
+### 1. `T& &` ==> `T&`
+If I have a **`T` reference** `T&` to a **reference** `&`, it will be deduced to **`T` reference** `T&`. Note that you as a programmer cannot write code like this `T& &`. But the compiler can generate a code like this `T& &`, and then deduce its type to this `T&`
+
+
+### 2. `T& &&` ==> `T&`
+In the same way, a **`T` reference** `T&` to **double reference** `&&` will be deduced `T&`.
+
+
+### 3. `T&& &` ==> `T&`
+`T` **double reference** `T&&` to **reference** `&` is a **`T` reference**.
+
+
+### 4. `T&& &&` ==> `T&&`
+**`T` double reference** to **double reference** `&&` is a **`T` double reference** `T&&`
+
+
