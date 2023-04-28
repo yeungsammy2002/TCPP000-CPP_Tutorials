@@ -280,19 +280,46 @@ If all you want is a solution, you can even stop here. You already know the synt
 Let's look at ***reference collapsing rules***. ***C++11*** defined a ***reference collapsing rules*** for ***type deduction***:
 
 
-### 1. `T& &` ==> `T&`
+### Case 1. `T& &` ==> `T&`
 If I have a **`T` reference** `T&` to a **reference** `&`, it will be deduced to **`T` reference** `T&`. Note that you as a programmer cannot write code like this `T& &`. But the compiler can generate a code like this `T& &`, and then deduce its type to this `T&`
 
 
-### 2. `T& &&` ==> `T&`
+### Case 2. `T& &&` ==> `T&`
 In the same way, a **`T` reference** `T&` to **double reference** `&&` will be deduced `T&`.
 
 
-### 3. `T&& &` ==> `T&`
+### Case 3. `T&& &` ==> `T&`
 `T` **double reference** `T&&` to **reference** `&` is a **`T` reference**.
 
 
-### 4. `T&& &&` ==> `T&&`
+### Case 4. `T&& &&` ==> `T&&`
 **`T` double reference** to **double reference** `&&` is a **`T` double reference** `T&&`
 
 
+The rule is actually not hard to remember, it seems that the **single ref** `&` is a ***"infectious"***, whenever there's appearance of **single ref** `&` (***Case 1, 2 & 3***), then the result of the deduction is a **single ref** `T&`. The result is a **double reference** `T&&` (***Case 4***) only when there is **double refs** in their type `T&& &&`, there is **no single ref**.
+
+
+
+Let's look at a standard library structure call the `remove_reference`. `remove_reference` does exactly what the name said, it remove reference. So if I create a `remove_reference<int&>`, then the resulted type is an integer. So this line of code `remove_reference<int&>::type i` is exactly the same as this code `int i`:
+```
+template<class T>
+struct remove_reference;            // It removes reference on type `T`
+
+// T is int&
+remove_reference<int&>::type i;     // int i;
+```
+
+If I create the `remove_reference<int>`, because there is no reference to remove, so the result is also `int i`:
+```
+// T is int
+remove_reference<int>::type i;      // int i;
+```
+
+
+Now let's go back the solution of function `relay()` that I give you. The function `relay()` takes a parameter of `T&&`:
+```
+template<typename T>
+void relay(T&& arg) {
+    ...
+}
+```
