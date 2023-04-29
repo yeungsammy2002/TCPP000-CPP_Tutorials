@@ -478,6 +478,74 @@ Let's run the program:
 ```
 0.01
 ```
-It prints out `0.01`.
+It prints out `0.01`. So this is how ***user defined literals*** work. By using ***user defined literals***, we provided convenience way to specify the ***units***.
 
-# 5 - 6:05
+However, we haven't solve all the problem yet, the unit translation still happens at ***runtime***. They still demand ***runtime cost***, so to minimize the runtime impact, all we need to do is **make this function *constant expression* `constexpr`**. Since all these functions take ***literals*** as ***input parameters***. We can safely assume that all these calcuations (i.e. `return x * 1000;`) can be performed at ***compile time***:
+```
+constexpr long double operator"" _cm(long double x) {
+    return x * 10;
+}
+constexpr long double oeprator"" _m(long double x) {
+    return x * 1000;
+}
+constexpr long double operator"" _mm(long double x) {
+    return x;
+}
+
+int main() {
+    long double height = 3.4_cm;
+    std::cout << height << std::endl;
+    std::cout << (height + 13.0_m) << std::endl;
+    std::cout << (130.0_mm / 13.0_m) << std::endl;
+}
+```
+So let's run the program again:
+```
+34
+13034
+0.01
+```
+The result is the same. However, now, all the unit translations are done by the ***compiler***. So they won't cost anything during the ***runtime***.
+
+
+Let's look at the second example. Here I am defined the ***user-defined literals* `_bin`**, which converts a string representation of ***binary number*** into an ***integer***. Note that this ***user defined literal* `_bin`** takes two parameters. First one is a string `str`, a `const char` pointer `const char*`. And second one is `std::size_t`, `l`. Note that ***C++11*** only allow a handful of data type, which can be used as parameter of the ***user defined literals***. With the `char` pointer `char*` and `std::size_t`, I can calculate the value of the binary number, and then return it. In the `main()` function, I print out `"110"` binary number, `"1100110"` and lastly a pretty big number `"110100010001001110001"`:
+```
+int operator"" _bin(const char* str, std::size_t l) {
+    int ret = 0;
+    for(int i = 0; i < 1; i++) {
+        ret = ret << 1;
+        if(str[i] == '1')
+            ret += 1;
+    }
+    return ret;
+}
+
+int main() {
+    std::cout "110"_bin << std::endl;
+    std::cout "1100110"_bin << std::endl;
+    std::cout "110100010001001110001"_bin << std::endl;
+}
+```
+Let's run the program:
+```
+6
+102
+1712753
+```
+So `"110"` is `6`. The second one `"1100110"` is `102`. And the last one `"110100010001001110001"` is a pretty big number `1712753`.
+
+So the importance of ***user defined literals*** is that ***C++*** went a long way to make ***user defined types* (*classes*)** to behave same as ***built-in types***, and ***user defined literals*** push this effort even futher. It makes the ***user defined literals*** to behave the same as the ***built-in literals***. So this is more than just a ***syntactic sugar***.
+
+
+## Restrictions of using User Defined Literals
+The last thing I want to point out is the ***user defined literals*** have some ***restrictions*** on the ***input parameter types***. The ***input parameter*** can only be one of the following types:
+```
+char const*
+unsigned long long
+long double
+char const*, std::size_t
+wchar_t const*, std::size_t
+char16_t const*, std::size_t
+char32_t const*, std::size_t
+```
+I have shown you an example that takes a `long double` parameter, and an example that takes a `char const*` and a `std::size_t` parameters. But the **return value can be of any type**.
