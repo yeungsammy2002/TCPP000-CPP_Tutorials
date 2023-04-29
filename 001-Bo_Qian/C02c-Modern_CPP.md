@@ -52,6 +52,58 @@ class Duck {
     Duck(Duck&&) {}         // move constructor
 }
 ```
-What methods will be generated for the class `Duck`? 
+What methods will be generated for the class `Duck`? ***Default constructor***? No. ***Copy constructor***? No, because we have defined a ***move constructor***. ***Copy assignment operator***? No. ***Destrcutor***? Yes. And ***move assignment operator***? No. So what we will get is the ***destructor*** only.
 
-# 6 - 5:36
+The `Duck` is actually represent a pretty useful case, it is an object that can only be moved constructed. It cannot be copied. In real life application, things like ***mutex*** or ***sockets***, which should only be moved and should not be copied. For the purpose of completeness, the methods that will be generated for `Dog` are all compiler generated methods:
+```
+class Dog{};
+```
+Same as below behind the scenes:
+```
+class Dog {
+    Dog();                          // default constructor
+    Dog(const Dog&);                // copy constructor
+    Dog& operator=(const Dog&);     // copy assignment operator
+    ~Dog();                         // destructor
+    Dog(Dog&&);                     // move constructor
+    Dog& operator=(Dog&&);          // move assignment operator
+};
+```
+
+
+Now let's look at another example. class `Frog` has a method as below. Now what will happen to this class?
+```
+class Frog {
+    Frog(Frog&&, int = 0) {}
+};
+```
+So this method `Frog(Frog&&, int = 0) {}` is actually a ***move constructor***, because when the second parameter is not specified. The `Frog` can be constructed from the ***r-value*** of another `Frog`. So the class `Frog` is the same as class `Duck`, only the ***destructor*** will be generated.
+
+As a side note, if you have a constructor `Frog`, which takes an integer as a parameter with the default value, then this is a ***default constructor***. If you have a constructor that takes `const Frog&` and `int = 0`, this is a ***copy constructor***:
+```
+class Frog {
+    Frog(Frog&&, int = 0) {}        // move constructor
+    Frog(int = 0) {}                // default constructor
+    Frog(const Frog&, int = 0) {}   // copy constructor
+};
+```
+
+
+Now let's look at another example. We have a class `Fish`, and `Fish` has a ***destructor***. What methods will be generated for this class?
+```
+class Fish {
+    ~Fish() {}
+}
+```
+The ***default constructor***? Yes, because there's no constructor being declared. ***Copy constructor***? Yes. ***Copy assignment operator***? Yes. ***Move constructor*** and ***Move assignment operator***? No, because we have a ***destructor*** being declared. So what will be generated for `Fish` is ***default constructor***, ***copy constructor*** and ***copy assignment operator***.
+
+
+Now let's look at a tricky one. We have a class `Cow`, which has a ***copy assignment operator*** that is **being deleted**. What methods will be generated for the class `Cow`?
+```
+class Cow {
+    Cow& operator=(const Cow&) = delete;
+}
+```
+
+
+# 6 - 9:14
