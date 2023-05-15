@@ -12,5 +12,3 @@ find_package(SFML COMPONENTS system window graphics audio network REQUIRED)
 
 include_directories(C:/SFML-2.5.1/include)
 target_link_libraries(hello_sfml sfml-system sfml-window sfml-graphics sfml-audio)
-
-#set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
