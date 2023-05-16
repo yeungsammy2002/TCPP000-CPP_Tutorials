@@ -38,3 +38,6 @@ int main()
 }
 ```
 
+#### 5. Setup the working directory for the project in order to use relative path of `images` folder
+`Run` (top menu) -> `Edit Configurations...` -> `Working directory:` (i.e. `E:\CLion_Projects\hello_sfml`)
+
