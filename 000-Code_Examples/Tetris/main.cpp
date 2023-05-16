@@ -7,7 +7,7 @@ constexpr int N = 10;
 int field[M][N] = {0};
 
 struct Point {
-    int x = 0, y = 0;
+    int x = -1, y = -1;
 } a[4], b[4];
 
 int figures[7][4] = {
@@ -31,7 +31,7 @@ bool check() {
 int main() {
     std::srand(std::time(0));
 
-    sf::RenderWindow window(sf::VideoMode(320, 480), "My Tetris");
+    sf::RenderWindow window(sf::VideoMode(320, 480), "Tetris");
 
     sf::Texture t1, t2, t3;
     t1.loadFromFile("images/tiles.png");
@@ -42,12 +42,11 @@ int main() {
 
     int dx = 0;
     bool rotate = false;
-    int colorNum = 1;
+    int colorNum = 1 + std::rand() % 7;
 
     float timer = 0, delay = 0.3;
 
     sf::Clock clock;
-
 
     while (window.isOpen()) {
         float time = clock.getElapsedTime().asSeconds();
