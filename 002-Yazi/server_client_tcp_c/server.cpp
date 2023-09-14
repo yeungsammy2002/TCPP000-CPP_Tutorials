@@ -63,9 +63,8 @@ int main() {
             return 1;
         }
 
-        char buf[1024] { 0 };
-
         // receiving client data
+        char buf[1024] { 0 };
         std::size_t len = ::recv(connfd, buf, sizeof(buf), 0);
         printf("recv: connfd=%d msg=%s\n", connfd, buf);
 
