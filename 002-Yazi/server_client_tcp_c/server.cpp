@@ -30,7 +30,13 @@ int main() {
     sockaddr.sin_family = AF_INET;
     // sin_family means internet socket address's family
     sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+    // sin_addr is struc in_addr type, in_addr has only one member s_addr,
+    // s_addr is unsigned long type,
+    // inet_addr() take IP address in cstring "xxx.xxx.xxx.xxx" then return unsigned long
     sockaddr.sin_port = htons(port);
+    // sin_port is unsiged short type
+    // htons() means host-to-network short, it works on 16-bit short int,
+    // which swaps the endianness of a short
     if (::bind(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) < 0) {
         printf("socket binding error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
