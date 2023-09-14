@@ -12,7 +12,7 @@ int main() {
     // AF_INET means Address From InterNET IPv4(IP & port pair), AF_INET6 means IPv6
     // SOCK_STREAM means socket type for TCP, SOCK_DGRAM means socket type for UDP
     // IPPROTO_TCP means TCP protocol from IP family, there are also IPPROTO_UDP & IPPROTO_IP,
-    // defined in <netinet/in.h>
+    // which defined in <netinet/in.h>
     if (sockfd < 0) {
         printf("socket creating error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
