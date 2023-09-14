@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int main() {
-    // creating socket
+    // 1. creating socket
     int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     // sockfd means socket file descriptor, returning negative value means error
     // AF_INET means Address From InterNET IPv4(IP & port pair), AF_INET6 means IPv6
@@ -20,7 +20,7 @@ int main() {
         printf("socket creating successful\n");
     }
 
-    // binding socket
+    // 2. binding socket
     std::string ip = "127.0.0.1";
     int port = 8080;
 
@@ -47,7 +47,7 @@ int main() {
     } else
         printf("socket binding successful ip=%s port=%d\n", ip.c_str(), port);
 
-    // socket listening
+    // 3. socket listening
     if (::listen(sockfd, 1024) < 0) {
         // second argument of listen() is the length of backlog
         printf("socket listening error: errno=%d errmsg=%s\n", errno, strerror(errno));
@@ -56,14 +56,16 @@ int main() {
         printf("socket listening ...\n");
 
     while (true) {
-        // accepting client connection
+        // 4. accepting client connection
         int connfd = ::accept(sockfd, nullptr, nullptr);
+        // second argument of accept() is peer, which is sockaddr * type
+        // third argument of accept () is socklen_t *
         if (connfd < 0) {
             printf("socket accepting error: errno=%d errmsg=%s\n", errno, strerror(errno));
             return 1;
         }
 
-        // receiving client data
+        // 5. receiving client data
         char buf[1024] { 0 };
         std::size_t len = ::recv(connfd, buf, sizeof(buf), 0);
         printf("recv: connfd=%d msg=%s\n", connfd, buf);
