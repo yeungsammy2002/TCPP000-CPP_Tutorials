@@ -74,5 +74,11 @@ int main() {
         ::send(connfd, buf, len, 0);
     }
 
+    // 7. closing socket
+    // under the normal circumstance, the infinite loop let the 
+    // server keep listening on client requests,
+    // just in case while some accidents occur lead to the loop break,
+    // we have to close the socket by using close()
     ::close(sockfd);
+    // close() is defined in <unistd.h>
 }
