@@ -33,6 +33,7 @@ int main() {
     // sin_addr is struc in_addr type, in_addr has only one member s_addr,
     // s_addr is unsigned long type,
     // inet_addr() take IP address in cstring "xxx.xxx.xxx.xxx" then return unsigned long
+    // inet_addr() is defined in <arpa/inet.h>
     sockaddr.sin_port = htons(port);
     // sin_port is unsiged short type
     // htons() means host-to-network short, it works on 16-bit short int,
