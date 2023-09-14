@@ -70,7 +70,7 @@ int main() {
         std::size_t len = ::recv(connfd, buf, sizeof(buf), 0);
         printf("recv: connfd=%d msg=%s\n", connfd, buf);
 
-        // sending same data back to client
+        // 6. sending same data back to client
         ::send(connfd, buf, len, 0);
     }
 
