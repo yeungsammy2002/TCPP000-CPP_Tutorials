@@ -27,6 +27,7 @@ int main() {
     // inet_addr() take IP address in cstring "xxx.xxx.xxx.xxx" then return unsigned long
     sockaddr.sin_port = htons(port);
     // sin_port is unsiged short type
+    // htons() means host-to-network short, it works on 16-bit short int
     if (::connect(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) < 0) {
         printf("socket connection error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
