@@ -41,6 +41,7 @@ int main() {
         // bind() take struct sockaddr pointer, not struct sockaddr_in,
         // struct sockaddr is a general structure valid for any protocol,
         // but struct sockaddr_in is protocol to be specific for IPv4 address family
+        // bind()'s third argument is address length
         printf("socket binding error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
     } else
@@ -48,6 +49,7 @@ int main() {
 
     // socket listening
     if (::listen(sockfd, 1024) < 0) {
+        // second argument of listen() is the length of backlog
         printf("socket listening error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
     } else
