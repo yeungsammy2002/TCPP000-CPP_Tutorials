@@ -38,6 +38,9 @@ int main() {
     // htons() means host-to-network short, it works on 16-bit short int,
     // which swaps the endianness of a short
     if (::bind(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) < 0) {
+        // bind() take struct sockaddr pointer, not struct sockaddr_in,
+        // struct sockaddr is a general structure valid for any protocol,
+        // but struct sockaddr_in is protocol to be specific for IPv4 address family
         printf("socket binding error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
     } else
