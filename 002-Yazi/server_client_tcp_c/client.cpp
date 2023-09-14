@@ -22,7 +22,10 @@ int main() {
     std::memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+    // sin_addr is struc in_addr type, in_addr has only one member s_addr,
+    // s_addr is unsigned long type, so inet_addr() return unsigned long
     sockaddr.sin_port = htons(port);
+    // sin_port is unsiged short
     if (::connect(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) < 0) {
         printf("socket connection error: errno=%d errmsg=%s\n", errno, strerror(errno));
         return 1;
