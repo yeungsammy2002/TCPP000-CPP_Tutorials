@@ -2,7 +2,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <cstring>
-#include <arpa/inet.h>
+#include <arpa/inet.h>  // arpa stand for Advance Research Projects Agency
 #include <unistd.h>
 
 int main() {
