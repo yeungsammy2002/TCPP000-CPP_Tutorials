@@ -3,7 +3,7 @@
 #include <string>
 #include <cstring>
 #include <arpa/inet.h>  // arpa stand for Advance Research Projects Agency
-#include <unistd.h>
+#include <unistd.h>     // unistd stand for unix standard
 
 int main() {
     // 1. creating socket
