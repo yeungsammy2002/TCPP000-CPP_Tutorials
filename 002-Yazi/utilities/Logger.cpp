@@ -10,7 +10,7 @@ const char * Logger::s_level[LEVEL_COUNT] {
         "FATAL ERROR"
 };
 
-void Logger::open(std::string filename) {
+void Logger::open(const std::string& filename) {
     m_filename = filename;
     m_fout.open(filename, std::ios::app);
     if (m_fout.fail())

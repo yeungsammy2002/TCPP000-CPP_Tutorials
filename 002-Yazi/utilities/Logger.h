@@ -40,7 +40,7 @@ namespace demo {
                 LEVEL_COUNT
             };
 
-            void open(std::string filename);
+            void open(const std::string& filename);
 
             void close();
 
