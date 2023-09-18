@@ -21,6 +21,10 @@ void Logger::open(const std::string& filename) {
     m_fout.open(filename, std::ios::app);
     if (m_fout.fail())
         throw std::logic_error("failed to open " + m_filename);
+
+    // if log file already has content, you have to get the
+    // length of the existing log file by using seekp() &
+    // tellp()
     m_fout.seekp(0, std::ios::end);
     m_len = m_fout.tellp();
 }
