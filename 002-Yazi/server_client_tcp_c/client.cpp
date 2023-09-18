@@ -7,7 +7,7 @@
 
 int main() {
     // 1. creating socket
-    int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int sockfd = ::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd < 0) {
         printf("socket creating error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
         return 1;
