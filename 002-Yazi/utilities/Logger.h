@@ -51,9 +51,9 @@ namespace demo {
             void max(int bytes);
 
         private:
-            Logger() : m_level(DEBUG), m_len(0), m_max(0) {}
+            Logger();
 
-            ~Logger() {}
+            ~Logger();
 
             Logger(const Logger &) = delete;
 

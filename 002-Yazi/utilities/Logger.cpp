@@ -2,6 +2,12 @@
 
 using namespace demo::utilities;
 
+Logger::Logger() : m_level(DEBUG), m_len(0), m_max(0) {}
+
+Logger::~Logger() {
+    close();
+}
+
 const char * Logger::s_level[LEVEL_COUNT] {
         "DEBUG",
         "INFO",
@@ -35,8 +41,7 @@ void Logger::log(Level level, const char * file, int line, const char * format, 
     std::time_t ticks = std::time(NULL);
     std::tm * ptm = std::localtime(&ticks);
 
-    char timestamp[64];
-    std::memset(timestamp, 0, sizeof(timestamp));
+    char timestamp[64]{ 0 };
     std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d(%a) %H:%M:%S GMT+8", ptm);
 
 //    std::cout << timestamp << std::endl;
@@ -93,8 +98,7 @@ void Logger::max(int bytes) {
 void Logger::rotate() {
     close();
 
-    char timestamp[32];
-    std::memset(timestamp, 0, sizeof(timestamp));
+    char timestamp[32]{ 0 };
 
     std::time_t ticks = std::time(NULL);
     std::tm * ptm = std::localtime(&ticks);
