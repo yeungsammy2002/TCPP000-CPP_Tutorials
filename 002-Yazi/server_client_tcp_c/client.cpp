@@ -6,15 +6,15 @@
 #include <unistd.h>
 
 int main() {
-    // creating socket
+    // 1. creating socket
     int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd < 0) {
-        printf("socket creating error: errno=%d errmsg=%s\n", errno, strerror(errno));
+        printf("socket creating error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
         return 1;
     } else
         printf("socket creating successful\n");
 
-    // connecting to server
+    // 2. connecting to server
     std::string ip = "127.0.0.1";
     int port = 8080;
 
@@ -24,19 +24,19 @@ int main() {
     sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
     sockaddr.sin_port = htons(port);
     if (::connect(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) < 0) {
-        printf("socket connection error: errno=%d errmsg=%s\n", errno, strerror(errno));
+        printf("socket connecting error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
         return 1;
     }
 
-    // sending data to server
+    // 3. sending data to server
     std::string data = "hello world";
     ::send(sockfd, data.c_str(), data.size(), 0);
 
-    // receiving data from server
-    char buf[1024] { 0 };
-    ::recv(sockfd, buf, sizeof(buf), 0);
-    printf("recv: msg=%s", buf);
+    // 4. receiving data from server
+    char buff[1024] { 0 };
+    ::recv(sockfd, buff, sizeof(buff), 0);
+    printf("recv: msg=%s", buff);
 
-    // closing socket
+    // 5. closing socket
     ::close(sockfd);
 }
