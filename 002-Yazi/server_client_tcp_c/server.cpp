@@ -7,7 +7,7 @@
 
 int main() {
     // 1. creating socket
-    int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int sockfd = ::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     // sockfd means socket file descriptor, returning negative value means error
     // AF_INET means Address From InterNET IPv4(IP & port pair), AF_INET6 means IPv6
     // SOCK_STREAM means socket type for TCP, SOCK_DGRAM means socket type for UDP
@@ -67,12 +67,12 @@ int main() {
         }
 
         // 5. receiving client data
-        char buf[1024] { 0 };
-        std::size_t len = ::recv(connfd, buf, sizeof(buf), 0);
-        printf("recv: connfd=%d msg=%s\n", connfd, buf);
+        char buff[1024] { 0 };
+        std::size_t len = ::recv(connfd, buff, sizeof(buff), 0);
+        printf("recv: connfd=%d msg=%s\n", connfd, buff);
 
         // 6. sending same data back to client
-        ::send(connfd, buf, len, 0);
+        ::send(connfd, buff, len, 0);
     }
 
     // 7. closing socket
