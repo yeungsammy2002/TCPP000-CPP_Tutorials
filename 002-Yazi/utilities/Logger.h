@@ -12,19 +12,19 @@
 namespace demo {
     namespace utilities {
 
-#define debug(format, ...) \
+#define log_debug(format, ...) \
         Singleton<Logger>::instance()->log(Logger::DEBUG, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define info(format, ...) \
+#define log_info(format, ...) \
         Singleton<Logger>::instance()->log(Logger::INFO, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define warn(format, ...) \
+#define log_warn(format, ...) \
         Singleton<Logger>::instance()->log(Logger::WARN, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define error(format, ...) \
+#define log_error(format, ...) \
         Singleton<Logger>::instance()->log(Logger::ERROR, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define fatal(format, ...) \
+#define log_fatal(format, ...) \
         Singleton<Logger>::instance()->log(Logger::FATAL, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
         class Logger {
