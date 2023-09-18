@@ -43,7 +43,7 @@ int main() {
         // struct sockaddr is a general structure valid for any protocol,
         // but struct sockaddr_in is protocol to be specific for IPv4 address family
         // bind()'s third argument is address length
-        printf("socket binding error: errno=%d errmsg=%s\n", errno, strerror(errno));
+        printf("socket binding error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
         return 1;
     } else
         printf("socket binding successful ip=%s port=%d\n", ip.c_str(), port);
@@ -51,7 +51,7 @@ int main() {
     // 3. socket listening
     if (::listen(sockfd, 1024) < 0) {
         // second argument of listen() is the length of backlog
-        printf("socket listening error: errno=%d errmsg=%s\n", errno, strerror(errno));
+        printf("socket listening error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
         return 1;
     } else
         printf("socket listening ...\n");
@@ -62,7 +62,7 @@ int main() {
         // second argument of accept() is peer, which is sockaddr * type
         // third argument of accept () is socklen_t *
         if (connfd < 0) {
-            printf("socket accepting error: errno=%d errmsg=%s\n", errno, strerror(errno));
+            printf("socket accepting error: errno=%d errmsg=%s\n", errno, std::strerror(errno));
             return 1;
         }
 
