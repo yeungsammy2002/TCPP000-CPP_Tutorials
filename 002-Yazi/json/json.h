@@ -1,3 +1,5 @@
+// specification: https://json.org/json-en.html
+
 #pragma once
 
 #include <string>
