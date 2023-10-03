@@ -231,18 +231,18 @@ std::string Json::asString() const {
     return *(m_value.m_string);
 }
 
-bool Json::has(int index) {
+bool Json::has(int index) const {
     if (m_type != json_array) return false;
     int size = (m_value.m_array)->size();
     return (index >= 0 && index < size);
 }
 
-bool Json::has(const char* key) {
+bool Json::has(const char* key) const {
     std::string name(key);
     return has(name);
 }
 
-bool Json::has(const std::string& name) {
+bool Json::has(const std::string& name) const {
     if (m_type != json_object) return false;
     auto it = (m_value.m_object)->end();
     return ((m_value.m_object)->find(name) != it);
