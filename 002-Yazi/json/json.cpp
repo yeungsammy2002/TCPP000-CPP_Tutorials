@@ -147,7 +147,8 @@ std::string Json::str() const {
     case json_object: {
         ss << '{';
         for (auto it = (m_value.m_object)->begin(); it != (m_value.m_object)->end(); ++it) {
-            if (it != (m_value.m_object)->begin()) ss << ',';
+            if (it != (m_value.m_object)->begin())
+                ss << ',';
             ss << '\"' << it->first << '\"' << ':' << (it->second).str();
         }
         ss << '}';
@@ -238,7 +239,7 @@ bool Json::has(int index) const {
 }
 
 bool Json::has(const char* key) const {
-    std::string name(key);
+    std::string name{ key };
     return has(name);
 }
 
