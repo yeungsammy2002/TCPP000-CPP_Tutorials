@@ -55,7 +55,7 @@ Json::Json(const Json& other) {
     copy(other);
 }
 
-Json& Json::operator=(const Json& other) {
+void Json::operator=(const Json& other) {
     clear();
     copy(other);
 }
@@ -160,17 +160,17 @@ std::string Json::str() const {
 }
 
 Json& Json::operator[](const char* key) {
-    std::string name(key);
+    std::string name{ key };
     return (*this)[name];
 }
 
-Json& Json::operator[](const std::string& key) {
+Json& Json::operator[](const std::string& name) {
     if (m_type != json_object) {
         clear();
         m_type = json_object;
         m_value.m_object = new std::map<std::string, Json>();
     }
-    return (*(m_value.m_object))[key];
+    return (*(m_value.m_object))[name];
 }
 
 Json::iterator Json::begin() {
@@ -242,10 +242,10 @@ bool Json::has(const char* key) {
     return has(name);
 }
 
-bool Json::has(const std::string& key) {
+bool Json::has(const std::string& name) {
     if (m_type != json_object) return false;
     auto it = (m_value.m_object)->end();
-    return ((m_value.m_object)->find(key) != it);
+    return ((m_value.m_object)->find(name) != it);
 }
 
 void Json::copy(const Json& other) {
@@ -320,17 +320,12 @@ void Json::remove(int index) {
 }
 
 void Json::remove(const char* key) {
-    std::string name(key);
+    std::string name{ key };
     remove(name);
 }
 
-void Json::remove(const std::string& key) {
-    if (!has(key)) return;
-    auto it = (m_value.m_object)->find(key);
-    (it->second).clear();
-    (m_value.m_object)->erase(it);
-}
-
-Json::~Json() {
-    clear();
+void Json::remove(const std::string& name) {
+    if (!has(name)) return;
+    (*this).clear();
+    (m_value.m_object)->erase(name);
 }

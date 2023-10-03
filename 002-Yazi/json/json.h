@@ -36,7 +36,7 @@ namespace demo {
 
             Json(const Json& other);
 
-            Json& operator=(const Json& other);
+            void operator=(const Json& other);
 
             operator bool();
 
@@ -104,8 +104,6 @@ namespace demo {
 
         private:
             void copy(const Json& other);
-
-            ~Json();
 
         private:
             union Value {
