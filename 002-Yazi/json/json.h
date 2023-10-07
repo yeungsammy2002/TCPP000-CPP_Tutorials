@@ -36,7 +36,7 @@ namespace demo {
 
             Json(const Json& other);
 
-            Json& operator=(const Json& other);
+            void operator=(const Json& other);
 
             operator bool();
 
@@ -88,11 +88,11 @@ namespace demo {
 
             std::string asString() const;
 
-            bool has(int index);
+            bool has(int index) const;
 
-            bool has(const char* key);
+            bool has(const char* key) const;
 
-            bool has(const std::string& key);
+            bool has(const std::string& key) const;
 
             void clear();
 
@@ -104,8 +104,6 @@ namespace demo {
 
         private:
             void copy(const Json& other);
-
-            ~Json();
 
         private:
             union Value {
