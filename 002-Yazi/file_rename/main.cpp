@@ -11,7 +11,7 @@ using namespace std;
 
 int main(void)
 {
-    std::string path = "C:\\Users\\tyeung\\Desktop\\20230915聖文德書院";
+    std::string path = "{your_path}";
 
     DIR * dr;
     struct dirent * en;
