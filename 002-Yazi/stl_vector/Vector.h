@@ -60,6 +60,8 @@ public:
 
         bool operator!=(const Iterator other) const;
 
+        Iterator & operator=(const Iterator other) const;
+
         Iterator & operator++();
 
         Iterator operator++(int);
@@ -116,7 +118,6 @@ Vector<T>::~Vector()
         delete[] m_data;
         m_data = nullptr;
     }
-
     m_size = 0;
     m_capacity = 0;
 }
@@ -154,7 +155,7 @@ template<typename T>
 void Vector<T>::pop_back()
 {
     if (empty())
-        throw std::logic_error("vector is emtpy");
+        throw std::logic_error("vector is empty");
 
     --m_size;
 }
@@ -281,7 +282,7 @@ template<typename T>
 T & Vector<T>::front()
 {
     if (empty())
-        throw std::logic_error("vector is emtpy");
+        throw std::logic_error("vector is empty");
 
     return m_data[0];
 }
@@ -328,6 +329,9 @@ Vector<T> & Vector<T>::operator=(const Vector<T> & other)
             m_data = nullptr;
         }
 
+        if (0 == m_capacity)
+            m_capacity = 1;
+
         while (m_capacity < other.m_size)
             m_capacity *= 2;
 
@@ -338,6 +342,7 @@ Vector<T> & Vector<T>::operator=(const Vector<T> & other)
         m_data[i] = other.m_data[i];
 
     m_size = other.m_size;
+    return *this;
 }
 
 template<typename T>
@@ -356,6 +361,13 @@ template<typename T>
 bool Vector<T>::Iterator::operator!=(const Iterator other) const
 {
     return m_pointer != other.m_pointer;
+}
+
+template<typename T>
+typename Vector<T>::Iterator & Vector<T>::Iterator::operator=(const Iterator other) const
+{
+    m_pointer = other.m_pointer;
+    return *this;
 }
 
 template<typename T>
@@ -437,6 +449,7 @@ typename Vector<T>::Iterator Vector<T>::find(const T & value)
         if (*it == value)
             return it;
     }
+
     return end();
 }
 
@@ -454,14 +467,12 @@ typename Vector<T>::Iterator Vector<T>::insert(const Iterator it, int n, const T
     if (m_capacity >= m_size + n)
     {
         if (is_basic_type())
-        {
             std::memmove(m_data + size + n, m_data + size, (m_size - size) * sizeof(T));
-        } else
+        else
         {
             for (int i = m_size - 1; i >= size; --i)
                 m_data[i + n] = m_data[i];
         }
-
 
         for (int i = 0; i < n; ++i)
             m_data[size + i] = value;
@@ -538,14 +549,12 @@ typename Vector<T>::Iterator Vector<T>::erase(const Iterator it)
     int size = it - begin();
 
     if (is_basic_type())
-    {
         std::memmove(m_data + size, m_data + size + 1, (m_size - size - 1) * sizeof(T));
-    } else
+    else
     {
         for (int i = size; i < m_size - 1; ++i)
             m_data[i] = m_data[i + 1];
     }
-
     --m_size;
 
     return it;
@@ -556,12 +565,11 @@ typename Vector<T>::Iterator Vector<T>::erase(const Iterator first, const Iterat
 {
     int f = first - begin();
     int l = last - begin();
-    int n = l - f;
+    int n = last - first;
 
     if (is_basic_type())
-    {
-        std::memmove(m_data + f, m_data + l, (m_size - l) * sizeof(T));
-    } else
+        std::memmove(m_data + f, m_data + l, (m_size - 1) * sizeof(T));
+    else
     {
         for (int i = 0; i < m_size - l; ++i)
             m_data[f + i] = m_data[l + i];
