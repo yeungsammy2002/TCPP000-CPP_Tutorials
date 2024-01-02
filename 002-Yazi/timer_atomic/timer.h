@@ -68,6 +68,7 @@ void Timer::start(int milliseconds, F && f, Args && ... args)
             }
         }
     });
+    m_thread.detach();
 }
 
 }
