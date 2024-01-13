@@ -1,24 +1,47 @@
 #include <iostream>
-
-#include <socket/socket.h>
 #include <string>
 
+#include <socket/client_socket.h>
+
 using namespace demo::socket;
-using namespace demo::utilities;
+using std::string;
 
-int main() {
-//    std::cout << "client" << std::endl;
+int main()
+{
+    const string & ip = "127.0.0.1";
+    const int port = 8080;
+    string data = "hello world";
+    const int buff_sz = 1024;
+    char buff[buff_sz]{ 0 };
 
-    Socket client;
+    ClientSocket client(ip, port);
 
-    if (!client.connect("127.0.0.1", 8080))
-        return 1;
-
-    std::string data = "hello world";
     client.send(data.c_str(), data.size());
 
-    char buff[1024] { 0 };
-    client.recv(buff, sizeof(buff));
-
-    printf("recv: msg=%s", buff);
+    client.recv(buff, buff_sz);
+    std::printf("recv: msg=%s\n", buff);
 }
+
+//#include <iostream>
+//
+//#include <socket/socket.h>
+//
+//using namespace demo::socket;
+//
+//int main()
+//{
+////    std::cout << "server client socket demo - client" << std::endl;
+//
+//    const string ip = "127.0.0.1";
+//    const int port = 8080;
+//    const int buff_sz = 1024;
+//    string data = "hello world";
+//
+//    Socket client;
+//    client.connect(ip, port);
+//
+//    client.send(data.c_str(), data.size());
+//    char buff[buff_sz]{ 0 };
+//    client.recv(buff, buff_sz);
+//    std::printf("recv: msg=%s\n", buff);
+//}

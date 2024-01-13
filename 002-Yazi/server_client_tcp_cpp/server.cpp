@@ -1,36 +1,68 @@
 #include <iostream>
+#include <string>
 
-#include <socket/Socket.h>
-#include <utilities/Logger.h>
+#include <socket/server_socket.h>
 
 using namespace demo::socket;
-using namespace demo::utilities;
+using std::string;
 
-int main() {
-//    std::cout << "server" << std::endl;
-    Singleton<Logger>::instance()->open("./test.log");
+int main()
+{
+    const string ip = "127.0.0.1";
+    const int port = 8080;
+    const int buff_sz = 1024;
 
-    //  1. creating socket
-    Socket server;
+    ServerSocket server(ip, port);
 
-    // 2. binding socket
-    if (!server.bind("127.0.0.1", 8080))
-        return 1;
-
-    // 3. socket listening
-    if (!server.listen(1024))
-        return 1;
-
-    while (true) {
-        // 4. socket accepting
+    while (true)
+    {
         int connfd = server.accept();
-        if (connfd < 0) return 1;
+
+        if (0 > connfd)
+            return 1;
+
         Socket client(connfd);
-        char buff[1024] { 0 };
-        int len = client.recv(buff, sizeof(buff));
-
-        printf("recv: connfd=%d msg=%s\n", connfd, buff);
-
+        char buff[buff_sz]{ 0 };
+        std::size_t len = client.recv(buff, buff_sz);
+        std::printf("recv: msg=%s\n", buff);
         client.send(buff, len);
     }
 }
+
+//#include <iostream>
+//
+//#include <socket/socket.h>
+//
+//using namespace demo::socket;
+//
+//int main()
+//{
+////    std::cout << "server client socket demo - server" << std::endl;
+//
+//    const string ip = "127.0.0.1";
+//    const int port = 8080;
+//    const int backlog = 1024;
+//    const int buff_sz = 1024;
+//
+//    Socket server;
+//
+//    if (!server.bind(ip, port))
+//        return 1;
+//
+//    if (!server.listen(backlog))
+//        return 1;
+//
+//    while (true)
+//    {
+//        int connfd = server.accept();
+//
+//        if (0 > connfd)
+//            return 1;
+//
+//        Socket client(connfd);
+//        char buff[buff_sz]{ 0 };
+//        std::size_t len = client.recv(buff, buff_sz);
+//        std::printf("recv: msg=%s\n", buff);
+//        client.send(buff, len);
+//    }
+//}
