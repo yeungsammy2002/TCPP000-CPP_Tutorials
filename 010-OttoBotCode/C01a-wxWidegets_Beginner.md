@@ -61,7 +61,7 @@ Inside the ***Visual Studio* IDE**, to build ***wxWidgets***, we have to choose 
 
 1. Build ***debug Win32 static library*** - First choose ***Debug*** configuration, and set the platform to ***Win32*** in the ***Visual Studio* IDE**. Then click ***Build*** tab -> ***Build Solution***. Once that's done. A new folder called `vc_lib` has been created inside the `lib` folder `C:\Libraries\wxWidgets-3.1.5\lib\vc_lib`. It contains the ***debug static libraries***, and you can see that they are suffixed with a `d` for ***debug***.
 
-2. Build ***release Win332 static library*** - Now go back to ***Visual Studio***, change to ***Release*** configuration, and build the solution again like before. After the installation, in the `vc_lib` folder, we now also have the ***release static libraries*** `C:\Libraries\wxWidgets-3.1.5\lib\vc_lib\mswu`.
+2. Build ***release Win32 static library*** - Now go back to ***Visual Studio***, change to ***Release*** configuration, and build the solution again like before. After the installation, in the `vc_lib` folder, we now also have the ***release static libraries*** `C:\Libraries\wxWidgets-3.1.5\lib\vc_lib\mswu`.
 
 3. Build ***debug x64 static library*** - Finally, we will build the library for ***64-bit* platforms** as well.
 
@@ -110,7 +110,15 @@ C:\Libraries\wxWidgets-3.1.5\include\msvc
 C:\Libraries\wxWidgets-3.1.5\include
 ```
 
-Don't close the ***"FirstGUI Property Pages"*** window, expand the ***Linker*** on the ***left pane*** here. Then click on ***System***. Here (main pane) we have to change the ***SubSystem*** from ***console*** to ***Windows***. This let the compiler know that we don't want a console application. We want a ***Windows GUI application***.
+Don't close the ***"FirstGUI Property Pages"*** window, expand the ***Linker*** on the ***left pane*** here. Then click on ***System***. Here (main pane) we have to change the ***SubSystem*** from ***console***:
+```
+Console (/SUBSYSTEM:CONSOLE)
+``` 
+to ***Windows***:
+```
+Windows (/SUBSYSTEM:WINDOWS)
+```
+This let the compiler know that we don't want a console application. We want a ***Windows GUI application***.
 
 Finally, we have to tell the ***linker*** where it can find the static libraries. And that depends on the target platform. So first, set ***Platform:*** to ***Win32*** on the top. Then go to the ***Linker*** -> ***General*** on the ***left pane***. Under ***Additional Library Directories***, we have to add the location of the ***static libraries*** for ***32-bit platforms***:
 ```
