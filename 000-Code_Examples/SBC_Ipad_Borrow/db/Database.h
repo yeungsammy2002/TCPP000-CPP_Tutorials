@@ -27,13 +27,10 @@ public:
 	typedef std::vector<Item>::iterator Item_Itr;
 	typedef std::vector<BList_Item>::iterator BList_Item_Itr;
 
-	bool in_open(const string & filename);
-	void in_close();
-
-	void set_path(const string & type, const string & path);
-	bool load(const string & type);
-	void load_items(const string & type, bool is_human);
-	void load_blist();
+	bool load(const string & type, const string & path);
+	bool load_items(const string & type, bool is_human);
+	bool load_blist();
+	bool load_rlist();
 
 	string trim(string s);
 	string trim_quote(string s);
@@ -44,19 +41,30 @@ public:
 	BList_Item_Itr find_blitem(const string & cardId);
 	BList_Item_Itr find_borrower(const string & cardId);
 
+	bool write_to_file(BList_Item borrower);
+	bool write_to_history(BList_Item returner);
+
+	bool has_titles(const string & type);
+
+	bool remove(BList_Item blitem);
+	bool update();
+
 	Logger * m_logger;
 	std::vector <Item> m_items;
 	std::vector <BList_Item> m_blist;
 	std::vector <BList_Item> m_rlist;
 private:
 	string m_filename;
-	std::ifstream m_fin;
-	std::ofstream m_fout;
 
 	string m_students_path;
 	string m_staffs_path;
 	string m_ipads_path;
 	string m_blist_path;
+	string m_history_path;
+
+	static const char * b_list_titles[9];
+	static const char * ipad_list_titles[2];
+	static const char * staff_list_titles[4];
 };
 
 }
