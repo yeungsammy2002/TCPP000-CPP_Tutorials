@@ -8,8 +8,6 @@ bool App::OnInit()
 {
 	MainFrame * mainFrame = new MainFrame("SBC iPad Borrow");
 	mainFrame->ShowFullScreen(true, wxFULLSCREEN_ALL);
-	mainFrame->SetClientSize(800, 800);
-	mainFrame->Center();
 	mainFrame->Show();
 
 	return true;

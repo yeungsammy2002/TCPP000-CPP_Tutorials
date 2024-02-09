@@ -2,9 +2,8 @@
 
 using namespace regulus::db;
 
-const char * Database::b_list_titles[9]{
+const char * Database::b_list_titles[8]{
 	"Time",
-	"ReturnTime",
 	"BorrowerCardID",
 	"ChineseName",
 	"EnglishName",
@@ -60,11 +59,6 @@ bool Database::load(const string & type, const string & path)
 	{
 		m_blist_path = path;
 		return load_blist();
-	}
-	else if ("rlist" == type)
-	{
-		m_history_path = path;
-		return load_rlist();
 	}
 	return false;
 }
@@ -210,15 +204,18 @@ bool Database::load_blist()
 	return true;
 }
 
-bool Database::load_rlist()
+bool Database::load_history(int year, int month, int day, const string & path)
 {
+	m_history_folder = path;
+	m_history_path = m_history_folder + "history_" + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day) + ".txt";
+	log_info(m_history_path.c_str());
 	string line;
 	std::vector<string> titles;
 	std::ifstream fin;
 	fin.open(m_history_path, std::ios::in);
 	if (fin.fail())
 	{
-		log_info("no history.txt exist yet");
+		log_info("no %s exist yet", m_history_path.c_str());
 		return false;
 	}
 	log_info("returned list loaded successfully, location: %s", m_history_path.c_str());
@@ -332,27 +329,27 @@ bool Database::write_to_file(BList_Item borrower)
 	if (!hastitles)
 	{
 		string titles = string("Time") + '\t'
-			+ "ReturnTime" + '\t'
 			+ "BorrowerCardID" + '\t'
 			+ "ChineseName" + '\t'
 			+ "EnglishName" + '\t'
 			+ "ClassName" + '\t'
 			+ "ClassNumber" + '\t'
 			+ "IpadCardID" + '\t'
-			+ "IpadNumber" + '\n';
+			+ "IpadNumber"
+			+ '\n';
 
 		fout << titles;
 	}
 
 	string blitem = '\"' + borrower["Time"] + "\"\t\""
-		+ borrower["ReturnTime"] + "\"\t\""
 		+ borrower["BorrowerCardID"] + "\"\t\""
 		+ borrower["ChineseName"] + "\"\t\""
 		+ borrower["EnglishName"] + "\"\t\""
 		+ borrower["ClassName"] + "\"\t\""
 		+ borrower["ClassNumber"] + "\"\t\""
 		+ borrower["IpadCardID"] + "\"\t\""
-		+ borrower["IpadNumber"] + "\"";
+		+ borrower["IpadNumber"]
+		+ "\"";
 	fout << blitem;
 
 	fout << '\n';
@@ -365,39 +362,49 @@ bool Database::write_to_file(BList_Item borrower)
 bool Database::write_to_history(BList_Item returner)
 {
 	bool hastitles = has_titles("rlist");
+	Time now = Time::now();
+	string current_history_path = m_history_folder + "history_" + std::to_string(now.m_year) + "-" + std::to_string(now.m_month) + "-" + std::to_string(now.m_day) + ".txt";
 	std::ofstream fout;
 
-	fout.open(m_history_path, std::ios::app);
+	fout.open(current_history_path, std::ios::app);
 	if (fout.fail())
 	{
-		log_error("open m_history_path failed: %s", m_history_path.c_str());
+		log_error("open m_history_folder failed: %s", current_history_path.c_str());
 		return false;
 	}
 
 	if (!hastitles)
 	{
-		string titles = string("Time") + '\t'
-			+ "ReturnTime" + '\t'
+
+		string titles = string("ChiTime") + '\t'
+			+ "ChiReturnTime" + '\t'
 			+ "BorrowerCardID" + '\t'
 			+ "ChineseName" + '\t'
 			+ "EnglishName" + '\t'
 			+ "ClassName" + '\t'
 			+ "ClassNumber" + '\t'
 			+ "IpadCardID" + '\t'
-			+ "IpadNumber" + '\n';
+			+ "IpadNumber" + '\t'
+			+ "Time" + '\t'
+			+ "ReturnTime" + '\t'
+			+ '\n';
 
 		fout << titles;
 	}
 
-	string rlitem = '\"' + returner["Time"] + "\"\t\""
-		+ returner["ReturnTime"] + "\"\t\""
+	string rlitem = '\"' + returner["ChiTime"] + "\"\t\""
+		+ returner["ChiReturnTime"] + "\"\t\""
 		+ returner["BorrowerCardID"] + "\"\t\""
 		+ returner["ChineseName"] + "\"\t\""
 		+ returner["EnglishName"] + "\"\t\""
 		+ returner["ClassName"] + "\"\t\""
 		+ returner["ClassNumber"] + "\"\t\""
 		+ returner["IpadCardID"] + "\"\t\""
-		+ returner["IpadNumber"] + "\"";
+		+ returner["IpadNumber"] + "\"\t\""
+		+ returner["Time"] + "\"\t\""
+		+ returner["ReturnTime"]
+		+ "\"";
+
 	fout << rlitem;
 
 	fout << '\n';
@@ -416,7 +423,10 @@ bool Database::has_titles(const string & type)
 		path = m_blist_path;
 
 	if ("rlist" == type)
-		path = m_history_path;
+	{
+		Time now = Time::now();
+		path = m_history_folder + "history_" + std::to_string(now.m_year) + "-" + std::to_string(now.m_month) + "-" + std::to_string(now.m_day) + ".txt";
+	}
 
 	std::ifstream fin;
 	fin.open(path, std::ios::in);
@@ -442,67 +452,6 @@ bool Database::has_titles(const string & type)
 	return false;
 }
 
-bool Database::remove(BList_Item blitem)
-{
-	string target = '\"' + blitem["Time"] + "\"\t\"" +
-		blitem["ReturnTime"] + "\"\t\"" +
-		blitem["BorrowerCardID"] + "\"\t\"" +
-		blitem["ChineseName"] + "\"\t\"" +
-		blitem["EnglishName"] + "\"\t\"" +
-		blitem["ClassName"] + "\"\t\"" +
-		blitem["ClassNumber"] + "\"\t\"" +
-		blitem["IpadCardID"] + "\"\t\"" +
-		blitem["IpadNumber"] + "\"";
-
-	//log_debug(target.c_str());
-
-	std::ifstream fin;
-
-	fin.open(m_blist_path, std::ios::in);
-
-	if (fin.fail())
-	{
-		log_error("failed to open borrowed list: %s", m_blist_path.c_str());
-		return false;
-	}
-
-	string temp = "./temp.txt";
-	std::ofstream fout;
-	fout.open(temp, std::ios::app);
-
-	if (fout.fail())
-	{
-		log_error("failed to open %s", temp.c_str());
-		return false;
-	}
-
-	string line;
-	while (std::getline(fin, line))
-	{
-		if (target == line)
-			continue;
-
-		fout << line << '\n';
-	}
-	fout.flush();
-	fout.close();
-	fin.close();
-
-	if (0 != std::remove(m_blist_path.c_str()))
-	{
-		log_error("failed to remove %s", m_blist_path.c_str());
-		return false;
-	}
-
-	if (0 != std::rename(temp.c_str(), m_blist_path.c_str()))
-	{
-		log_error("failed to rename %s to %s", temp.c_str(), m_blist_path.c_str());
-		return false;
-	}
-
-	return true;
-}
-
 bool Database::update()
 {
 	std::ofstream fout;
@@ -515,14 +464,14 @@ bool Database::update()
 	}
 
 	string titles = string("Time") + '\t'
-		+ "ReturnTime" + '\t'
 		+ "BorrowerCardID" + '\t'
 		+ "ChineseName" + '\t'
 		+ "EnglishName" + '\t'
 		+ "ClassName" + '\t'
 		+ "ClassNumber" + '\t'
 		+ "IpadCardID" + '\t'
-		+ "IpadNumber" + '\n';
+		+ "IpadNumber"
+		+ '\n';
 
 	fout << titles;
 
@@ -531,17 +480,19 @@ bool Database::update()
 		BList_Item & blitem = m_blist[i];
 
 		string target = '\"' + blitem["Time"] + "\"\t\"" +
-			blitem["ReturnTime"] + "\"\t\"" +
 			blitem["BorrowerCardID"] + "\"\t\"" +
 			blitem["ChineseName"] + "\"\t\"" +
 			blitem["EnglishName"] + "\"\t\"" +
 			blitem["ClassName"] + "\"\t\"" +
 			blitem["ClassNumber"] + "\"\t\"" +
 			blitem["IpadCardID"] + "\"\t\"" +
-			blitem["IpadNumber"] + "\"";
+			blitem["IpadNumber"]
+			+ "\"";
 
 		fout << target << '\n';
 	}
 	fout.flush();
 	fout.close();
+
+	return true;
 }

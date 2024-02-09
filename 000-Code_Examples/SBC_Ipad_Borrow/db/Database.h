@@ -10,6 +10,7 @@ using std::string;
 
 #include "../utilities/Singleton.h"
 #include "../utilities/Logger.h"
+#include "../utilities/Time.h"
 
 using namespace regulus::utilities;
 
@@ -30,7 +31,7 @@ public:
 	bool load(const string & type, const string & path);
 	bool load_items(const string & type, bool is_human);
 	bool load_blist();
-	bool load_rlist();
+	bool load_history(int year, int month, int day, const string & path);
 
 	string trim(string s);
 	string trim_quote(string s);
@@ -46,7 +47,6 @@ public:
 
 	bool has_titles(const string & type);
 
-	bool remove(BList_Item blitem);
 	bool update();
 
 	Logger * m_logger;
@@ -60,9 +60,10 @@ private:
 	string m_staffs_path;
 	string m_ipads_path;
 	string m_blist_path;
+	string m_history_folder;
 	string m_history_path;
 
-	static const char * b_list_titles[9];
+	static const char * b_list_titles[8];
 	static const char * ipad_list_titles[2];
 	static const char * staff_list_titles[4];
 };
