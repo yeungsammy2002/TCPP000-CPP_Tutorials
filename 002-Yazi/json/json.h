@@ -6,11 +6,16 @@
 #include <stdexcept>
 #include <sstream>
 
+using std::string;
+
 namespace demo {
     namespace json {
-        class Json {
+
+        class Json
+        {
         public:
-            enum Type {
+            enum Type
+            {
                 json_null = 0,
                 json_bool,
                 json_int,
@@ -30,13 +35,25 @@ namespace demo {
 
             Json(const char* value);
 
-            Json(const std::string& value);
+            Json(const string& value);
 
             Json(Type type);
 
             Json(const Json& other);
 
-            void operator=(const Json& other);
+            bool is_null() const { return json_null == m_type; }
+
+            bool is_bool() const { return json_bool == m_type; }
+
+            bool is_int() const { return json_int == m_type; }
+
+            bool is_double() const { return json_double == m_type; }
+
+            bool is_string() const { return json_string == m_type; }
+
+            bool is_array() const { return json_array == m_type; }
+
+            bool is_object() const { return json_object == m_type; }
 
             operator bool();
 
@@ -44,79 +61,73 @@ namespace demo {
 
             operator double();
 
-            operator std::string();
-
-            Json& operator[](int index);
-
-            void append(const Json& other);
-
-            std::string str() const;
-
-            Json& operator[](const char* key);
-
-            Json& operator[](const std::string& key);
-
-            typedef std::vector<Json>::iterator iterator;
-
-            iterator begin();
-
-            iterator end();
-
-            bool operator==(const Json& other);
-
-            bool operator!=(const Json& other);
-
-            bool isNull() const { return m_type == json_null; }
-
-            bool isBool() const { return m_type == json_bool; }
-
-            bool isInt() const { return m_type == json_int; }
-
-            bool isDouble() const { return m_type == json_double; }
-
-            bool isString() const { return m_type == json_string; }
-
-            bool isArray() const { return m_type == json_array; }
-
-            bool isObject() const { return m_type == json_object; }
-
-            bool asBool() const;
-
-            int asInt() const;
-
-            double asDouble() const;
-
-            std::string asString() const;
-
-            bool has(int index) const;
-
-            bool has(const char* key) const;
-
-            bool has(const std::string& key) const;
+            operator string();
 
             void clear();
 
-            void remove(int index);
+            Json& operator[](const int index);
+
+            void append(const Json& other);
+
+            int size() const;
+
+            string str() const;
+
+            Json& operator[](const char* key);
+
+            Json& operator[](const string& key);
+
+            Json& operator=(const Json& other);
+
+            typedef std::vector<Json>::iterator iterator;
+
+            iterator begin() const;
+
+            iterator end() const;
+
+            iterator erase(iterator it);
+
+            bool operator==(const Json& other) const;
+
+            bool operator!=(const Json& other) const;
+
+            bool as_bool() const;
+
+            int as_int() const;
+
+            double as_double() const;
+
+            string as_string() const;
+
+            bool has(const int index) const;
+
+            bool has(const char* key) const;
+
+            bool has(const string& key) const;
+
+            void remove(const int index);
 
             void remove(const char* key);
 
-            void remove(const std::string& key);
+            void remove(const string& key);
 
         private:
             void copy(const Json& other);
 
         private:
-            union Value {
+            union Value
+            {
                 bool m_bool;
                 int m_int;
                 double m_double;
-                std::string* m_string;
+                string* m_string;
                 std::vector<Json>* m_array;
-                std::map<std::string, Json>* m_object;
+                std::map<string, Json>* m_object;
             };
 
             Type m_type;
             Value m_value;
         };
+
     }
 }
