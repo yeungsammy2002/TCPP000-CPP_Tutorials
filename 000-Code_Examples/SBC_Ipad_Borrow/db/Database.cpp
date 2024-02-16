@@ -204,21 +204,27 @@ bool Database::load_blist()
 	return true;
 }
 
+bool Database::load_history(int year, int month, int day)
+{
+	return load_history(year, month, day, m_history_folder);
+}
+
 bool Database::load_history(int year, int month, int day, const string & path)
 {
+	m_rlist.clear();
 	m_history_folder = path;
 	m_history_path = m_history_folder + "history_" + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day) + ".txt";
-	log_info(m_history_path.c_str());
+	log_debug(m_history_path.c_str());
 	string line;
 	std::vector<string> titles;
 	std::ifstream fin;
 	fin.open(m_history_path, std::ios::in);
 	if (fin.fail())
 	{
-		log_info("no %s exist yet", m_history_path.c_str());
+		log_debug("no %s exist yet", m_history_path.c_str());
 		return false;
 	}
-	log_info("returned list loaded successfully, location: %s", m_history_path.c_str());
+	log_debug("returned list loaded successfully, location: %s", m_history_path.c_str());
 	while (std::getline(fin, line))
 	{
 		line = trim(line);

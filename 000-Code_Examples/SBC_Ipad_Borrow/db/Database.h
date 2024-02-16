@@ -31,6 +31,7 @@ public:
 	bool load(const string & type, const string & path);
 	bool load_items(const string & type, bool is_human);
 	bool load_blist();
+	bool load_history(int year, int month, int day);
 	bool load_history(int year, int month, int day, const string & path);
 
 	string trim(string s);
@@ -53,9 +54,8 @@ public:
 	std::vector <Item> m_items;
 	std::vector <BList_Item> m_blist;
 	std::vector <BList_Item> m_rlist;
-private:
-	string m_filename;
 
+	string m_filename;
 	string m_students_path;
 	string m_staffs_path;
 	string m_ipads_path;

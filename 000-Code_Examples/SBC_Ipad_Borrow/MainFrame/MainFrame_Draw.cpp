@@ -11,11 +11,35 @@ void MainFrame::init_draw()
 void MainFrame::draw_p2()
 {
 	m_page2 = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(m_width, m_full_height));
-	Time now = Time::now();
-	string title = std::to_string(now.m_year) + " 年 " + std::to_string(now.m_month) + " 月" + std::to_string(now.m_day) + "號學生歸還 iPad 記錄";
+	Time t = Time::get_time(m_history_unixtime_p2);
+	string title = std::to_string(m_history_year_p2) + " 年 " + std::to_string(m_history_month_p2) + " 月" + std::to_string(m_history_day_p2) + " 號 (" + t.str_chi_weekday + ") 學生歸還 iPad 記錄";
 	m_title_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8(title), wxPoint(13, 13));
 	m_title_p2->SetForegroundColour(m_main_colour);
 	m_title_p2->SetFont(wxFont(18, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	m_message1_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("如要查看所有學生歸還 iPad 記錄, 請瀏覽以下路徑:"), wxPoint(13, 50));
+	m_message1_p2->SetForegroundColour(m_main_colour);
+	m_message1_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	m_textctrl1_p2 = new wxTextCtrl(m_page2, wxID_ANY, wxString::FromUTF8(m_db->m_history_folder), wxPoint(450, 46), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl1_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message2_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("按 \"F\" 或 \"space\" 跳去下一頁     ||     按 \"D\" 跳去上一頁"), wxPoint(100, 100));
+	m_message2_p2->SetForegroundColour(m_forth_colour);
+	m_message2_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	m_message3_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("按 \"1\" 或 \"=\" 跳去後一日     ||     按 \"2\"或 \"-\" 跳去前一日"), wxPoint(800, 100));
+	m_message3_p2->SetForegroundColour(m_third_colour);
+	m_message3_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	//m_button_left_p2 = new wxButton(m_page2, 0, wxString::FromUTF8("<<"), wxPoint(1200, 40), wxSize(40, 40));
+	//m_button_left_p2->SetFont(wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	//m_button_left_p2->SetForegroundColour(m_white_colour);
+	//m_button_left_p2->SetBackgroundColour(m_second_colour);
+	//m_button_right_p2 = new wxButton(m_page2, 1, wxString::FromUTF8(">>"), wxPoint(1250, 40), wxSize(40, 40));
+	//m_button_right_p2->SetFont(wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	//m_button_right_p2->SetForegroundColour(m_white_colour);
+	//m_button_right_p2->SetBackgroundColour(m_second_colour);
 
 	draw_grid_p2();
 }
@@ -23,8 +47,13 @@ void MainFrame::draw_p2()
 void MainFrame::draw_p1()
 {
 	m_page1 = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(m_width, m_full_height));
+	m_page1->SetBackgroundColour(m_white_colour);
 
-	m_title_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("歡迎使用 iPad 借用管理系統"), wxPoint(13, 13));
+	m_logo_handler_p1 = new wxPNGHandler;
+	wxImage::AddHandler(m_logo_handler_p1);
+	m_logo_image_p1 = new wxStaticBitmap(m_page1, wxID_ANY, wxBitmap("C:\\Users\\Public\\Documents\\ipad_borrow_data\\sbc_logo.png", wxBITMAP_TYPE_PNG), wxPoint(13, 13), wxSize(80, 80));
+
+	m_title_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("歡迎使用聖文德書院學生 iPad 借用管理系統"), wxPoint(120, 13));
 	m_title_p1->SetForegroundColour(m_main_colour);
 	m_title_p1->SetFont(wxFont(18, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
@@ -32,26 +61,30 @@ void MainFrame::draw_p1()
 	m_status_p1->SetForegroundColour(m_main_colour);
 	m_status_p1->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_message1_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("如要借出 iPad, 請先讓學生拍卡; 如要歸還 iPad, 請讓 iPad 拍卡"), wxPoint(13, 50));
+	m_message1_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("如要借出 iPad, 請先讓學生拍卡; 如要歸還 iPad, 請讓 iPad 拍卡"), wxPoint(120, 50));
 	m_message1_p1->SetForegroundColour(m_main_colour);
 	m_message1_p1->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_message2_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓學生拍卡"), wxPoint(13, 80));
+	m_message2_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓學生拍卡"), wxPoint(120, 80));
 	m_message2_p1->SetForegroundColour(m_second_colour);
 	m_message2_p1->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_message3_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"), wxPoint(13, 110));
+	m_message3_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"), wxPoint(600, 80));
 	m_message3_p1->SetForegroundColour(m_third_colour);
 	m_message3_p1->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	m_message4_p1 = new wxStaticText(m_page1, wxID_ANY, wxString::FromUTF8("按 \"F\" 或 \"space\" 跳去下一頁     ||     按 \"D\" 跳去上一頁"), wxPoint((m_width / 2) - 260, 120));
+	m_message4_p1->SetForegroundColour(m_forth_colour);
+	m_message4_p1->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
 	draw_grid_p1();
 }
 
 void MainFrame::draw_grid_p2()
 {
-	int total_items = (m_db->m_rlist).size();
-
 	m_grid_p2 = new wxGrid(m_page2, wxID_ANY, wxPoint(1, m_header_h_p2), wxSize(m_width, m_full_height - m_header_h_p2));
+
+	int total_items = (m_db->m_rlist).size();
 	m_grid_p2->CreateGrid(total_items, m_col_num_p2);
 	m_grid_p2->SetRowLabelSize(0);
 	m_grid_p2->SetColLabelSize(36);
@@ -79,12 +112,54 @@ void MainFrame::draw_grid_p2()
 		{
 			m_grid_p2->SetCellAlignment(i, j, wxALIGN_CENTER, wxALIGN_CENTER);
 			m_grid_p2->SetCellBackgroundColour(i, j, m_bg_colour);
-			m_grid_p2->SetCellTextColour(i, j, m_forth_colour);
+			m_grid_p2->SetCellTextColour(i, j, m_black_colour);
 			m_grid_p2->SetCellFont(i, j, wxFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 			m_grid_p2->SetCellValue(i, j, wxString::FromUTF8((m_db->m_rlist)[i][m_rlitem_titles_p2[j]]));
 			m_grid_p2->SetReadOnly(i, j);
 		}
 	}
+
+	string empty_message = std::to_string(m_history_year_p2) + " 年 " + std::to_string(m_history_month_p2) + " 月" + std::to_string(m_history_day_p2) + " 號沒有學生借出 / 歸還 iPad 記錄";
+	m_empty_message_p2 = new wxStaticText(m_grid_p2, wxID_ANY, wxString::FromUTF8(empty_message), wxPoint((m_width / 2) - 260, 100));
+	m_empty_message_p2->SetForegroundColour(m_main_colour);
+	m_empty_message_p2->SetFont(wxFont(18, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	show_empty_p2();
+
+}
+
+void MainFrame::redraw_grid_p2(bool is_exist)
+{
+
+	int old_rows = m_grid_p2->GetNumberRows();
+
+	if (old_rows > 0)
+		m_grid_p2->DeleteRows(0, old_rows, true);
+
+	if (!is_exist)
+	{
+		show_empty_p2();
+		return;
+	}
+
+	int total_items = (m_db->m_rlist).size();
+
+	m_grid_p2->AppendRows(total_items, true);
+
+	for (int i = 0; i < total_items; ++i)
+	{
+		m_grid_p2->SetRowSize(i, 45);
+		for (int j = 0; j < m_col_num_p2; ++j)
+		{
+			m_grid_p2->SetCellAlignment(i, j, wxALIGN_CENTER, wxALIGN_CENTER);
+			m_grid_p2->SetCellBackgroundColour(i, j, m_bg_colour);
+			m_grid_p2->SetCellTextColour(i, j, m_black_colour);
+			m_grid_p2->SetCellFont(i, j, wxFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+			m_grid_p2->SetCellValue(i, j, wxString::FromUTF8((m_db->m_rlist)[i][m_rlitem_titles_p2[j]]));
+			m_grid_p2->SetReadOnly(i, j);
+		}
+	}
+
+	show_empty_p2();
 }
 
 void MainFrame::draw_grid_p1()
@@ -152,6 +227,10 @@ void MainFrame::draw_grid_p1()
 
 void MainFrame::append_p2()
 {
+	const Time t = Time::now();
+	if (t.m_year != m_history_year_p2 || t.m_month != m_history_month_p2 || t.m_day != m_history_day_p2)
+		return;
+
 	m_grid_p2->AppendRows(1, true);
 	int i = (m_db->m_rlist).size() - 1;
 	m_grid_p2->SetRowSize(i, 45);
@@ -159,7 +238,7 @@ void MainFrame::append_p2()
 	{
 		m_grid_p2->SetCellAlignment(i, j, wxALIGN_CENTER, wxALIGN_CENTER);
 		m_grid_p2->SetCellBackgroundColour(i, j, m_bg_colour);
-		m_grid_p2->SetCellTextColour(i, j, m_forth_colour);
+		m_grid_p2->SetCellTextColour(i, j, m_black_colour);
 		m_grid_p2->SetCellFont(i, j, wxFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 		m_grid_p2->SetCellValue(i, j, wxString::FromUTF8((m_db->m_rlist)[i][m_rlitem_titles_p2[j]]));
 		m_grid_p2->SetReadOnly(i, j);
@@ -209,6 +288,19 @@ void MainFrame::show_empty_p1()
 		m_empty_message_p1->Hide();
 }
 
+void MainFrame::show_empty_p2()
+{
+	if (0 == (m_db->m_rlist).size())
+	{
+		Time t = Time::get_time(m_history_unixtime_p2);
+		string empty_message = std::to_string(m_history_year_p2) + " 年 " + std::to_string(m_history_month_p2) + " 月" + std::to_string(m_history_day_p2) + " 號 (" + t.str_chi_weekday + ") 沒有學生歸還 iPad 記錄";
+		m_empty_message_p2->SetLabel(wxString::FromUTF8(empty_message));
+		m_empty_message_p2->Show();
+	}
+	else
+		m_empty_message_p2->Hide();
+}
+
 void MainFrame::draw_setup_page()
 {
 	m_setup_page = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(m_width, m_full_height));
@@ -216,4 +308,40 @@ void MainFrame::draw_setup_page()
 	m_title_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("iPad 借用管理系統設定頁面"), wxPoint(13, 13));
 	m_title_sp->SetForegroundColour(m_main_colour);
 	m_title_sp->SetFont(wxFont(18, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+
+	m_message1_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("注意: 所有預設數據庫資料路徑均為固定, 不能修改學生及iPad的儲存路徑, 包括所有此程式要用的數據庫Folder總路徑為:"), wxPoint(50, 60));
+	m_message1_sp->SetForegroundColour(m_main_colour);
+	m_message1_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl1_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8("C:\\Users\\Public\\Documents\\ipad_borrow_data\\"), wxPoint(50, 85), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl1_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message2_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("學生歸還 iPad 記錄資料庫Folder路徑為:"), wxPoint(50, 150));
+	m_message2_sp->SetForegroundColour(m_main_colour);
+	m_message2_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl2_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8(m_db->m_history_folder), wxPoint(50, 175), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl2_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message3_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("學生借出 iPad 記錄資料庫.txt文檔路徑為:"), wxPoint(50, 250));
+	m_message3_sp->SetForegroundColour(m_main_colour);
+	m_message3_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl3_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8(m_db->m_blist_path), wxPoint(50, 275), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl3_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message4_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("學生姓名, 班別, 學號, 智能卡ID資料庫.csv文檔路徑為: (eclass-user.csv下載後預設為UTF-16, 須要用NotePad++改為UTF-8後重新儲存)"), wxPoint(50, 350));
+	m_message4_sp->SetForegroundColour(m_main_colour);
+	m_message4_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl4_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8(m_db->m_students_path), wxPoint(50, 375), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl4_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message5_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("iPad 編號及 iPad 智能卡ID資料庫.txt文檔路徑為:"), wxPoint(50, 450));
+	m_message5_sp->SetForegroundColour(m_main_colour);
+	m_message5_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl5_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8(m_db->m_ipads_path), wxPoint(50, 475), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl5_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+
+	m_message6_sp = new wxStaticText(m_setup_page, wxID_ANY, wxString::FromUTF8("程式運行日誌(system log)Folder路徑為:"), wxPoint(50, 550));
+	m_message6_sp->SetForegroundColour(m_main_colour);
+	m_message6_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	m_textctrl6_sp = new wxTextCtrl(m_setup_page, wxID_ANY, wxString::FromUTF8(Singleton<Logger>::instance()->m_folder_path), wxPoint(50, 575), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl6_sp->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 }

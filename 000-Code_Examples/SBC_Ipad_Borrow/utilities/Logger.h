@@ -41,7 +41,7 @@ public:
 		L_LEVEL_COUNT
 	};
 
-	bool open(const string & filename);
+	bool open(const string & folder_path);
 
 	void close();
 
@@ -49,11 +49,18 @@ public:
 
 	void level(Level level);
 
+	void max(const int bytes);
+
+	void rotate();
+
+	string m_folder_path;
 private:
 	string m_filename;
 	std::ofstream m_fout;
 	static const char * s_level[L_LEVEL_COUNT];
 	Level m_level = L_DEBUG;
+	int m_max;
+	int m_len;
 };
 
 }
