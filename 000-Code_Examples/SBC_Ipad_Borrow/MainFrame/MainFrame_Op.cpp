@@ -34,7 +34,6 @@ void MainFrame::processing_student_tap_p1(Database::Item & student)
 
 		m_message1_p1->SetLabel(wxString::FromUTF8(reject_message));
 		m_message1_p1->SetForegroundColour(m_warn_colour);
-		//wxLogStatus("此學生已借入 iPad, 不能再借, 如要歸還, 請為歸還 iPad 拍卡即可");
 		return;
 	}
 
@@ -54,7 +53,7 @@ void MainFrame::processing_student_tap_p1(Database::Item & student)
 	m_message2_p1->SetForegroundColour(m_second_colour);
 	m_message3_p1->SetLabel(wxString::FromUTF8("請為要借出的 iPad 拍卡: "));
 	m_message3_p1->SetForegroundColour(m_second_colour);
-	//wxLogStatus("請為iPad拍卡: ");
+
 }
 
 void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
@@ -69,7 +68,6 @@ void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
 
 		m_message1_p1->SetLabel(wxString::FromUTF8(reject_message));
 		m_message1_p1->SetForegroundColour(m_warn_colour);
-		//wxLogStatus("此 iPad 不能再借出, 請先拍卡歸還");
 		return;
 	}
 
@@ -85,7 +83,6 @@ void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
 	string success_message = "iPad " + m_borrower_p1["IpadNumber"] + " 已成功借給 " + m_borrower_p1["ClassName"] + "(" + m_borrower_p1["ClassNumber"] + ") " + m_borrower_p1["ChineseName"];
 	m_message1_p1->SetLabel(wxString::FromUTF8(success_message));
 	m_message1_p1->SetForegroundColour(m_main_colour);
-	//wxLogStatus("此 iPad 已成功借出");
 	reset_p1();
 }
 
@@ -117,7 +114,6 @@ void MainFrame::processing_return_ipad_p1(Database::Item & ipad)
 		m_message2_p1->SetLabel(wxString::FromUTF8(message2));
 		m_message2_p1->SetForegroundColour(m_main_colour);
 		m_message3_p1->SetLabel("");
-		//wxLogStatus("iPad 已歸還");
 		show_empty_p1();
 		show_empty_p2();
 		return;
@@ -127,8 +123,25 @@ void MainFrame::processing_return_ipad_p1(Database::Item & ipad)
 	{
 		reset_p1();
 		m_message1_p1->SetLabel(wxString::FromUTF8("此 iPad 沒有借出, 歸還操作已取消"));
-		//wxLogStatus("此 iPad 沒有借出, 如要借出 iPad, 請先讓學生拍卡, 再讓借出 iPad 拍卡");
 	}
+}
+
+void MainFrame::switch_page(int page)
+{
+	if (1 > m_current_page_num)
+	{
+		log_error("switch to zero or negative page");
+		return;
+	}
+
+	if (m_last_page_num < m_current_page_num)
+	{
+		log_error("switch to beyond last page");
+		return;
+	}
+
+	m_current_page_num = page;
+	switch_page();
 }
 
 void MainFrame::switch_page(bool move)

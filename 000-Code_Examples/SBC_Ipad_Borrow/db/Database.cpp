@@ -130,7 +130,7 @@ bool Database::load_items(const string & type, bool is_person)
 		// merge each key to appopriate value
 		for (int i = 0; std::getline(ss, s, '\t'); ++i)
 		{
-			s = trim_quote(s);
+			s = trim(s, "\"");
 			item[titles[i]] = s;
 		}
 
@@ -192,7 +192,7 @@ bool Database::load_blist()
 		// merge each key to appopriate value
 		for (int i = 0; std::getline(ss, s, '\t'); ++i)
 		{
-			s = trim_quote(s);
+			s = trim(s, "\"");
 			blitem[titles[i]] = s;
 		}
 
@@ -250,7 +250,7 @@ bool Database::load_history(int year, int month, int day, const string & path)
 
 		for (int i = 0; std::getline(ss, s, '\t'); ++i)
 		{
-			s = trim_quote(s);
+			s = trim(s, "\"");
 			rlitem[titles[i]] = s;
 		}
 
@@ -260,6 +260,16 @@ bool Database::load_history(int year, int month, int day, const string & path)
 	return true;
 }
 
+string Database::trim(string src, const char * remove_chars)
+{
+	if (src.empty())
+		return src;
+
+	src.erase(0, src.find_first_not_of(remove_chars));
+	src.erase(src.find_last_not_of(remove_chars) + 1);
+	return src;
+}
+
 string Database::trim(string s)
 {
 	if (s.empty())
@@ -267,16 +277,6 @@ string Database::trim(string s)
 
 	s.erase(0, s.find_first_not_of(" \n\r"));
 	s.erase(s.find_last_not_of(" \n\r") + 1);
-	return s;
-}
-
-string Database::trim_quote(string s)
-{
-	if (s.empty())
-		return s;
-
-	s.erase(0, s.find_first_not_of("\""));
-	s.erase(s.find_last_not_of("\"") + 1);
 	return s;
 }
 

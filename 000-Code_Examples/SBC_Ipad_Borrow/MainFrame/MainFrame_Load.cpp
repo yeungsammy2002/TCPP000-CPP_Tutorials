@@ -5,7 +5,7 @@ void MainFrame::init()
 	m_logger = Singleton<Logger>::instance();
 	m_logger->open("C:\\Users\\Public\\Documents\\ipad_borrow_data\\log\\");
 	m_logger->max(20480);
-	m_logger->level(Logger::L_INFO);
+	m_logger->level(Logger::L_DEBUG);
 
 	m_db = Singleton<Database>::instance();
 	m_db->m_logger = Singleton<Logger>::instance();

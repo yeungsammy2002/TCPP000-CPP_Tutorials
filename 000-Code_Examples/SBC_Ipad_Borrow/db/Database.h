@@ -35,7 +35,7 @@ public:
 	bool load_history(int year, int month, int day, const string & path);
 
 	string trim(string s);
-	string trim_quote(string s);
+	string trim(string src, const char * remove_chars);
 
 	Item_Itr find_item(const string & cardId);
 	Item_Itr find_item(const string & cardId, const string & type);

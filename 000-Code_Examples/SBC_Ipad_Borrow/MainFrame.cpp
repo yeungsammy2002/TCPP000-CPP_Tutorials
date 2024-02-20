@@ -12,13 +12,10 @@ MainFrame::MainFrame(const wxString & title) : wxFrame(nullptr, wxID_ANY, title,
 	m_setup_page->Hide();
 
 	init_bind();
-
-	//CreateStatusBar();
 }
 
 void MainFrame::tap(const string & cardId)
 {
-	//wxLogStatus("tap");
 	Database::Item_Itr item = m_db->find_item(cardId);
 	m_message1_p1->SetLabel(wxString::FromUTF8("如要借出 iPad, 請先讓學生拍卡; 如要歸還 iPad, 請讓 iPad 拍卡"));
 	m_message1_p1->SetForegroundColour(m_main_colour);
@@ -28,7 +25,6 @@ void MainFrame::tap(const string & cardId)
 		reset_p1();
 		m_message1_p1->SetLabel(wxString::FromUTF8("查無此學生或此 iPad, 請重新拍卡"));
 		m_message1_p1->SetForegroundColour(m_warn_colour);
-		//wxLogStatus(wxString::FromUTF8("無此學生或 iPad 請重新輸入"));
 		return;
 	}
 
@@ -46,7 +42,6 @@ void MainFrame::tap(const string & cardId)
 			{
 				m_message1_p1->SetLabel(wxString::FromUTF8("職員版正在開發中, 敬請期待"));
 				m_message1_p1->SetForegroundColour(m_main_colour);
-				//wxLogStatus("職員版正在開發中, 敬請期待");
 				return;
 			}
 		}

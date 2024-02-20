@@ -17,29 +17,20 @@ void MainFrame::draw_p2()
 	m_title_p2->SetForegroundColour(m_main_colour);
 	m_title_p2->SetFont(wxFont(18, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_message1_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("如要查看所有學生歸還 iPad 記錄, 請瀏覽以下路徑:"), wxPoint(13, 50));
+	m_message1_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("如要查看所有學生歸還 iPad 記錄, 請瀏覽路徑:"), wxPoint(13, 50));
 	m_message1_p2->SetForegroundColour(m_main_colour);
 	m_message1_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_textctrl1_p2 = new wxTextCtrl(m_page2, wxID_ANY, wxString::FromUTF8(m_db->m_history_folder), wxPoint(450, 46), wxSize(600, 30), wxTE_READONLY);
+	m_textctrl1_p2 = new wxTextCtrl(m_page2, wxID_ANY, wxString::FromUTF8(m_db->m_history_folder), wxPoint(500, 46), wxSize(600, 30), wxTE_READONLY);
 	m_textctrl1_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
 	m_message2_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("按 \"F\" 或 \"space\" 跳去下一頁     ||     按 \"D\" 跳去上一頁"), wxPoint(100, 100));
 	m_message2_p2->SetForegroundColour(m_forth_colour);
 	m_message2_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
-	m_message3_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("按 \"1\" 或 \"=\" 跳去後一日     ||     按 \"2\"或 \"-\" 跳去前一日"), wxPoint(800, 100));
+	m_message3_p2 = new wxStaticText(m_page2, wxID_ANY, wxString::FromUTF8("按 \"=\" 跳去後一日     ||     按 \"-\" 跳去前一日"), wxPoint(800, 100));
 	m_message3_p2->SetForegroundColour(m_third_colour);
 	m_message3_p2->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-
-	//m_button_left_p2 = new wxButton(m_page2, 0, wxString::FromUTF8("<<"), wxPoint(1200, 40), wxSize(40, 40));
-	//m_button_left_p2->SetFont(wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-	//m_button_left_p2->SetForegroundColour(m_white_colour);
-	//m_button_left_p2->SetBackgroundColour(m_second_colour);
-	//m_button_right_p2 = new wxButton(m_page2, 1, wxString::FromUTF8(">>"), wxPoint(1250, 40), wxSize(40, 40));
-	//m_button_right_p2->SetFont(wxFont(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-	//m_button_right_p2->SetForegroundColour(m_white_colour);
-	//m_button_right_p2->SetBackgroundColour(m_second_colour);
 
 	draw_grid_p2();
 }

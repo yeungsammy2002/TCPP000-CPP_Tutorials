@@ -23,8 +23,10 @@ public:
 	void init_bind();
 
 	void tap(const string & cardId);
+	void switch_page(int page);
 	void switch_page(bool move);
 	void switch_page();
+
 	void processing_student_tap_p1(Database::Item & borrower);
 	void processing_ipad_tap_p1(Database::Item & ipad);
 	void processing_return_ipad_p1(Database::Item & ipad);
