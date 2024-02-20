@@ -147,9 +147,9 @@ Now the program should run in both ***Debug*** and ***Release*** mode on both **
 3. On left pane, expand ***"C/C++"*** > ***"All Options"***
    
 4. On the right main pane, scroll down until you see ***"Preprocessor Definitions"*** field, expand the right field and then click ***"<Edit...>"***, then add the following:
-```
-_CRT_SECURE_NO_DEPRECATE
-_CRT_NONSTDC_NO_DEPRECATE
-```
+    ```
+    _CRT_SECURE_NO_DEPRECATE
+    _CRT_NONSTDC_NO_DEPRECATE
+    ```
 
 5. Check the ***"Inherit from parent or project defaults"*** box, then click ***"OK"***
