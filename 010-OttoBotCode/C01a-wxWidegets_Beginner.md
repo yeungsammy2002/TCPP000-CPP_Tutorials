@@ -138,3 +138,18 @@ click ***OK*** to close.
 
 Now the program should run in both ***Debug*** and ***Release*** mode on both ***32-bit*** and ***64-bit***. You should successfully built ***wxWidgets*** from source, and setup a project which links to it. For some other libraries, you would also have to tell the ***linker*** which `.lib` files your program will use. For ***wxWidgets***, that is not required, and that's because it uses a special feature of the ***Microsoft Virtual C++ Compiler***.
 
+
+### Step 5 - Turn Off Visual Studio Secure Warnings
+1. Right click on your project on the ***left pane***, and choose ***Properties***.
+
+2. Make sure ***Configuration***: ***"All Configurations"***, and ***Platform***: ***"All Platforms"***
+   
+3. On left pane, expand ***"C/C++"*** > ***"All Options"***
+   
+4. On the right main pane, scroll down until you see ***"Preprocessor Definitions"*** field, expand the right field and then click ***"<Edit...>"***, then add the following:
+```
+_CRT_SECURE_NO_DEPRECATE
+_CRT_NONSTDC_NO_DEPRECATE
+```
+
+5. Check the ***"Inherit from parent or project defaults"*** box, then click ***"OK"***
