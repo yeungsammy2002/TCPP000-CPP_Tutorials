@@ -7,7 +7,7 @@ void MainFrame::tap(const string & cardId)
 	m_message1_p1->SetForegroundColour(m_main_colour);
 
 	m_message3_p1->SetLabel(wxString::FromUTF8("如要借出 iPad, 請先讓學生拍卡; 如要歸還 iPad, 請讓 iPad 拍卡"));
-	m_message3_p1->SetForegroundColour(m_sixth_colour);
+	m_message3_p1->SetForegroundColour(m_p3text_colour);
 
 	if ((m_db->m_items).end() == item)
 	{
@@ -107,11 +107,8 @@ void MainFrame::tap(const string & cardId)
 
 	if (m_lock_p3)
 	{
-		if ("false" == (*item)["is_person"])
-		{
-			processing_ipad_tap_p3(*item);
-			return;
-		}
+		processing_borrow_tap_p3(*item);
+		return;
 	}
 }
 
@@ -131,7 +128,7 @@ void MainFrame::reset_p1()
 	m_message2_p1->SetLabel(wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓學生拍卡"));
 	m_message2_p1->SetForegroundColour(m_second_colour);
 	m_message3_p1->SetLabel(wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"));
-	m_message3_p1->SetForegroundColour(m_third_colour);
+	m_message3_p1->SetForegroundColour(m_second_colour);
 	show_empty_p1();
 	show_empty_p2();
 }
@@ -271,7 +268,7 @@ void MainFrame::processing_return_ipad_p3(Database::Item & ipad)
 
 	m_message1_p3->SetLabel("");
 	m_message2_p3->SetLabel(wxString::FromUTF8(message2));
-	m_message2_p3->SetForegroundColour(m_sixth_colour);
+	m_message2_p3->SetForegroundColour(m_p3text_colour);
 	m_message3_p3->SetLabel("");
 	show_empty_p3();
 	show_empty_p4();
@@ -289,7 +286,8 @@ void MainFrame::reset_p3()
 	m_staff_p3["IpadNumber"] = "";
 	m_lock_p3 = false;
 	m_second_lock_p3 = false;
-	m_status_p3->SetForegroundColour(m_sixth_colour);
+	m_last_ipad_p3 = "";
+	m_status_p3->SetForegroundColour(m_p3text_colour);
 	m_status_p3->SetLabel(wxString::FromUTF8("狀態: 借出 / 歸還"));
 	m_message2_p3->SetLabel(wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓職員拍卡"));
 	m_message2_p3->SetForegroundColour(m_second_colour);
@@ -309,19 +307,18 @@ void MainFrame::processing_staff_tap_p3(Database::Item & staff)
 
 	m_lock_p3 = true;
 
-	m_status_p1->SetLabel(wxString::FromUTF8("狀態: 借出"));
-	m_status_p1->SetForegroundColour(m_second_colour);
+	m_status_p3->SetLabel(wxString::FromUTF8("狀態: 借出"));
+	m_status_p3->SetForegroundColour(m_second_colour);
 
-	string message1 = "借入職員: " + staff["ChineseName"] + " " + staff["EnglishName"] + " 登入名稱: " + staff["Login"];
-	m_message2_p3->SetLabel(wxString::FromUTF8(message1));
+	string message2 = "借入職員: " + staff["ChineseName"] + " " + staff["EnglishName"] + " 登入名稱: " + staff["Login"];
+	m_message2_p3->SetLabel(wxString::FromUTF8(message2));
 	m_message2_p3->SetForegroundColour(m_second_colour);
 	m_message3_p3->SetLabel(wxString::FromUTF8("請為要借出的 iPad 拍卡: "));
 	m_message3_p3->SetForegroundColour(m_second_colour);
 }
 
-void MainFrame::processing_ipad_tap_p3(Database::Item & ipad)
+bool MainFrame::check_ipad_borrowed_p3(Database::Item & ipad)
 {
-	switch_page(3);
 	Database::BList_Item_Itr p_borrowed_ipad = m_db->find_blitem(ipad["CardID"]);
 	if ((m_db->m_blist).end() != p_borrowed_ipad)
 	{
@@ -332,7 +329,7 @@ void MainFrame::processing_ipad_tap_p3(Database::Item & ipad)
 
 		m_message1_p3->SetLabel(wxString::FromUTF8(reject_message));
 		m_message1_p3->SetForegroundColour(m_warn_colour);
-		return;
+		return true;
 	}
 	p_borrowed_ipad = m_db->find_bslitem(ipad["CardID"]);
 	if ((m_db->m_bslist).end() != p_borrowed_ipad)
@@ -344,22 +341,98 @@ void MainFrame::processing_ipad_tap_p3(Database::Item & ipad)
 
 		m_message1_p3->SetLabel(wxString::FromUTF8(reject_message));
 		m_message1_p3->SetForegroundColour(m_warn_colour);
+		return true;
+	}
+	return false;
+}
+
+void MainFrame::processing_borrow_tap_p3(Database::Item & item)
+{
+	switch_page(3);
+
+	if ("false" == item["is_person"] && !m_second_lock_p3)
+	{
+		Database::Item & ipad = item;
+		Database::BList_Item_Itr p_borrowed_ipad = m_db->find_blitem(ipad["CardID"]);
+		if (check_ipad_borrowed_p3(ipad))
+			return;
+
+		std::stringstream ss;
+		ss << Time::now().m_unixtime;
+		m_staff_p3["Time"] = ss.str();
+		m_staff_p3["IpadCardID"] = ipad["CardID"];
+		m_staff_p3["IpadNumber"] = ipad["IpadNumber"];
+		(m_db->m_bslist).insert((m_db->m_bslist).begin(), m_staff_p3);
+		push_p3();
+		m_db->write_blist_to_file("staff");
+
+		string success_msg = "iPad " + m_staff_p3["IpadNumber"] + " 已成功借給 " + m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ")";
+		m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
+		m_message1_p3->SetForegroundColour(m_p3text_colour);
+		reset_p3();
 		return;
 	}
 
-	std::stringstream ss;
-	ss << Time::now().m_unixtime;
-	m_staff_p3["Time"] = ss.str();
-	m_staff_p3["IpadCardID"] = ipad["CardID"];
-	m_staff_p3["IpadNumber"] = ipad["IpadNumber"];
-	(m_db->m_bslist).insert((m_db->m_bslist).begin(), m_staff_p3);
-	push_p3();
-	m_db->write_blist_to_file("staff");
+	if ("true" == item["is_person"] && !m_second_lock_p3)
+	{
+		m_second_lock_p3 = true;
+		m_status_p3->SetLabel(wxString::FromUTF8("借出多部 iPad 模式"));
+		m_status_p3->SetForegroundColour(m_second_colour);
+		m_message3_p3->SetLabel(wxString::FromUTF8("已進入多次借出 iPad 模式, 請為要借出的 iPad 拍卡: "));
+		m_message3_p3->SetForegroundColour(m_main_colour);
+		return;
+	}
 
-	string success_msg = "iPad " + m_staff_p3["IpadNumber"] + " 已成功借給 " + m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ")";
-	m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
-	m_message1_p3->SetForegroundColour(m_sixth_colour);
-	reset_p3();
+	if (("false" == item["is_person"] && m_second_lock_p3 && (m_last_ipad_p3 == item["CardID"])) ||
+		("true" == item["is_person"] && m_second_lock_p3 && (m_staff_p3["StaffCardID"] == item["CardID"])))
+	{
+		string success_msg = m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ") 已結束借入多部 iPad 模式";
+		m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
+		m_message1_p3->SetForegroundColour(m_p3text_colour);
+		reset_p3();
+		return;
+	}
+
+	if ("false" == item["is_person"] && m_second_lock_p3)
+	{
+		Database::Item & ipad = item;
+
+		Database::BList_Item_Itr p_borrowed_ipad = m_db->find_blitem(ipad["CardID"]);
+		if (check_ipad_borrowed_p3(ipad))
+			return;
+
+		std::stringstream ss;
+		ss << Time::now().m_unixtime;
+		m_staff_p3["Time"] = ss.str();
+		m_staff_p3["IpadCardID"] = ipad["CardID"];
+		m_staff_p3["IpadNumber"] = ipad["IpadNumber"];
+		(m_db->m_bslist).insert((m_db->m_bslist).begin(), m_staff_p3);
+		push_p3();
+		m_db->write_blist_to_file("staff");
+
+		string success_msg = "iPad " + m_staff_p3["IpadNumber"] + " 已成功借給 " + m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ")";
+		m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
+		m_message1_p3->SetForegroundColour(m_p3text_colour);
+
+		m_message2_p3->SetLabel(wxString::FromUTF8("請為下一部 iPad 拍卡, 如要結束, 請為最後一部剛剛已借出的 iPad 拍卡"));
+		m_message2_p3->SetForegroundColour(m_second_colour);
+		m_message3_p3->SetLabel(wxString::FromUTF8(""));
+
+		m_last_ipad_p3 = ipad["CardID"];
+		return;
+	}
+
+	if ("true" == item["is_person"] && m_second_lock_p3)
+	{
+		if ("staff" == item["type"])
+		{
+			string success_msg = m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ") 已結束借入多部 iPad 模式";
+			m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
+			m_message1_p3->SetForegroundColour(m_p3text_colour);
+			reset_p3();
+			return;
+		}
+	}
 }
 
 void MainFrame::switch_page(int page)

@@ -44,7 +44,8 @@ public:
 	void move_history_p2(const int id);
 
 	void processing_staff_tap_p3(Database::Item & staff);
-	void processing_ipad_tap_p3(Database::Item & ipad);
+	bool check_ipad_borrowed_p3(Database::Item & ipad);
+	void processing_borrow_tap_p3(Database::Item & ipad);
 	void processing_return_ipad_p3(Database::Item & ipad);
 	void draw_p3();
 	void reset_p3();
@@ -78,13 +79,9 @@ private:
 
 	wxColour m_main_colour = wxColour(0, 50, 110);
 	wxColour m_second_colour = wxColour(0, 130, 20);
-	wxColour m_third_colour = wxColour(200, 80, 0);
-	wxColour m_forth_colour = wxColour(220, 37, 55);
-	wxColour m_fifth_colour = wxColour(190, 255, 200);
-	wxColour m_sixth_colour = wxColour(50, 50, 50);
-	wxColour m_black_colour = wxColour(0, 0, 0);
 	wxColour m_bg_colour = wxColour(220, 220, 220);
 	wxColour m_warn_colour = wxColour(220, 0, 0);
+	wxColour m_black_colour = wxColour(0, 0, 0);
 	wxColour m_white_colour = wxColour(255, 255, 255);
 
 	wxPanel * m_page1 = nullptr;
@@ -101,11 +98,13 @@ private:
 	wxGrid * m_grid_p1 = nullptr;
 	const int m_col_num_p1 = 6;
 	const int m_col_sizes_p1[6]{ 400,100,350,100,50,300 };
+	const std::vector<string> & m_col_titles_p1{ "借出時間","學生姓名","學生英文姓名","班別","學號","iPad 號碼" };
 	const char * m_borrower_titles_p1[6]{ "Time","ChineseName","EnglishName","ClassName","ClassNumber","IpadNumber" };
 	Database::BList_Item m_borrower_p1;
 	bool m_lock_p1 = false;
 
 	wxPanel * m_page2 = nullptr;
+	wxColour m_p2bg_colour = wxColour(200, 230, 255);
 	wxStaticText * m_message1_p2 = nullptr;
 	wxTextCtrl * m_textctrl1_p2 = nullptr;
 	wxStaticText * m_message2_p2 = nullptr;
@@ -122,9 +121,12 @@ private:
 	wxGrid * m_grid_p2 = nullptr;
 	const int m_col_num_p2 = 7;
 	const int m_col_sizes_p2[7]{ 310,310,100,240,100,50,190 };
+	const std::vector<string> & m_col_titles_p2{ "借出時間","歸還時間","學生姓名","學生英文姓名","班別","學號","iPad 號碼" };
 	const char * m_rlitem_titles_p2[7]{ "ChiTime","ChiReturnTime","ChineseName","EnglishName","ClassName","ClassNumber","IpadNumber" };
 
 	wxPanel * m_page3 = nullptr;
+	wxColour m_p3bg_colour = wxColour(210, 210, 210);
+	wxColour m_p3text_colour = wxColour(50, 50, 50);
 	int m_header_h_p3 = 150;
 	wxPNGHandler * m_logo_handler_p3 = nullptr;
 	wxStaticBitmap * m_logo_image_p3 = nullptr;
@@ -138,12 +140,15 @@ private:
 	wxGrid * m_grid_p3 = nullptr;
 	const int m_col_num_p3 = 5;
 	const int m_col_sizes_p3[5]{ 350,150,250,150,400 };
+	const std::vector<string> & m_col_titles_p3{ "借出時間","職員姓名","職員英文姓名","登入名稱","iPad 號碼" };
 	const char * m_borrower_titles_p3[5]{ "Time","ChineseName","EnglishName","Login","IpadNumber" };
 	Database::BList_Item m_staff_p3;
 	bool m_lock_p3 = false;
 	bool m_second_lock_p3 = false;
+	string m_last_ipad_p3 = "";
 
 	wxPanel * m_page4 = nullptr;
+	wxColour m_p4bg_colour = wxColour(190, 255, 200);
 	wxStaticText * m_message1_p4 = nullptr;
 	wxTextCtrl * m_textctrl1_p4 = nullptr;
 	wxStaticText * m_message2_p4 = nullptr;
@@ -159,6 +164,7 @@ private:
 	wxGrid * m_grid_p4 = nullptr;
 	const int m_col_num_p4 = 6;
 	const int m_col_sizes_p4[6]{ 330,330,100,240,100,200 };
+	const std::vector<string> & m_col_titles_p4{ "借出時間","歸還時間","職員姓名","職員英文姓名","登入名稱","iPad 號碼" };
 	const char * m_rslitem_titles_p4[6]{ "ChiTime","ChiReturnTime","ChineseName","EnglishName","Login","IpadNumber" };
 
 	wxPanel * m_setup_page = nullptr;
