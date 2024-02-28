@@ -56,7 +56,7 @@ bool Database::load_items(const string & type, bool is_person)
 		fin.open(m_students_path, std::ios::in);
 		if (fin.fail())
 		{
-			log_error("failed to open student list, location: ", m_students_path.c_str());
+			log_error("failed to open student list, location: %s", m_students_path.c_str());
 			return false;
 		}
 		log_info("student list open successfully, location: %s", m_students_path.c_str());
@@ -67,7 +67,7 @@ bool Database::load_items(const string & type, bool is_person)
 		fin.open(m_staffs_path, std::ios::in);
 		if (fin.fail())
 		{
-			log_error("failed to open staff list, location: ", m_staffs_path.c_str());
+			log_error("failed to open staff list, location: %s", m_staffs_path.c_str());
 			return false;
 		}
 		log_info("staff list open successfully, location: %s", m_staffs_path.c_str());
@@ -87,7 +87,6 @@ bool Database::load_items(const string & type, bool is_person)
 	//int line_count = 0;
 	while (std::getline(fin, line))
 	{
-		//log_debug(line.c_str());
 
 		line = trim(line);
 
@@ -98,12 +97,12 @@ bool Database::load_items(const string & type, bool is_person)
 			std::stringstream ss(line);
 
 			while (std::getline(ss, title, '\t'))
+			{
 				titles.push_back(title);
+			}
 
 			continue;
 		}
-
-		//log_debug(line.c_str());
 
 		string s;
 		Item item;
@@ -114,6 +113,8 @@ bool Database::load_items(const string & type, bool is_person)
 		{
 			s = trim(s, "\"");
 			item[titles[i]] = s;
+			//if ("IpadSN" == titles[i])
+			//	log_debug(s.c_str());
 		}
 
 		item["type"] = type;
@@ -123,9 +124,6 @@ bool Database::load_items(const string & type, bool is_person)
 
 		//++line_count;
 	}
-
-	//log_debug(m_items[m_items.size() - 1]["ChineseName"].c_str());
-	//log_debug(m_items[m_items.size() - 1]["IpadNumber"].c_str());
 
 	fin.close();
 	return true;
@@ -168,8 +166,6 @@ bool Database::load_blist(const string & type)
 
 	while (std::getline(fin, line))
 	{
-		//log_debug(line.c_str());
-
 		line = trim(line);
 
 		if ("" == line)
@@ -187,8 +183,6 @@ bool Database::load_blist(const string & type)
 			continue;
 		}
 
-		//log_debug(line.c_str());
-
 		string s;
 		BList_Item blitem;
 		std::stringstream ss(line);
@@ -202,8 +196,6 @@ bool Database::load_blist(const string & type)
 
 		list.push_back(blitem);
 	}
-
-	//log_debug(m_blist[m_blist.size() - 1]["ChineseName"].c_str());
 	fin.close();
 	return true;
 }
@@ -218,7 +210,7 @@ bool Database::load_history(int year, int month, int day, const string & path)
 	m_rlist.clear();
 	m_history_folder = path;
 	m_history_path = m_history_folder + "history_" + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day) + ".txt";
-	log_debug(m_history_path.c_str());
+	//log_debug(m_history_path.c_str());
 	string line;
 	std::vector<string> titles;
 	std::ifstream fin;

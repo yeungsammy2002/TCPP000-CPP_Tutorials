@@ -6,7 +6,6 @@ Logger::Logger() : m_level(L_DEBUG), m_max(0), m_len(0) {}
 
 Logger::~Logger()
 {
-	//m_fout << "close\n";
 	close();
 }
 
@@ -28,7 +27,7 @@ bool Logger::open(const string & folder_path)
 		return false;
 
 	m_fout.seekp(0, std::ios::end);
-	m_len = m_fout.tellp();
+	m_len = static_cast<int>(m_fout.tellp());
 
 	return true;
 }
@@ -50,13 +49,16 @@ void Logger::log(Level level, const char * file, int line, const char * format, 
 	char timestamp[64]{ 0 };
 	std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d(%a) %H:%M:%S GMT+8", ptm);
 
+	if (level < Level::L_DEBUG || level > Level::L_LEVEL_COUNT)
+		return;
+
 	const char * fmt = "%s [%s] %s:%d ";
 	int size = std::snprintf(NULL, 0, fmt, timestamp, s_level[level], file, line);
 
 	if (0 < size)
 	{
 		char * buff = new char[size + 1];
-		std::snprintf(buff, size + 1, fmt, timestamp, s_level[level], file, line);
+		std::snprintf(buff, static_cast<size_t>(size + 1), fmt, timestamp, s_level[level], file, line);
 		buff[size] = 0;
 		m_fout << buff;
 		m_len += size;
@@ -72,7 +74,7 @@ void Logger::log(Level level, const char * file, int line, const char * format, 
 	{
 		char * buff = new char[va_size + 1];
 		va_start(arg_ptr, format);
-		std::vsnprintf(buff, va_size + 1, format, arg_ptr);
+		std::vsnprintf(buff, static_cast<size_t>(va_size + 1), format, arg_ptr);
 		va_end(arg_ptr);
 		buff[va_size] = 0;
 		m_fout << buff;
@@ -113,7 +115,11 @@ void Logger::rotate()
 	string filename = m_folder_path + "log_" + timestamp + ".txt";
 
 	if (0 != std::rename(m_filename.c_str(), filename.c_str()))
-		log_error("failed to rename log file: %s", filename.c_str());
+	{
+		return;
+		//log_error("failed to rename log file: %s", filename.c_str());
+	}
+
 
 	open(m_folder_path);
 }

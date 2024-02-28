@@ -2,19 +2,14 @@
 
 void MainFrame::init_bind()
 {
-	m_page1->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	m_page2->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	m_page3->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	m_page4->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	m_setup_page->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
+	for (auto page : m_pages)
+		page->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
 }
 
 void MainFrame::OnKeyEvent(wxKeyEvent & evt)
 {
 	int keyCode = evt.GetKeyCode();
 	static wxString wx_cardId;
-
-	//log_debug(std::to_string(keyCode).c_str());
 
 	if (13 != keyCode)
 	{
@@ -54,7 +49,6 @@ void MainFrame::OnKeyEvent(wxKeyEvent & evt)
 		if (std::isdigit(keyCode))
 		{
 			//string s = string("is_digit: ") + char(keyCode);
-			//log_debug(s.c_str());
 			wxChar keyChar = evt.GetUnicodeKey();
 			wx_cardId.append(keyChar);
 			return;

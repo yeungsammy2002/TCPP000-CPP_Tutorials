@@ -71,11 +71,11 @@ public:
 	string m_staff_history_path;
 
 	std::vector<string> b_list_titles{ "Time","BorrowerCardID","ChineseName","EnglishName","ClassName","ClassNumber","IpadCardID","IpadNumber" };
-	std::vector<string> bs_list_titles{ "Time","StaffCardID","ChineseName","EnglishName","Login","IpadCardID","IpadNumber" };
-	const char * ipad_list_titles[2]{ "IpadNumber","CardID" };
+	std::vector<string> bs_list_titles{ "Time","StaffCardID","ChineseName","EnglishName","Login","IpadCardID","IpadNumber","IpadSN" };
+	const char * ipad_list_titles[3]{ "IpadNumber","CardID","IpadSN" };
 	const char * staff_list_titles[4]{ "EnglishName","ChineseName","Login","CardID" };
 	std::vector<string> m_history_titles{ "ChiTime", "ChiReturnTime", "BorrowerCardID", "ChineseName", "EnglishName", "ClassName", "ClassNumber", "IpadCardID", "IpadNumber", "Time", "ReturnTime" };
-	std::vector<string> m_staff_history_titles{ "ChiTime", "ChiReturnTime", "StaffCardID", "ChineseName", "EnglishName", "Login", "IpadCardID", "IpadNumber", "Time", "ReturnTime" };
+	std::vector<string> m_staff_history_titles{ "ChiTime", "ChiReturnTime", "StaffCardID", "ChineseName", "EnglishName", "Login", "IpadCardID", "IpadNumber", "IpadSN", "Time", "ReturnTime" };
 };
 
 }

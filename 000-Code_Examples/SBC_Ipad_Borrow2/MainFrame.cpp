@@ -6,12 +6,11 @@ MainFrame::MainFrame(const wxString & title) : wxFrame(nullptr, wxID_ANY, title,
 	init_draw();
 
 	m_sizer = new wxBoxSizer(wxVERTICAL);
-	m_sizer->Add(m_page1, 0, wxALIGN_CENTER);
+	m_sizer->Add(m_pages[0], 0, wxALIGN_CENTER);
 	SetSizerAndFit(m_sizer);
-	m_page2->Hide();
-	m_page3->Hide();
-	m_page4->Hide();
-	m_setup_page->Hide();
+
+	for (int i = 1; i < m_total_pages; ++i)
+		m_pages[i]->Hide();
 
 	init_bind();
 }

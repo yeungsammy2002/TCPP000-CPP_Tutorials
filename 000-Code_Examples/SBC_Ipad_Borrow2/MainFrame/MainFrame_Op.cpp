@@ -14,16 +14,14 @@ void MainFrame::tap(const string & cardId)
 		if (3 == m_current_page_num || 4 == m_current_page_num)
 		{
 			switch_page(3);
-			reset_p1();
-			reset_p3();
+			reset();
 			m_message1_p3->SetLabel(wxString::FromUTF8("查無此職員, 學生或 iPad, 請重新拍卡"));
 			m_message1_p3->SetForegroundColour(m_warn_colour);
 			return;
 		}
 
 		switch_page(1);
-		reset_p1();
-		reset_p3();
+		reset();
 		m_message1_p1->SetLabel(wxString::FromUTF8("查無此學生, 職員或 iPad, 請重新拍卡"));
 		m_message1_p1->SetForegroundColour(m_warn_colour);
 		return;
@@ -60,8 +58,7 @@ void MainFrame::tap(const string & cardId)
 			}
 			else
 			{
-				reset_p1();
-				reset_p3();
+				reset();
 				if (3 == m_current_page_num || 4 == m_current_page_num)
 				{
 					switch_page(3);
@@ -92,7 +89,7 @@ void MainFrame::tap(const string & cardId)
 				string cancel_message = m_borrower_p1["ChineseName"] + m_borrower_p1["ClassName"] + "(" + m_borrower_p1["ClassNumber"] + ") " + "已取消借入 iPad";
 				m_message1_p1->SetLabel(wxString::FromUTF8(cancel_message));
 				m_message1_p1->SetForegroundColour(m_main_colour);
-				reset_p1();
+				reset();
 			}
 			else
 			{
@@ -112,7 +109,7 @@ void MainFrame::tap(const string & cardId)
 	}
 }
 
-void MainFrame::reset_p1()
+void MainFrame::reset()
 {
 	m_borrower_p1["Time"] = "";
 	m_borrower_p1["BorrowerCardID"] = "";
@@ -129,8 +126,28 @@ void MainFrame::reset_p1()
 	m_message2_p1->SetForegroundColour(m_second_colour);
 	m_message3_p1->SetLabel(wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"));
 	m_message3_p1->SetForegroundColour(m_second_colour);
-	show_empty_p1();
-	show_empty_p2();
+
+	m_staff_p3["Time"] = "";
+	m_staff_p3["StaffCardID"] = "";
+	m_staff_p3["ChineseName"] = "";
+	m_staff_p3["EnglishName"] = "";
+	m_staff_p3["Login"] = "";
+	m_staff_p3["IpadCardID"] = "";
+	m_staff_p3["IpadNumber"] = "";
+	m_staff_p3["IpadSN"] = "";
+	m_lock_p3 = false;
+	m_second_lock_p3 = false;
+	m_last_ipad_p3 = "";
+	m_status_p3->SetForegroundColour(m_p3text_colour);
+	m_status_p3->SetLabel(wxString::FromUTF8("狀態: 借出 / 歸還"));
+	m_message2_p3->SetLabel(wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓職員拍卡"));
+	m_message2_p3->SetForegroundColour(m_second_colour);
+	m_message3_p3->SetLabel(wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"));
+	m_message3_p3->SetForegroundColour(m_second_colour);
+
+	show_empty(0);
+	show_empty(1);
+	show_empty(2);
 }
 
 void MainFrame::processing_student_tap_p1(Database::Item & student)
@@ -139,7 +156,7 @@ void MainFrame::processing_student_tap_p1(Database::Item & student)
 	Database::BList_Item_Itr p_borrower = m_db->find_borrower(student["CardID"]);
 	if ((m_db->m_blist).end() != p_borrower)
 	{
-		reset_p1();
+		reset();
 
 		string reject_message = "學生" + (*p_borrower)["ChineseName"] + " "
 			+ (*p_borrower)["ClassName"] + "(" + (*p_borrower)["ClassNumber"] + ") 已借入 iPad "
@@ -174,7 +191,7 @@ void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
 	Database::BList_Item_Itr p_borrowed_ipad = m_db->find_blitem(ipad["CardID"]);
 	if ((m_db->m_blist).end() != p_borrowed_ipad)
 	{
-		reset_p1();
+		reset();
 		string reject_message = "iPad " + (*p_borrowed_ipad)["IpadNumber"] + " 已經借給學生 "
 			+ (*p_borrowed_ipad)["ChineseName"] + (*p_borrowed_ipad)["ClassName"]
 			+ "(" + (*p_borrowed_ipad)["ClassNumber"] + "), 借入操作已取消";
@@ -186,7 +203,7 @@ void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
 	p_borrowed_ipad = m_db->find_bslitem(ipad["CardID"]);
 	if ((m_db->m_bslist).end() != p_borrowed_ipad)
 	{
-		reset_p1();
+		reset();
 		string reject_message = "iPad " + (*p_borrowed_ipad)["IpadNumber"] + " 已經借給職員 "
 			+ (*p_borrowed_ipad)["ChineseName"] + " " + (*p_borrowed_ipad)["EnglishName"]
 			+ "(" + (*p_borrowed_ipad)["Login"] + "), 借入操作已取消";
@@ -202,13 +219,13 @@ void MainFrame::processing_ipad_tap_p1(Database::Item & ipad)
 	m_borrower_p1["IpadCardID"] = ipad["CardID"];
 	m_borrower_p1["IpadNumber"] = ipad["IpadNumber"];
 	(m_db->m_blist).insert(m_db->m_blist.begin(), m_borrower_p1);
-	push_p1();
+	push(0);
 	m_db->write_blist_to_file("student");
 
 	string success_msg = "iPad " + m_borrower_p1["IpadNumber"] + " 已成功借給 " + m_borrower_p1["ClassName"] + "(" + m_borrower_p1["ClassNumber"] + ") " + m_borrower_p1["ChineseName"];
 	m_message1_p1->SetLabel(wxString::FromUTF8(success_msg));
 	m_message1_p1->SetForegroundColour(m_main_colour);
-	reset_p1();
+	reset();
 }
 
 void MainFrame::processing_return_ipad_p1(Database::Item & ipad)
@@ -227,19 +244,19 @@ void MainFrame::processing_return_ipad_p1(Database::Item & ipad)
 	rlitem["ChiReturnTime"] = t.str_chi_time;
 	rlitem["ChiTime"] = Time::get_time(std::atoll(rlitem["Time"].c_str())).str_chi_time;
 	(m_db->m_rlist).push_back(rlitem);
-	append_p2();
+	append(1);
 	m_db->write_to_history(rlitem, "student");
 
 	int index = blitem - (m_db->m_blist).begin();
-	m_grid_p1->DeleteRows(index, 1, true);
+	m_grids[0]->DeleteRows(index, 1, true);
 	(m_db->m_blist).erase(blitem);
 	m_db->write_blist_to_file("student");
 
 	m_message2_p1->SetLabel(wxString::FromUTF8(message2));
 	m_message2_p1->SetForegroundColour(m_main_colour);
 	m_message3_p1->SetLabel("");
-	show_empty_p1();
-	show_empty_p2();
+	show_empty(0);
+	show_empty(1);
 	return;
 }
 
@@ -258,11 +275,11 @@ void MainFrame::processing_return_ipad_p3(Database::Item & ipad)
 	rslitem["ChiReturnTime"] = t.str_chi_time;
 	rslitem["ChiTime"] = Time::get_time(std::atoll(rslitem["Time"].c_str())).str_chi_time;
 	(m_db->m_rslist).push_back(rslitem);
-	append_p4();
+	append(3);
 	m_db->write_to_history(rslitem, "staff");
 
 	int index = bslitem - (m_db->m_bslist).begin();
-	m_grid_p3->DeleteRows(index, 1, true);
+	m_grids[2]->DeleteRows(index, 1, true);
 	(m_db->m_bslist).erase(bslitem);
 	m_db->write_blist_to_file("staff");
 
@@ -270,31 +287,9 @@ void MainFrame::processing_return_ipad_p3(Database::Item & ipad)
 	m_message2_p3->SetLabel(wxString::FromUTF8(message2));
 	m_message2_p3->SetForegroundColour(m_p3text_colour);
 	m_message3_p3->SetLabel("");
-	show_empty_p3();
-	show_empty_p4();
+	show_empty(2);
+	show_empty(3);
 	return;
-}
-
-void MainFrame::reset_p3()
-{
-	m_staff_p3["Time"] = "";
-	m_staff_p3["StaffCardID"] = "";
-	m_staff_p3["ChineseName"] = "";
-	m_staff_p3["EnglishName"] = "";
-	m_staff_p3["Login"] = "";
-	m_staff_p3["IpadCardID"] = "";
-	m_staff_p3["IpadNumber"] = "";
-	m_lock_p3 = false;
-	m_second_lock_p3 = false;
-	m_last_ipad_p3 = "";
-	m_status_p3->SetForegroundColour(m_p3text_colour);
-	m_status_p3->SetLabel(wxString::FromUTF8("狀態: 借出 / 歸還"));
-	m_message2_p3->SetLabel(wxString::FromUTF8("借出 - 如要借出 iPad, 請先讓職員拍卡"));
-	m_message2_p3->SetForegroundColour(m_second_colour);
-	m_message3_p3->SetLabel(wxString::FromUTF8("歸還 - 如要歸還 iPad, 請讓 iPad 拍卡"));
-	m_message3_p3->SetForegroundColour(m_second_colour);
-
-	show_empty_p3();
 }
 
 void MainFrame::processing_staff_tap_p3(Database::Item & staff)
@@ -310,7 +305,7 @@ void MainFrame::processing_staff_tap_p3(Database::Item & staff)
 	m_status_p3->SetLabel(wxString::FromUTF8("狀態: 借出"));
 	m_status_p3->SetForegroundColour(m_second_colour);
 
-	string message2 = "借入職員: " + staff["ChineseName"] + " " + staff["EnglishName"] + " 登入名稱: " + staff["Login"];
+	string message2 = "借入職員: " + staff["ChineseName"] + " || " + staff["EnglishName"] + " (" + staff["Login"] + ")";
 	m_message2_p3->SetLabel(wxString::FromUTF8(message2));
 	m_message2_p3->SetForegroundColour(m_second_colour);
 	m_message3_p3->SetLabel(wxString::FromUTF8("請為要借出的 iPad 拍卡: "));
@@ -322,7 +317,7 @@ bool MainFrame::check_ipad_borrowed_p3(Database::Item & ipad)
 	Database::BList_Item_Itr p_borrowed_ipad = m_db->find_blitem(ipad["CardID"]);
 	if ((m_db->m_blist).end() != p_borrowed_ipad)
 	{
-		reset_p3();
+		reset();
 		string reject_message = "iPad " + (*p_borrowed_ipad)["IpadNumber"] + " 已經借給學生"
 			+ (*p_borrowed_ipad)["ChineseName"] + (*p_borrowed_ipad)["ClassName"]
 			+ "(" + (*p_borrowed_ipad)["ClassNumber"] + "), 借入操作已取消";
@@ -334,7 +329,7 @@ bool MainFrame::check_ipad_borrowed_p3(Database::Item & ipad)
 	p_borrowed_ipad = m_db->find_bslitem(ipad["CardID"]);
 	if ((m_db->m_bslist).end() != p_borrowed_ipad)
 	{
-		reset_p3();
+		reset();
 		string reject_message = "iPad " + (*p_borrowed_ipad)["IpadNumber"] + " 已經借給職員 "
 			+ (*p_borrowed_ipad)["ChineseName"] + " " + (*p_borrowed_ipad)["EnglishName"]
 			+ "(" + (*p_borrowed_ipad)["Login"] + "), 借入操作已取消";
@@ -362,14 +357,15 @@ void MainFrame::processing_borrow_tap_p3(Database::Item & item)
 		m_staff_p3["Time"] = ss.str();
 		m_staff_p3["IpadCardID"] = ipad["CardID"];
 		m_staff_p3["IpadNumber"] = ipad["IpadNumber"];
+		m_staff_p3["IpadSN"] = ipad["IpadSN"];
 		(m_db->m_bslist).insert((m_db->m_bslist).begin(), m_staff_p3);
-		push_p3();
+		push(2);
 		m_db->write_blist_to_file("staff");
 
 		string success_msg = "iPad " + m_staff_p3["IpadNumber"] + " 已成功借給 " + m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ")";
 		m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
 		m_message1_p3->SetForegroundColour(m_p3text_colour);
-		reset_p3();
+		reset();
 		return;
 	}
 
@@ -389,7 +385,7 @@ void MainFrame::processing_borrow_tap_p3(Database::Item & item)
 		string success_msg = m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ") 已結束借入多部 iPad 模式";
 		m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
 		m_message1_p3->SetForegroundColour(m_p3text_colour);
-		reset_p3();
+		reset();
 		return;
 	}
 
@@ -406,8 +402,9 @@ void MainFrame::processing_borrow_tap_p3(Database::Item & item)
 		m_staff_p3["Time"] = ss.str();
 		m_staff_p3["IpadCardID"] = ipad["CardID"];
 		m_staff_p3["IpadNumber"] = ipad["IpadNumber"];
+		m_staff_p3["IpadSN"] = ipad["IpadSN"];
 		(m_db->m_bslist).insert((m_db->m_bslist).begin(), m_staff_p3);
-		push_p3();
+		push(2);
 		m_db->write_blist_to_file("staff");
 
 		string success_msg = "iPad " + m_staff_p3["IpadNumber"] + " 已成功借給 " + m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ")";
@@ -429,7 +426,7 @@ void MainFrame::processing_borrow_tap_p3(Database::Item & item)
 			string success_msg = m_staff_p3["ChineseName"] + " " + m_staff_p3["EnglishName"] + "(" + m_staff_p3["Login"] + ") 已結束借入多部 iPad 模式";
 			m_message1_p3->SetLabel(wxString::FromUTF8(success_msg));
 			m_message1_p3->SetForegroundColour(m_p3text_colour);
-			reset_p3();
+			reset();
 			return;
 		}
 	}
@@ -470,65 +467,17 @@ void MainFrame::switch_page()
 {
 	m_sizer->Detach(0);
 
-	switch (m_current_page_num)
+	int page_index = m_current_page_num - 1;
+	for (int i = 0; i < m_total_pages; ++i)
 	{
-	case 1:
-	{
-		m_page2->Hide();
-		m_page3->Hide();
-		m_page4->Hide();
-		m_setup_page->Hide();
-		m_sizer->Prepend(m_page1, 0, wxALIGN_CENTER);
-		m_page1->Show();
-		m_page1->SetFocus();
-	}
-	break;
-	case 2:
-	{
-		m_page1->Hide();
-		m_page3->Hide();
-		m_page4->Hide();
-		m_setup_page->Hide();
-		m_sizer->Prepend(m_page2, 0, wxALIGN_CENTER);
-		m_page2->Show();
-		m_page2->SetFocus();
-	}
-	break;
-	case 3:
-	{
-		m_page1->Hide();
-		m_page2->Hide();
-		m_page4->Hide();
-		m_setup_page->Hide();
-		m_sizer->Prepend(m_page3, 0, wxALIGN_CENTER);
-		m_page3->Show();
-		m_page3->SetFocus();
-	}
-	break;
-	case 4:
-	{
-		m_page1->Hide();
-		m_page2->Hide();
-		m_page3->Hide();
-		m_setup_page->Hide();
-		m_sizer->Prepend(m_page4, 0, wxALIGN_CENTER);
-		m_page4->Show();
-		m_page4->SetFocus();
-	}
-	break;
-	case 5:
-	{
-		m_page1->Hide();
-		m_page2->Hide();
-		m_page3->Hide();
-		m_page4->Hide();
-		m_sizer->Prepend(m_setup_page, 0, wxALIGN_CENTER);
-		m_setup_page->Show();
-		m_setup_page->SetFocus();
-	}
-	break;
-	default:
-		break;
+		if (i == page_index)
+		{
+			m_sizer->Prepend(m_pages[i], 0, wxALIGN_CENTER);
+			m_pages[i]->Show();
+			m_pages[i]->SetFocus();
+		}
+		else
+			m_pages[i]->Hide();
 	}
 
 	m_sizer->Layout();
@@ -562,7 +511,7 @@ void MainFrame::move_history_p2(const int id)
 	m_title_p2->SetLabel(wxString::FromUTF8(title));
 	bool is_exist = m_db->load_history(m_history_year_p2, m_history_month_p2, m_history_day_p2);
 
-	redraw_grid_p2(is_exist);
+	redraw_grid(1, is_exist);
 }
 
 void MainFrame::move_history_p4(const int id)
@@ -592,5 +541,5 @@ void MainFrame::move_history_p4(const int id)
 	m_title_p4->SetLabel(wxString::FromUTF8(title));
 	bool is_exist = m_db->load_staff_history(m_history_year_p4, m_history_month_p4);
 
-	redraw_grid_p4(is_exist);
+	redraw_grid(3, is_exist);
 }
