@@ -2,17 +2,19 @@
 
 #include <iostream>
 
-#include <reflect/ClassRegister.h>
+#include <reflect/class_register.h>
 
 using namespace demo::reflect;
 
-class B : public Object {
+class B : public Object
+{
 public:
     B() {}
 
     ~B() {}
 
-    void show() {
+    void show()
+    {
         std::cout << "B" << std::endl;
     }
 };
