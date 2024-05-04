@@ -1,133 +1,142 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include <map>
+#include <string>
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 
 using std::string;
 
 namespace demo {
-    namespace json {
+namespace json {
 
-        class Json
-        {
-        public:
-            enum Type
-            {
-                json_null = 0,
-                json_bool,
-                json_int,
-                json_double,
-                json_string,
-                json_array,
-                json_object
-            };
+class Json
+{
+public:
+    enum Type
+    {
+        json_null = 0,
+        json_bool,
+        json_int,
+        json_double,
+        json_string,
+        json_array,
+        json_object
+    };
 
-            Json();
+    Json();
 
-            Json(bool value);
+    ~Json() = default;
 
-            Json(int value);
+    Json(const Json & other);
 
-            Json(double value);
+    typedef std::vector<Json>::iterator iterator;
 
-            Json(const char* value);
+    iterator begin();
 
-            Json(const string& value);
+    iterator end();
 
-            Json(Type type);
+    iterator erase(iterator it);
 
-            Json(const Json& other);
+    iterator begin() const;
 
-            bool is_null() const { return json_null == m_type; }
+    iterator end() const;
 
-            bool is_bool() const { return json_bool == m_type; }
+    void clear();
 
-            bool is_int() const { return json_int == m_type; }
+    Json & operator=(const Json & other);
 
-            bool is_double() const { return json_double == m_type; }
+    bool operator==(const Json & other) const;
 
-            bool is_string() const { return json_string == m_type; }
+    bool operator!=(const Json & other) const;
 
-            bool is_array() const { return json_array == m_type; }
+    Json(bool value);
 
-            bool is_object() const { return json_object == m_type; }
+    Json(int value);
 
-            operator bool();
+    Json(double value);
 
-            operator int();
+    Json(const char * value);
 
-            operator double();
+    Json(const string & value);
 
-            operator string();
+    Json(Type type);
 
-            void clear();
+    bool is_null() const { return json_null == m_type; }
 
-            Json& operator[](const int index);
+    bool is_bool() const { return json_bool == m_type; }
 
-            void append(const Json& other);
+    bool is_int() const { return json_int == m_type; }
 
-            int size() const;
+    bool is_double() const { return json_double == m_type; }
 
-            string str() const;
+    bool is_string() const { return json_string == m_type; }
 
-            Json& operator[](const char* key);
+    bool is_array() const { return json_array == m_type; }
 
-            Json& operator[](const string& key);
+    bool is_object() const { return json_object == m_type; }
 
-            Json& operator=(const Json& other);
+    operator bool();
 
-            typedef std::vector<Json>::iterator iterator;
+    operator int();
 
-            iterator begin() const;
+    operator double();
 
-            iterator end() const;
+    operator string();
 
-            iterator erase(iterator it);
+    bool as_bool() const;
 
-            bool operator==(const Json& other) const;
+    int as_int() const;
 
-            bool operator!=(const Json& other) const;
+    double as_double() const;
 
-            bool as_bool() const;
+    string as_string() const;
 
-            int as_int() const;
+    void append(const Json & other);
 
-            double as_double() const;
+    int size() const;
 
-            string as_string() const;
+    Json & operator[](const int index);
 
-            bool has(const int index) const;
+    string str() const;
 
-            bool has(const char* key) const;
+    void show() const;
 
-            bool has(const string& key) const;
+    Json & operator[](const char * key);
 
-            void remove(const int index);
+    Json & operator[](const string & key);
 
-            void remove(const char* key);
+    bool has(const int index) const;
 
-            void remove(const string& key);
+    bool has(const char * key) const;
 
-        private:
-            void copy(const Json& other);
+    bool has(const string & key) const;
 
-        private:
-            union Value
-            {
-                bool m_bool;
-                int m_int;
-                double m_double;
-                string* m_string;
-                std::vector<Json>* m_array;
-                std::map<string, Json>* m_object;
-            };
+    void remove(const int index);
 
-            Type m_type;
-            Value m_value;
-        };
+    void remove(const char * key);
 
-    }
+    void remove(const string & key);
+
+private:
+    void copy(const Json & other);
+
+private:
+    union Value
+    {
+        bool m_bool;
+        int m_int;
+        double m_double;
+        string * m_string;
+        std::vector<Json> * m_array;
+        std::map<string, Json> * m_object;
+    };
+
+    Type m_type;
+    Value m_value;
+};
+
+}
 }
