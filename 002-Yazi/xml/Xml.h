@@ -4,112 +4,86 @@
 #include <map>
 #include <list>
 #include <sstream>
+#include <iostream>
+#include <stdexcept>
+
+#include <utilities/value.h>
+
+using namespace demo::utilities;
+
+using std::string;
 
 namespace demo {
-    namespace xml {
-        class Value {
-        public:
-            Value();
+namespace xml {
 
-            Value(bool value);
+class Xml
+{
+public:
+    Xml();
 
-            Value(int value);
+    Xml(const string & name);
 
-            Value(double value);
+    Xml(const Xml & other);
 
-            Value(const char * value);
+    ~Xml() = default;
 
-            Value(const std::string & value);
+    typedef std::list<Xml>::iterator iterator;
 
-            ~Value();
+    iterator begin();
 
-            Value & operator=(bool value);
+    iterator end();
 
-            Value & operator=(int value);
+    iterator erase(iterator it);
 
-            Value & operator=(double value);
+    iterator begin() const;
 
-            Value & operator=(const char * value);
+    iterator end() const;
 
-            Value & operator=(const std::string & value);
+    void clear();
 
-            Value & operator=(const Value & value);
+    Xml & operator=(const Xml & other);
 
-            bool operator==(const Value & value);
+    string name() const;
 
-            bool operator!=(const Value & value);
+    void name(const string & name);
 
-            operator bool();
+    string text() const;
 
-            operator int();
+    void text(const string & text);
 
-            operator double();
+    Value & attr(const string & key);
 
-            operator std::string();
+    void attr(const string & key, const Value & value);
 
-        private:
-            std::string m_value;
-        };
+    string str() const;
 
-        class Xml {
-        public:
-            Xml();
+    void show() const;
 
-            ~Xml() = default;
+    void append(const Xml & child);
 
-            Xml(const char * name);
+    int size() const;
 
-            Xml(const std::string & name);
+    Xml & operator[](const int index);
 
-            Xml(const Xml & other);
+    Xml & operator[](const char * name);
 
-            std::string name() const;
+    Xml & operator[](const string & name);
 
-            void name(const std::string & name);
+    void remove(const int index);
 
-            std::string text() const;
+    void remove(const char * name);
 
-            void text(const std::string & text);
+    void remove(const string & name);
 
-            Value & attr(const std::string & key);
+private:
+    void copy(const Xml & other);
 
-            void attr(const std::string & key, const Value & val);
+private:
+    string * m_name;
+    string * m_text;
+    std::map<string, Value> * m_attrs;
+    std::list<Xml> * m_child;
+};
 
-            std::string str() const;
-
-            void clear();
-
-            void append(const Xml & child);
-
-            Xml & operator[](int index);
-
-            Xml & operator[](const char * name);
-
-            Xml & operator[](const std::string & name);
-
-            void remove(int index);
-
-            void remove(const char * name);
-
-            void remove(const std::string & name);
-
-            Xml & operator=(const Xml & other);
-
-            typedef std::list<Xml>::iterator iterator;
-
-            iterator begin() { return m_child->begin(); }
-
-            iterator end() { return m_child->end(); }
-
-            iterator erase(iterator it) { return m_child->erase(it); }
-
-            int size() const { return m_child->size(); }
-
-        private:
-            std::string * m_name;
-            std::string * m_text;
-            std::map<std::string, Value> * m_attrs;
-            std::list<Xml> * m_child;
-        };
-    }
+}
 }
