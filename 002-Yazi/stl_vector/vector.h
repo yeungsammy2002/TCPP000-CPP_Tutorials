@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <stdexcept>
 #include <cstring>
 
@@ -13,7 +12,7 @@ class Vector
 public:
     Vector();
 
-    ~Vector();
+    ~Vector() = default;
 
     void push_back(const T & value);
 
@@ -56,21 +55,21 @@ public:
 
         ~Iterator() = default;
 
-        bool operator==(const Iterator & other) const;
-
-        bool operator!=(const Iterator & other) const;
-
         Iterator & operator++();
 
         Iterator operator++(int);
 
-        Iterator operator+(const int i);
+        bool operator==(const Iterator other) const;
 
-        Iterator operator-(const int i);
+        bool operator!=(const Iterator other) const;
 
-        Iterator & operator+=(const int i);
+        Iterator operator+(const int i) const;
 
-        Iterator & operator-=(const int i);
+        Iterator operator-(const int i) const;
+
+        Iterator & operator+=(const int i) const;
+
+        Iterator & operator-=(const int i) const;
 
         int operator-(const Iterator & other) const;
 
@@ -88,16 +87,15 @@ public:
 
     Iterator find(const T & value);
 
-    Iterator insert(const Iterator & it, const T & value);
+    Iterator insert(Iterator it, const T & value);
 
-    Iterator insert(const Iterator & it, int n, const T & value);
+    Iterator insert(Iterator it, int n, const T & value);
 
-    Iterator erase(const Iterator & it);
-
-    Iterator erase(const Iterator & first, const Iterator & last);
-
-private:
     bool is_basic_type() const;
+
+    Iterator erase(Iterator it);
+
+    Iterator erase(Iterator first, Iterator last);
 
 private:
     T * m_data;
