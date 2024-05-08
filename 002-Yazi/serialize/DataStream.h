@@ -6,104 +6,104 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
+using std::string;
 
 namespace demo {
-    namespace serialize {
+namespace serialize {
 
-        class DataStream
-        {
-        public:
-            enum DataType
-            {
-                BOOL = 0,
-                CHAR,
-                INT32,
-                INT64,
-                FLOAT,
-                DOUBLE,
-                STRING,
-                VECTOR,
-                LIST,
-                MAP,
-                SET,
-                CUSTOM
-            };
+class Datastream
+{
+public:
+    enum DataType
+    {
+        BOOL = 0,
+        CHAR,
+        INT32,
+        INT64,
+        FLOAT,
+        DOUBLE,
+        STRING,
+        VECTOR,
+        MAP,
+        LIST,
+        SET,
+        CUSTOM
+    };
 
-            DataStream() : m_pos(0) {}
+    Datastream();
 
-            ~DataStream() = default;
+    ~Datastream() = default;
 
-            void write(const char * data, int len);
+    void write(const char * buff, int len);
 
-            void write(bool value);
+    void write(bool value);
 
-            void write(char value);
+    void write(char value);
 
-            void write(std::int32_t value);
+    void write(int32_t value);
 
-            void write(std::int64_t value);
+    void write(int64_t value);
 
-            void write(float value);
+    void write(float value);
 
-            void write(double value);
+    void write(double value);
 
-            void write(const char * value);
+    void write(const char * value);
 
-            void write(const string & value);
+    void write(const string & value);
 
-            void show() const;
+    Datastream & operator<<(bool value);
 
-            DataStream & operator<<(bool value);
+    Datastream & operator<<(char value);
 
-            DataStream & operator<<(char value);
+    Datastream & operator<<(int32_t value);
 
-            DataStream & operator<<(std::int32_t value);
+    Datastream & operator<<(int64_t value);
 
-            DataStream & operator<<(std::int64_t value);
+    Datastream & operator<<(float value);
 
-            DataStream & operator<<(float value);
+    Datastream & operator<<(double value);
 
-            DataStream & operator<<(double value);
+    Datastream & operator<<(const char * value);
 
-            DataStream & operator<<(const char * value);
+    Datastream & operator<<(const string & value);
 
-            DataStream & operator<<(const string & value);
+    void show() const;
 
-            bool read(bool & value);
+    bool read(bool & value);
 
-            bool read(char & value);
+    bool read(char & value);
 
-            bool read(std::int32_t & value);
+    bool read(int32_t & value);
 
-            bool read(std::int64_t & value);
+    bool read(int64_t & value);
 
-            bool read(float & value);
+    bool read(float & value);
 
-            bool read(double & value);
+    bool read(double & value);
 
-            bool read(string & value);
+    bool read(string & value);
 
-            DataStream & operator>>(bool & value);
+    Datastream & operator>>(bool & value);
 
-            DataStream & operator>>(char & value);
+    Datastream & operator>>(char & value);
 
-            DataStream & operator>>(std::int32_t & value);
+    Datastream & operator>>(int32_t & value);
 
-            DataStream & operator>>(std::int64_t & value);
+    Datastream & operator>>(int64_t & value);
 
-            DataStream & operator>>(float & value);
+    Datastream & operator>>(float & value);
 
-            DataStream & operator>>(double & value);
+    Datastream & operator>>(double & value);
 
-            DataStream & operator>>(string & value);
+    Datastream & operator>>(string & value);
 
-        private:
-            void reserve(int len);
+private:
+    void reserve(int len);
 
-        private:
-            std::vector<char> m_buf;
-            int m_pos;
-        };
-    }
+private:
+    std::vector<char> m_buff;
+    int m_pos;
+};
+}
 }
