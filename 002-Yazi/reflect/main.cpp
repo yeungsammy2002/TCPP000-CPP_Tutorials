@@ -6,14 +6,16 @@
 #include "test/b.h"
 
 using namespace demo::reflect;
-using namespace demo::utilities;
 
 int main()
 {
 //    std::cout << "reflect demo" << std::endl;
 
     auto factory = Singleton<ClassFactory>::instance();
+
 //    A * a = (A *) factory->create_object("A");
+//    a->show();
+
     Object * a = factory->create_object("A");
     a->show();
 

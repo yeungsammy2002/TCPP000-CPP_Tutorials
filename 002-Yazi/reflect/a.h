@@ -9,14 +9,17 @@ using namespace demo::reflect;
 class A : public Object
 {
 public:
-    A() {}
+    A() : label('A') {}
 
     ~A() {}
 
     void show()
     {
-        std::cout << "A" << std::endl;
+        std::cout << label << std::endl;
     }
+
+private:
+    char label;
 };
 
 REGISTER_CLASS(A);

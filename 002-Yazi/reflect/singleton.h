@@ -29,7 +29,7 @@ private:                                                \
     classname() = default;                              \
     ~classname() = default;                             \
     classname(const classname &) = delete;              \
-    classname & operator=(const classname &) = delete;
+    classname & operator=(const classname &) = delete
 
 }
 }

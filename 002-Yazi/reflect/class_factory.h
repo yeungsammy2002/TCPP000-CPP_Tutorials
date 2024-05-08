@@ -15,9 +15,9 @@ namespace reflect {
 class Object
 {
 public:
-    Object() {}
+    Object() = default;
 
-    virtual ~Object() {}
+    ~Object() = default;
 
     virtual void show() = 0;
 };
@@ -27,13 +27,14 @@ typedef Object * (* create_object_t)(void);
 class ClassFactory
 {
     SINGLETON(ClassFactory);
-public:
-    void register_class(const string & className, create_object_t method);
 
-    Object * create_object(const string & className);
+public:
+    void register_class(const string & classname, create_object_t method);
+
+    Object * create_object(const string & classname);
 
 private:
-    std::map<string, create_object_t> m_classMap;
+    std::map<string, create_object_t> m_classmap;
 };
 
 }
