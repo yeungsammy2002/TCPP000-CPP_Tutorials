@@ -16,19 +16,20 @@ public:
 private:
     Singleton() = default;
 
+    ~Singleton() = default;
+
     Singleton(const Singleton<T> &) = delete;
 
-    Singleton & operator=(const Singleton<T> &) = delete;
-
-    ~Singleton() = default;
+    Singleton<T> & operator=(const Singleton<T> &) = delete;
 };
 
 #define SINGLETON(classname)                            \
 friend class Singleton<classname>;                      \
 private:                                                \
     classname() = default;                              \
-    classname(const classname &) = delete;              \
-    classname & operator=(const classname &) = delete;  \
-    ~classname() = default;
+    ~classname() = default;                             \
+    classname(const classname &) = delete;  \
+    classname & operator=(const classname &) = delete;
+
 }
 }

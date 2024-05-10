@@ -20,7 +20,7 @@ public:
 
     template<typename F, typename... Args>
     void callback(int milliseconds, F && f, Args && ... args);
-
+    
     void on_timer();
 
 private:
@@ -33,12 +33,7 @@ private:
     int m_repeat;
 };
 
-template<typename F, typename... Args>
-void Timer::callback(int milliseconds, F && f, Args && ... args)
-{
-    m_period = milliseconds;
-    m_func = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-}
+#include <timer/timer.inl>
 
 }
 }
