@@ -10,9 +10,10 @@ class ServerSocket : public Socket
 public:
     ServerSocket() = delete;
 
-    ServerSocket(const string & ip, int port);
+    ServerSocket(const string & ip, const int port);
 
     ~ServerSocket() = default;
 };
+
 }
 }

@@ -9,6 +9,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <utilities/logger.h>
+
+using namespace demo::utilities;
+
 using std::string;
 
 namespace demo {
@@ -21,19 +25,19 @@ public:
 
     Socket(int sockfd);
 
-    ~Socket();
+    virtual ~Socket();
 
-    bool bind(const string & ip, int port);
+    bool bind(const string & ip, const int port);
 
-    bool listen(int backlog);
+    bool connect(const string & ip, const int port);
 
-    bool connect(const string & ip, int port);
+    bool listen(const int backlog);
 
     int accept();
 
-    std::size_t recv(char * buff, std::size_t len);
+    size_t send(const char * buff, size_t len);
 
-    std::size_t send(const char * buff, std::size_t len);
+    size_t recv(char * buff, size_t len);
 
     void close();
 
@@ -57,3 +61,4 @@ private:
 
 }
 }
+
