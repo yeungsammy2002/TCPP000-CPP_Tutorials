@@ -9,142 +9,104 @@ template<typename T>
 class WeakPtr
 {
 public:
-    WeakPtr();
+    WeakPtr() : m_data(nullptr), m_count(nullptr) {}
 
-    WeakPtr(const SharedPtr<T> & sp);
+    WeakPtr(const SharedPtr<T> & sp) : m_data(sp.m_data), m_count(sp.m_count) {}
 
-    WeakPtr(const WeakPtr<T> & other);
+    WeakPtr(const WeakPtr<T> & other) : m_data(other.m_data), m_count(other.m_count) {}
 
-    WeakPtr(WeakPtr<T> && other) noexcept;
+    WeakPtr(WeakPtr<T> && other) : m_data(other.m_data), m_count(other.m_count)
+    {
+        other.reset();
+    }
 
-    ~WeakPtr();
+    ~WeakPtr()
+    {
+        reset();
+    }
 
-    void reset();
+    void reset()
+    {
+        m_data = nullptr;
+        m_count = nullptr;
+    }
 
-    bool expired() const;
+    bool expired() const
+    {
+        return (nullptr == m_data) || (0 >= *m_count);
+    }
 
-    SharedPtr<T> lock() const;
+    SharedPtr<T> & lock() const
+    {
+        if (expired())
+        {
+            return SharedPtr<T>();
+        }
+        SharedPtr<T> sp;
+        sp.m_data = m_data;
+        sp.m_count = m_count;
+        if (nullptr != m_data)
+        {
+            ++(*m_count);
+        }
+        return sp;
+    }
 
-    void swap(WeakPtr<T> & other);
+    void swap(WeakPtr<T> & other)
+    {
+        auto data = other.m_data;
+        auto count = other.m_count;
 
-    int use_count() const;
+        other.m_data = m_data;
+        other.m_count = m_count;
 
-    WeakPtr<T> & operator=(const SharedPtr<T> & sp);
+        m_data = data;
+        m_count = count;
+    }
 
-    WeakPtr<T> & operator=(const WeakPtr<T> & other);
+    int use_count() const
+    {
+        if (nullptr == m_data)
+        {
+            return 0;
+        }
+        return *m_count;
+    }
 
-    WeakPtr<T> & operator=(WeakPtr<T> && other);
+    WeakPtr<T> & operator=(const SharedPtr<T> & sp)
+    {
+        m_data = sp.m_data;
+        m_count = sp.m_count;
+        return *this;
+    }
+
+    WeakPtr<T> & operator=(const WeakPtr<T> & other)
+    {
+        if (&other == this || other.m_data == m_data)
+        {
+            return *this;
+        }
+        m_data = other.m_data;
+        m_count = other.m_count;
+        return *this;
+    }
+
+    WeakPtr<T> & operator=(WeakPtr<T> && other)
+    {
+        if (this == &other || m_data == other.m_data)
+        {
+            return *this;
+        }
+        m_data = other.m_data;
+        m_count = other.m_count;
+        other.reset();
+        return *this;
+    }
 
 private:
     T * m_data;
     int * m_count;
 };
-
-template<typename T>
-WeakPtr<T>::WeakPtr() : m_data(nullptr), m_count(nullptr) {}
-
-template<typename T>
-WeakPtr<T>::WeakPtr(const SharedPtr<T> & sp) : m_data(sp.m_data), m_count(sp.m_count) {}
-
-template<typename T>
-WeakPtr<T>::WeakPtr(const WeakPtr<T> & other) : m_data(other.m_data), m_count(other.m_count) {}
-
-template<typename T>
-WeakPtr<T>::WeakPtr(WeakPtr<T> && other) noexcept
-{
-    m_data = other.m_data;
-    m_count = other.m_count;
-    other.m_data = nullptr;
-    other.m_count = nullptr;
-}
-
-template<typename T>
-WeakPtr<T>::~WeakPtr()
-{
-    m_data = nullptr;
-    m_count = nullptr;
-}
-
-template<typename T>
-void WeakPtr<T>::reset()
-{
-    m_data = nullptr;
-    m_count = nullptr;
-}
-
-template<typename T>
-bool WeakPtr<T>::expired() const
-{
-    return !m_count || (*m_count) <= 0;
-}
-
-template<typename T>
-SharedPtr<T> WeakPtr<T>::lock() const
-{
-    if (expired())
-        return SharedPtr<T>();
-
-    SharedPtr<T> sp;
-    sp.m_data = m_data;
-    sp.m_count = m_count;
-
-    if (nullptr != m_count)
-        ++(*m_count);
-
-    return sp;
-}
-
-template<typename T>
-void WeakPtr<T>::swap(WeakPtr<T> & other)
-{
-    T * data = other.m_data;
-    int * count = other.m_count;
-    other.m_data = m_data;
-    other.m_count = m_count;
-    m_data = data;
-    m_count = count;
-}
-
-template<typename T>
-int WeakPtr<T>::use_count() const
-{
-    if (nullptr == m_data)
-        return 0;
-
-    return *m_count;
-}
-
-template<typename T>
-WeakPtr<T> & WeakPtr<T>::operator=(const SharedPtr<T> & sp)
-{
-    m_data = sp.m_data;
-    m_count = sp.m_count;
-    return *this;
-}
-
-template<typename T>
-WeakPtr<T> & WeakPtr<T>::operator=(const WeakPtr<T> & other)
-{
-    if (this == &other)
-        return *this;
-
-    m_data = other.m_data;
-    m_count = other.m_count;
-    return *this;
-}
-
-template<typename T>
-WeakPtr<T> & WeakPtr<T>::operator=(WeakPtr<T> && other)
-{
-    if (this == &other)
-        return *this;
-
-    m_data = other.m_data;
-    m_count = other.m_count;
-    other.m_data = nullptr;
-    other.m_count = nullptr;
-    return *this;
-}
 
 }
 }
