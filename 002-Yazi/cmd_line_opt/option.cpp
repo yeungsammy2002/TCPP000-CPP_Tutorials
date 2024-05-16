@@ -29,11 +29,12 @@ void Option::parse(int argc, char * argv[])
         if ("--" == arg.substr(0, 2))
         {
             string str = arg.substr(2);
-            const auto pos = str.find_first_of("=");
+            const auto pos = str.find_first_of('=');
             if (pos != std::string::npos)
             {
                 string opt = str.substr(0, pos);
                 string val = str.substr(pos + 1);
+
                 switch (type(opt))
                 {
                     case OPT_NO:
@@ -81,10 +82,6 @@ void Option::parse(int argc, char * argv[])
             }
         } else
         {
-            if (1 == arg.length())
-            {
-                continue;
-            }
             string opt = arg.substr(1, 1);
             switch (type(opt))
             {
@@ -92,7 +89,7 @@ void Option::parse(int argc, char * argv[])
                 {
                     for (int k = 1; k < arg.length(); ++k)
                     {
-                        string o(1, arg[k]);
+                        string o = string(1, arg[k]);
                         if (OPT_NO != type(o))
                         {
                             continue;
@@ -102,29 +99,29 @@ void Option::parse(int argc, char * argv[])
                 }
                     break;
                 case OPT_REQUIRED:
-                {
-                    if (i + 1 >= argc)
-                    {
-                        throw std::logic_error("option require argument: " + opt);
-                    }
-                    string val = argv[i + 1];
-                    if ("-" == val.substr(0, 1))
-                    {
-                        throw std::logic_error("option missing argument: " + opt);
-                    }
-                    m_args[opt] = val;
-                    ++i;
-                }
-                    break;
-                case OPT_OPTIONAL:
-                {
                     if (2 < arg.length())
                     {
                         m_args[opt] = arg.substr(2);
+                        break;
                     } else
                     {
-                        m_args[opt] = "";
+                        if (i + 1 >= argc)
+                        {
+                            throw std::logic_error("option require argument: " + opt);
+                        }
+                        string val = argv[i + 1];
+                        if ("-" == val.substr(0, 1))
+                        {
+                            throw std::logic_error("option missing argument: " + opt);
+                        }
+                        m_args[opt] = val;
+                        ++i;
                     }
+                    break;
+                case OPT_OPTIONAL:
+                {
+                    string val = arg.substr(2);
+                    m_args[opt] = val;
                 }
                     break;
                 default:
@@ -136,43 +133,45 @@ void Option::parse(int argc, char * argv[])
 
 void Option::show() const
 {
-    for (auto it = m_args.begin(); it != m_args.end(); ++it)
+    for (const auto & pair: m_args)
     {
-        std::cout << it->first << ":" << it->second << " ";
+        std::cout << pair.first << ":" << pair.second << " ";
     }
     std::cout << std::endl;
 }
 
-bool Option::has(const string & opt) const
+bool Option::has(const string & opt)
 {
     return m_opts.find(opt) != m_opts.end();
 }
 
-bool Option::get_bool(const string & opt) const
+bool Option::get_bool(const string & opt)
 {
+    if (!has(opt))
+    {
+        return false;
+    }
     return m_args.find(opt) != m_args.end();
 }
 
-int Option::get_int(const string & opt) const
+int Option::get_int(const string & opt)
 {
-    const auto it = m_args.find(opt);
-    if (it == m_args.end())
+    if (!has(opt) || m_args.find(opt) == m_args.end())
     {
         return 0;
     }
     std::stringstream ss;
+    ss << m_args[opt];
     int value = 0;
-    ss << it->second;
     ss >> value;
     return value;
 }
 
-string Option::get_string(const string & opt) const
+string Option::get_string(const string & opt)
 {
-    const auto it = m_args.find(opt);
-    if (it == m_args.end())
+    if (!has(opt) || m_args.find(opt) == m_args.end())
     {
         return "";
     }
-    return it->second;
+    return m_args[opt];
 }
