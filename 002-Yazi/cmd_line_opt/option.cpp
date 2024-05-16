@@ -17,7 +17,7 @@ Option::Type Option::type(const string & opt) const
     return it->second;
 }
 
-void Option::parse(int argc, char * argv[])
+void Option::parse(int argc, char * const argv[])
 {
     for (int i = 1; i < argc; ++i)
     {
