@@ -47,10 +47,19 @@ srcs_to_executable:				# main.cpp has to include add.h
 
 # add root directory to cpp search paths - i.e. #include <add.h>
 srcs_to_executable:				# -I[dir], I means include, [dir] means search path, . means current directory
+	g++ -I[dir] ...
+#i.e.
 	g++ -I. add.cpp main.cpp -o main
 
 
-srcs_to_binaries_to_exe:		# linking doesn't need -I
+# add multiple directories to cpp search paths
+srcs_to_executable:
+	g++ -I[dir1] -I[dir2] -I[dir3] ...
+#i.e.
+	g++ -I. -I./include add.cpp main.cpp -o main
+
+
+srcs_to_binaries_to_executable:		# linking doesn't need -I
 	g++ -I. -c add.cpp -o add.o
 	g++ -I. -c sub.cpp -o sub.o
 	g++ -I. -c main.cpp -o main.o
@@ -65,7 +74,7 @@ check_make_installed:
 	make --version
 
 
-# using Makefile to compile executable - Makefile source code
+# create target to use Makefile to compile executable from source code
 [target]:							# "target" is an arbitrary name
 	g++ -I. add.cpp sub.cpp main.cpp -o main
 
@@ -86,7 +95,7 @@ main:
 	g++ -I. add.cpp sub.cpp main.cpp -o main
 
 
-# define a target depends on multiple target
+# define a target depends on multiple targets
 target: add_o sub_o main_o main		# main must be the last if main need add.o, sub.o & main.o to compile
 add_o:								# once add_o produce add.o, main could use add.o to compile
 	g++ -I. -c add.cpp -o add.o
@@ -143,6 +152,8 @@ clear:								# remove all .o files
 
 # assign shell commands to variable - show all .cpp files filtered from all files in current directory
 SRCS := $(shell find ./* -type f | grep "\.cpp")	# all .cpp files inside sub-directories also included
+# "find ./* -type f" - means find all files (find ./*) but not include directories (-type f), f stand for file only
+# "grep "\.cpp" - means filter out all files that are not .cpp extensions
 
 
 # print variable
@@ -272,7 +283,7 @@ $(warning SRCS is $(SRCS))
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 INCLUDE := -I. -I./include
 
@@ -301,7 +312,7 @@ $(warning SRCS is $(SRCS))
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 INCLUDE := -I. -I./include
 
@@ -331,7 +342,7 @@ clear:
 # then "make static"
 
 
-# linking static library
+# linking static libraries
 CC := g++
 
 SRCS := $(shell find ./* -type f | grep "\.cpp" | grep -v "./main\.cpp")
@@ -340,7 +351,7 @@ $(warning SRCS is $(SRCS))
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 LDFLAGS := -L./lib -lmul								# link static library
 
@@ -371,3 +382,5 @@ clear:
 	rm -rf $(OBJS) $(MAIN_OBJ) $(MAIN_EXE)
 # run "make static" at first to create .a file, then run "make" to create .o files
 
+
+# linking dynamic libraries
