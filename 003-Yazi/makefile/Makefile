@@ -200,6 +200,7 @@ main:
 	g++ $(CFLAGS) $(OBJS) -o main	# g++ -g -O2 -Wall -Werror -Wno-unused -std=c++11  ./add.o  ./main.o  ./sub.o -o main
 clear:
 	rm -rf $(OBJS) main
+	
 # -g	- 	is used to include debugging information in the compiled executable.
 #			This information is essential for debugging the program with tools like gdb (GNU Debugger) or other debugging tools.
 #			When you compile your C++ code with the -g option, the compiler includes additional metadata in the executable binary that
