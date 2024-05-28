@@ -353,6 +353,26 @@ util.o: util.c				# compile util.c into util.o
 # you could write `gcc $^ -o program` instead of `gcc -o program $^`. Both forms achieve the same result.
 
 
+# grep -v ... -	`-v` in the `grep` command is used to invert the match, 
+#				meaning it selects all lines that do not match the specified pattern.
+
+# Let's say you have a file named "example.txt" with the following content:
+#	apple
+#	banana
+#	cherry
+#	date
+
+# Now you want to find all lines in "example.txt" that do not contain the world "banana".
+# You can use `grep -v` to achieve this:
+no_banana:
+	grep -v "banana" example.txt
+
+# The output would be:
+#	apple
+#	cherry
+#	data
+
+
 # compile a project contains single main entry template
 CC := g++				# specify a compiler
 
