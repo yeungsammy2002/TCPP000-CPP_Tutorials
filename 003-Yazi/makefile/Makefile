@@ -119,6 +119,9 @@ main_o:
 main:
 	g++ add.o sub.o main.o -o main
 
+# When you write a rule in Makefile, you specify a target, dependencies, and commands to execute.
+# In this example, "target" is the target, "add_o", "sub_o", "main_o" and "main" are its dependencies.
+
 
 # .o can be used as target name but .cpp can't
 target: add.o sub.o main.o main
@@ -138,6 +141,19 @@ target: add.o sub.o main.o main		# [target].o replace %.o, [target].cpp replace 
 	g++ -I. -c $< -o $@
 main:								# $<, $@ are called "automatic variables"
 	g++ add.o sub.o main.o -o main
+
+# $< -	represents the first prerequisite (dependency) of a target. When a rule is executed,
+#		$< will be replaced with the name of the first prerequisite of the rule.
+
+# $@ -	represents the target of the rule. When a rule is executed, $@ will be replaced with
+#		the name of the target
+
+# For example,
+output.txt: input.txt
+	cp $< $@
+# $< would represent "input.txt" since it is the first prerequisite of "output.txt".
+# $@ would represent "output.txt"
+
 
 
 # variable - replace multiple targets with a variable
@@ -203,16 +219,20 @@ clear:
 # assign compile options to variable
 SRCS := $(shell find ./* -type f | grep "\.cpp")
 $(warning SRCS is $(SRCS))
+
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
 CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 target: $(OBJS) main
-%.o: %.cpp
-	g++ -I. $(CFLAGS) -c $< -o $@	# g++ -I. -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11 -c add.cpp -o add.o
-main:
-	g++ $(CFLAGS) $(OBJS) -o main	# g++ -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11  ./add.o  ./main.o  ./sub.o -o main
+
+%.o: %.cpp				# i.e. g++ -I. -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11 -c add.cpp -o add.o
+	g++ -I. $(CFLAGS) -c $< -o $@
+
+main:					# g++ -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11  ./add.o  ./main.o  ./sub.o -o main
+	g++ $(CFLAGS) $(OBJS) -o main
+
 clear:
 	rm -rf $(OBJS) main
 
@@ -252,7 +272,7 @@ clear:
 #				These warnings can be helpful for identifying potential mistakes or unnecessary code that could be removed to improve clarity and maintainability.
 
 # -ldl -		is used to link against the dynamic linking library, libdl. This library provides functions that
-#				enable a program to load and use dynamic shared objects (DSOs) during runtime.
+#				enable a program to load and use dynamic shared objects (DSOs) during runtime. (ONLY work using cygwin compiler)
 
 # -std=c++11 -	tells the compiler to use the C++11 standard for compiling your code. Your code has to comform the rules and syntax defined in the C++11 standard.
 #				By default, g++ may conform the eariler C++98/03 version if the standard is not specified.
@@ -266,15 +286,22 @@ clear:
 # assign searching paths to variable
 SRCS := $(shell find ./* -type f | grep "\.cpp")
 $(warning SRCS is $(SRCS))
+
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
+
 INCLUDE := -I.											# here
+
 target: $(OBJS) main
-%.o: %.cpp
-	g++ $(INCLUDE) $(CFLAGS) -c $< -o $@				# here
+
+%.o: %.cpp												# here
+	g++ $(INCLUDE) $(CFLAGS) -c $< -o $@
+
 main:
 	g++ $(CFLAGS) $(OBJS) -o main
+
 clear:													# not use in target
 	rm -rf $(OBJS) main
 
@@ -286,7 +313,7 @@ $(warning SRCS is $(SRCS))											# last 2 grep above filter out main.cpp & t
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 INCLUDE := -I.
 
@@ -312,6 +339,19 @@ $(TEST_EXE): $(OBJS) $(TEST_OBJ)
 clear:
 	rm -rf $(OBJS) $(MAIN_OBJ) $(TEST_OBJ) $(MAIN_EXE) $(TEST_EXE)
 
+# $^ represents all of the the dependencies of the current target.
+# For example:
+program: main.o util.o
+	gcc -o program $^
+main.o: main.c				# compile main.c into main.o
+	gcc -c main.c -o main.o
+util.o: util.c				# compile util.c into util.o
+	gcc -c util.c -o util.o
+# In this example, "program" target depends on "main.o" and "util.o".
+# When building "program", "$^" represent all dependencies "main.o util.o", so we don't need to explicity list them.
+# There are separate rules to compile "main.c" and "util.c" into object files "main.o" and "util.o" respectively.
+# you could write `gcc $^ -o program` instead of `gcc -o program $^`. Both forms achieve the same result.
+
 
 # compile a project contains single main entry template
 CC := g++				# specify a compiler
@@ -322,7 +362,7 @@ $(warning SRCS is $(SRCS))
 OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
 $(warning OBJS is $(OBJS))
 
-CFLAGS := -g -O2 -Wall -Werror -Wno-unused -std=c++11
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 INCLUDE := -I.
 
