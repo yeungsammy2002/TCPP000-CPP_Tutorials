@@ -1,4 +1,14 @@
 # It is recommended to install "Windows Terminal" to run make inside the terminal
+# If you using Windows to run g++'s -ldl option, ONLY cygwin can work properly, ...
+# because C:\cygwin64\lib contains "libdl.a" but MinGW not
+
+# Here are the steps to setup cygwin default g++ compiler:
+# On Windows, search for "Environment Variables".
+# On "Environment Variables" window's "System variables" sub-window, select "Path" then click "Edit".
+# On Edit environment variable, click "New", then paste the path, i.e. C:\cygwin64\bin
+# keep clicking "Move Up" until the compiler prior any other g++ compiler
+
+
 
 
 # gcc
@@ -200,9 +210,9 @@ CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
 target: $(OBJS) main
 %.o: %.cpp
-	g++ -I. $(CFLAGS) -c $< -o $@	# g++ -I. -g -O2 -Wall -Werror -Wno-unused -std=c++11 -c add.cpp -o add.o
+	g++ -I. $(CFLAGS) -c $< -o $@	# g++ -I. -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11 -c add.cpp -o add.o
 main:
-	g++ $(CFLAGS) $(OBJS) -o main	# g++ -g -O2 -Wall -Werror -Wno-unused -std=c++11  ./add.o  ./main.o  ./sub.o -o main
+	g++ $(CFLAGS) $(OBJS) -o main	# g++ -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11  ./add.o  ./main.o  ./sub.o -o main
 clear:
 	rm -rf $(OBJS) main
 
