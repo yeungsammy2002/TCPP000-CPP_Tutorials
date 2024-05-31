@@ -1,8 +1,8 @@
-#include "regulus_err_handler\utilities\err_handler.h"
+#include "err.h"
 
 using namespace regulus::utilities;
 
-void Err::logic(const char* format, ...)
+void Err::logic(const char * format, ...)
 {
     std::stringstream ss;
     va_list arg_ptr;
@@ -12,7 +12,7 @@ void Err::logic(const char* format, ...)
 
     if (size > 0)
     {
-        char* buff = new char[size + 1];
+        char * buff = new char[size + 1];
         va_start(arg_ptr, format);
         std::vsnprintf(buff, size + 1, format, arg_ptr);
         va_end(arg_ptr);

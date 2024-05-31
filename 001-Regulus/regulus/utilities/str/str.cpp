@@ -1,8 +1,8 @@
-#include "regulus_str\utilities\str.h"
+#include "str.h"
 
 using namespace regulus::utilities;
 
-bool Str::are_alpha(const string& str)
+bool Str::are_alpha(const string & str)
 {
     for (int i = 0; i < str.length(); ++i)
     {
@@ -14,7 +14,7 @@ bool Str::are_alpha(const string& str)
     return true;
 }
 
-bool Str::are_digit(const string& str)
+bool Str::are_digit(const string & str)
 {
     for (int i = 0; i < str.length(); ++i)
     {
@@ -26,7 +26,7 @@ bool Str::are_digit(const string& str)
     return true;
 }
 
-bool Str::are_alnum(const string& str)
+bool Str::are_alnum(const string & str)
 {
     for (int i = 0; i < str.length(); ++i)
     {
@@ -38,7 +38,7 @@ bool Str::are_alnum(const string& str)
     return true;
 }
 
-bool Str::contain(const string& str, const string& chars)
+bool Str::contain(const string & str, const string & chars)
 {
     for (int i = 0; i < chars.size(); ++i)
     {
@@ -57,14 +57,14 @@ string Str::trim(string str)
     return str;
 }
 
-string Str::trim(string str, const string& chars_to_trim)
+string Str::trim(string str, const string & chars_to_trim)
 {
     str.erase(0, str.find_first_not_of(chars_to_trim));
     str.erase(str.find_last_not_of(chars_to_trim) + 1);
     return str;
 }
 
-string Str::to_str(const char* format, ...)
+string Str::to_str(const char * format, ...)
 {
     std::stringstream ss;
     va_list arg_ptr;
@@ -74,7 +74,7 @@ string Str::to_str(const char* format, ...)
 
     if (size > 0)
     {
-        char* buff = new char[size + 1];
+        char * buff = new char[size + 1];
         va_start(arg_ptr, format);
         std::vsnprintf(buff, size + 1, format, arg_ptr);
         va_end(arg_ptr);
