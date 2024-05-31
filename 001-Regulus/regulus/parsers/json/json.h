@@ -1,7 +1,7 @@
 #pragma once
 
 namespace regulus {
-namespace parser {
+namespace parsers {
 
 class Json
 {

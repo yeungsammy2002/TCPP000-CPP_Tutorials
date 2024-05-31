@@ -17,3 +17,5 @@ file(GLOB_RECURSE SOURCES
 )
 
 add_executable(regulus ${SOURCES} main.cpp)
+
+add_executable(json_sandbox ${SOURCES} parsers/json/sandbox.cpp)

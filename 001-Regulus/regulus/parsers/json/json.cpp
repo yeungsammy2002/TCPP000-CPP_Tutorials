@@ -1,4 +1,4 @@
 #include "json.h"
 
-using namespace regulus::parser;
+using namespace regulus::parsers;
 
