@@ -7,6 +7,10 @@
 #include <sstream>
 #include <iostream>
 
+#include "utilities/log/log.h"
+
+using namespace regulus::utilities;
+
 using std::string;
 
 namespace regulus {
@@ -53,15 +57,24 @@ public:
     Json(const Json & other);
     Json & operator=(const Json & other);
 
+    Json(Json && other);
+    Json & operator=(Json && other);
+
     string str() const;
+
     void show() const;
 
     void append(const Json & value);
 
+    Json & operator[](const int index);
+
+    Json & operator[](const char * key);
+    Json & operator[](const string & key);
+
 private:
     void copy(const Json & other);
 
-    void yazi_cpy(const Json & other);
+    void move(Json && other);
 
     void clear();
 

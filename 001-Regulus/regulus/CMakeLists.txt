@@ -12,6 +12,9 @@ file(GLOB_RECURSE SOURCES
         "utilities/cmd_opts/*.cpp"
         "utilities/err/*.h"
         "utilities/err/*.cpp"
+        "utilities/log/*.h"
+        "utilities/log/*.cpp"
+        "utilities/singleton/*.h"
         "utilities/str/*.h"
         "utilities/str/*.cpp"
 )
