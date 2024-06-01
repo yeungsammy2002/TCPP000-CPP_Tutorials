@@ -154,6 +154,10 @@ void Json::clear()
 
 void Json::copy(const Json & other)
 {
+    if (&other == this)
+    {
+        return;
+    }
     m_type = other.m_type;
     switch (m_type)
     {
@@ -212,6 +216,10 @@ Json::Json(const Json & other) : m_type(other.m_type)
 }
 Json & Json::operator=(const Json & other)
 {
+    if (this == &other)
+    {
+        return *this;
+    }
     clear();
     copy(other);
     return *this;
@@ -221,6 +229,10 @@ Json & Json::operator=(const Json & other)
 
 void Json::move(Json && other)
 {
+    if (&other == this)
+    {
+        return;
+    }
     m_type = other.m_type;
     switch (m_type)
     {
