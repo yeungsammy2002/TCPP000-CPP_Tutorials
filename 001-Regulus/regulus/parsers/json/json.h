@@ -7,10 +7,6 @@
 #include <sstream>
 #include <iostream>
 
-#include "utilities/log/log.h"
-
-using namespace regulus::utilities;
-
 using std::string;
 
 namespace regulus {

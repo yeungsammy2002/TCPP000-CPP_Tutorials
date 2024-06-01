@@ -6,14 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(./)
 
 file(GLOB_RECURSE SOURCES
+
         "parsers/json/*.h"
         "parsers/json/*.cpp"
         "utilities/cmd_opts/*.h"
         "utilities/cmd_opts/*.cpp"
         "utilities/err/*.h"
         "utilities/err/*.cpp"
-        "utilities/log/*.h"
-        "utilities/log/*.cpp"
         "utilities/singleton/*.h"
         "utilities/str/*.h"
         "utilities/str/*.cpp"

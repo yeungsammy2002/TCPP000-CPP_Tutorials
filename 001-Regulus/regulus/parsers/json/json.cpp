@@ -2,46 +2,33 @@
 
 using namespace regulus::parsers;
 
+
 Json::~Json()
 {
-//    std::cout << "destructor called" << std::endl;
     clear();
 }
 
 
-Json::Json() : m_type(JSON_NULL)
-{
-//    log("default Json constructor called");
-}
 
+Json::Json() : m_type(JSON_NULL) {}
 Json::Json(bool value) : m_type(JSON_BOOL)
 {
-//    log("Json constructor takes bool called");
     m_value.m_bool = value;
 }
-
 Json::Json(int value) : m_type(JSON_INT)
 {
-//    log("Json constructor takes int called");
     m_value.m_int = value;
 }
-
 Json::Json(double value) : m_type(JSON_DOUBLE)
 {
-//    log("Json constructor takes double called");
     m_value.m_double = value;
 }
-
 Json::Json(const char * value) : m_type(JSON_STRING)
 {
-//    log("Json constructor takes c string called");
     m_value.m_string = new string(value);
 }
+Json::Json(const string & value) : Json(value.c_str()) {}
 
-Json::Json(const string & value) : Json(value.c_str())
-{
-//    log("Json constructor takes string object called");
-}
 
 
 Json::operator bool() const
@@ -49,24 +36,22 @@ Json::operator bool() const
     assert(is_bool() && "Json object must be JSON_BOOL");
     return m_value.m_bool;
 }
-
 Json::operator int() const
 {
     assert(is_int() && "Json object must be JSON_INT");
     return m_value.m_int;
 }
-
 Json::operator double() const
 {
     assert(is_double() && "Json object must be JSON_DOUBLE");
     return m_value.m_double;
 }
-
 Json::operator string() const
 {
     assert(is_string() && "Json object must be JSON_STRING");
     return *m_value.m_string;
 }
+
 
 
 Json::Json(Type type) : m_type(type)
@@ -109,6 +94,63 @@ Json::Json(Type type) : m_type(type)
             break;
     }
 }
+
+
+
+void Json::clear()
+{
+    switch (m_type)
+    {
+        case JSON_NULL:
+        case JSON_BOOL:
+        case JSON_INT:
+        case JSON_DOUBLE:
+            break;
+        case JSON_STRING:
+        {
+            if (nullptr == m_value.m_string)
+            {
+                break;
+            }
+            delete m_value.m_string;
+            m_value.m_string = nullptr;
+        }
+            break;
+        case JSON_ARRAY:
+        {
+            if (nullptr == m_value.m_array)
+            {
+                break;
+            }
+            for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
+            {
+                it->clear();
+            }
+            delete m_value.m_array;
+            m_value.m_array = nullptr;
+        }
+            break;
+        case JSON_OBJECT:
+        {
+            if (nullptr == m_value.m_object)
+            {
+                break;
+            }
+            for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
+            {
+                it->second.clear();
+            }
+            delete m_value.m_object;
+            m_value.m_object = nullptr;
+        }
+            break;
+        default:
+            break;
+    }
+    m_type = JSON_NULL;
+}
+
+
 
 void Json::copy(const Json & other)
 {
@@ -164,72 +206,18 @@ void Json::copy(const Json & other)
             break;
     }
 }
-
-void Json::clear()
-{
-    switch (m_type)
-    {
-        case JSON_NULL:
-        case JSON_BOOL:
-        case JSON_INT:
-        case JSON_DOUBLE:
-            break;
-        case JSON_STRING:
-        {
-            if (nullptr == m_value.m_string)
-            {
-                break;
-            }
-            delete m_value.m_string;
-            m_value.m_string = nullptr;
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            if (nullptr == m_value.m_array)
-            {
-                break;
-            }
-            for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
-            {
-                it->clear();
-            }
-            delete m_value.m_array;
-            m_value.m_array = nullptr;
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            if (nullptr == m_value.m_object)
-            {
-                break;
-            }
-            for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
-            {
-                it->second.clear();
-            }
-            delete m_value.m_object;
-            m_value.m_object = nullptr;
-        }
-            break;
-        default:
-            break;
-    }
-    m_type = JSON_NULL;
-}
-
 Json::Json(const Json & other) : m_type(other.m_type)
 {
-    log("copy constructor called");
     copy(other);
 }
 Json & Json::operator=(const Json & other)
 {
-    log("copy assignment operator called");
     clear();
     copy(other);
     return *this;
 }
+
+
 
 void Json::move(Json && other)
 {
@@ -268,12 +256,10 @@ void Json::move(Json && other)
 }
 Json::Json(Json && other) : m_type(other.m_type)
 {
-    log("move constructor called");
     move(std::move(other));
 }
 Json & Json::operator=(Json && other)
 {
-    Log::log("move assignment operator called");
     if (this == &other)
     {
         return *this;
@@ -282,6 +268,8 @@ Json & Json::operator=(Json && other)
     move(std::move(other));
     return *this;
 }
+
+
 
 string Json::str() const
 {
@@ -346,30 +334,31 @@ string Json::str() const
     }
     return ss.str();
 }
-
 void Json::show() const
 {
     std::cout << str() << std::endl;
 }
+
+
 
 void Json::append(const Json & value)
 {
     assert(is_array() && "Json object must be JSON_ARRAY");
     m_value.m_array->push_back(value);
 }
-
 Json & Json::operator[](const int index)
 {
     assert(is_array() && "Json object must be JSON_ARRAY");
     return m_value.m_array->at(index);
 }
 
+
+
 Json & Json::operator[](const char * key)
 {
     assert(is_object() && "Json object must by JSON_OBJECT");
     return (*m_value.m_object)[key];
 }
-
 Json & Json::operator[](const string & key)
 {
     assert(is_object() && "Json object must by JSON_OBJECT");
