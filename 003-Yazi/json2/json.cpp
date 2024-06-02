@@ -9,40 +9,40 @@ Json::Json(Type type) : m_type(type)
 {
     switch (type)
     {
-        case JSON_NULL:
-            break;
-        case JSON_BOOL:
-        {
-            m_value.m_bool = false;
-        }
-            break;
-        case JSON_INT:
-        {
-            m_value.m_int = 0;
-        }
-            break;
-        case JSON_DOUBLE:
-        {
-            m_value.m_double = 0.0;
-        }
-            break;
-        case JSON_STRING:
-        {
-            m_value.m_string = new string("");
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            m_value.m_array = new std::vector<Json>();
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            m_value.m_object = new std::map<string, Json>();
-        }
-            break;
-        default:
-            break;
+    case JSON_NULL:
+        break;
+    case JSON_BOOL:
+    {
+        m_value.m_bool = false;
+    }
+    break;
+    case JSON_INT:
+    {
+        m_value.m_int = 0;
+    }
+    break;
+    case JSON_DOUBLE:
+    {
+        m_value.m_double = 0.0;
+    }
+    break;
+    case JSON_STRING:
+    {
+        m_value.m_string = new string("");
+    }
+    break;
+    case JSON_ARRAY:
+    {
+        m_value.m_array = new std::vector<Json>();
+    }
+    break;
+    case JSON_OBJECT:
+    {
+        m_value.m_object = new std::map<string, Json>();
+    }
+    break;
+    default:
+        break;
     }
 }
 
@@ -61,29 +61,29 @@ Json::Json(double value) : m_type(JSON_DOUBLE)
     m_value.m_double = value;
 }
 
-Json::Json(const char * value) : m_type(JSON_STRING)
+Json::Json(const char* value) : m_type(JSON_STRING)
 {
     m_value.m_string = new string(value);
 }
 
-Json::Json(const string & value) : m_type(JSON_STRING)
+Json::Json(const string& value) : m_type(JSON_STRING)
 {
     m_value.m_string = new string(value);
 }
 
-Json::Json(const Json & other) : m_type(JSON_NULL)
+Json::Json(const Json& other) : m_type(JSON_NULL)
 {
     copy(other);
 }
 
-Json::Json(Json && other)
+Json::Json(Json&& other)
 {
     swap(other);
 }
 
 Json::~Json()
 {
-//    clear();
+    //    clear();
 }
 
 Json::Type Json::type() const
@@ -166,53 +166,53 @@ void Json::clear()
 {
     switch (m_type)
     {
-        case JSON_NULL:
-        case JSON_BOOL:
-        case JSON_INT:
-        case JSON_DOUBLE:
-            break;
-        case JSON_STRING:
+    case JSON_NULL:
+    case JSON_BOOL:
+    case JSON_INT:
+    case JSON_DOUBLE:
+        break;
+    case JSON_STRING:
+    {
+        if (nullptr != m_value.m_string)
         {
-            if (nullptr != m_value.m_string)
-            {
-                delete m_value.m_string;
-                m_value.m_string = nullptr;
-            }
+            delete m_value.m_string;
+            m_value.m_string = nullptr;
         }
-            break;
-        case JSON_ARRAY:
+    }
+    break;
+    case JSON_ARRAY:
+    {
+        if (nullptr != m_value.m_array)
         {
-            if (nullptr != m_value.m_array)
+            for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
             {
-                for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
-                {
-                    it->clear();
-                }
-                delete m_value.m_array;
-                m_value.m_array = nullptr;
+                it->clear();
             }
+            delete m_value.m_array;
+            m_value.m_array = nullptr;
         }
-            break;
-        case JSON_OBJECT:
+    }
+    break;
+    case JSON_OBJECT:
+    {
+        if (nullptr != m_value.m_object)
         {
-            if (nullptr != m_value.m_object)
+            for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
             {
-                for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
-                {
-                    (it->second).clear();
-                }
-                delete m_value.m_object;
-                m_value.m_object = nullptr;
+                (it->second).clear();
             }
+            delete m_value.m_object;
+            m_value.m_object = nullptr;
         }
-            break;
-        default:
-            break;
+    }
+    break;
+    default:
+        break;
     }
     m_type = JSON_NULL;
 }
 
-Json & Json::operator=(bool value)
+Json& Json::operator=(bool value)
 {
     clear();
     m_type = JSON_BOOL;
@@ -220,7 +220,7 @@ Json & Json::operator=(bool value)
     return *this;
 }
 
-Json & Json::operator=(int value)
+Json& Json::operator=(int value)
 {
     clear();
     m_type = JSON_INT;
@@ -228,7 +228,7 @@ Json & Json::operator=(int value)
     return *this;
 }
 
-Json & Json::operator=(double value)
+Json& Json::operator=(double value)
 {
     clear();
     m_type = JSON_DOUBLE;
@@ -236,7 +236,7 @@ Json & Json::operator=(double value)
     return *this;
 }
 
-Json & Json::operator=(const char * value)
+Json& Json::operator=(const char* value)
 {
     clear();
     m_type = JSON_STRING;
@@ -244,7 +244,7 @@ Json & Json::operator=(const char * value)
     return *this;
 }
 
-Json & Json::operator=(const string & value)
+Json& Json::operator=(const string& value)
 {
     clear();
     m_type = JSON_STRING;
@@ -252,14 +252,14 @@ Json & Json::operator=(const string & value)
     return *this;
 }
 
-Json & Json::operator=(const Json & other)
+Json& Json::operator=(const Json& other)
 {
     clear();
     copy(other);
     return *this;
 }
 
-Json & Json::operator=(Json && other) noexcept
+Json& Json::operator=(Json&& other) noexcept
 {
     swap(other);
     return *this;
@@ -310,55 +310,55 @@ string Json::str() const
     std::stringstream ss;
     switch (m_type)
     {
-        case JSON_NULL:
+    case JSON_NULL:
+    {
+        ss << "null";
+    }
+    break;
+    case JSON_BOOL:
+    {
+        ss << (m_value.m_bool ? "true" : "false");
+    }
+    break;
+    case JSON_INT:
+    {
+        ss << m_value.m_int;
+    }
+    break;
+    case JSON_DOUBLE:
+    {
+        ss << m_value.m_double;
+    }
+    break;
+    case JSON_STRING:
+    {
+        ss << "\"" << *(m_value.m_string) << "\"";
+    }
+    break;
+    case JSON_ARRAY:
+    {
+        ss << "[";
+        for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
         {
-            ss << "null";
+            ss << (m_value.m_array->begin() != it ? "," : "");
+            ss << it->str();
         }
-            break;
-        case JSON_BOOL:
+        ss << "]";
+    }
+    break;
+    case JSON_OBJECT:
+    {
+        ss << "{";
+        for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
         {
-            ss << (m_value.m_bool ? "true" : "false");
+            ss << (m_value.m_object->begin() != it ? "," : "");
+            ss << "\"" << it->first << "\"" << ":" << (it->second).str();
         }
-            break;
-        case JSON_INT:
-        {
-            ss << m_value.m_int;
-        }
-            break;
-        case JSON_DOUBLE:
-        {
-            ss << m_value.m_double;
-        }
-            break;
-        case JSON_STRING:
-        {
-            ss << "\"" << *(m_value.m_string) << "\"";
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            ss << "[";
-            for (auto it = m_value.m_array->begin(); it != m_value.m_array->end(); ++it)
-            {
-                ss << (m_value.m_array->begin() != it ? "," : "");
-                ss << it->str();
-            }
-            ss << "]";
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            ss << "{";
-            for (auto it = m_value.m_object->begin(); it != m_value.m_object->end(); ++it)
-            {
-                ss << (m_value.m_object->begin() != it ? "," : "");
-                ss << "\"" << it->first << "\"" << ":" << (it->second).str();
-            }
-            ss << "}";
-        }
-            break;
-        default:
-            break;
+        ss << "}";
+    }
+    break;
+    default:
+        break;
     }
     return ss.str();
 }
@@ -368,7 +368,7 @@ void Json::show() const
     std::cout << str() << std::endl;
 }
 
-void Json::append(const Json & value)
+void Json::append(const Json& value)
 {
     if (!is_array())
     {
@@ -379,7 +379,7 @@ void Json::append(const Json & value)
     m_value.m_array->push_back(value);
 }
 
-void Json::append(Json && value)
+void Json::append(Json&& value)
 {
     if (!is_array())
     {
@@ -396,11 +396,11 @@ bool Json::has(int index)
     {
         return false;
     }
-    int size = (int) m_value.m_array->size();
+    int size = (int)m_value.m_array->size();
     return index >= 0 && index < size;
 }
 
-bool Json::has(const char * key) const
+bool Json::has(const char* key) const
 {
     if (!is_object())
     {
@@ -409,7 +409,7 @@ bool Json::has(const char * key) const
     return m_value.m_object->end() != m_value.m_object->find(key);
 }
 
-bool Json::has(const string & key) const
+bool Json::has(const string& key) const
 {
     return has(key.c_str());
 }
@@ -423,7 +423,7 @@ Json Json::get(int index)
     return m_value.m_array->at(index);
 }
 
-Json Json::get(const char * key)
+Json Json::get(const char* key)
 {
     if (!has(key))
     {
@@ -432,7 +432,7 @@ Json Json::get(const char * key)
     return (*m_value.m_object)[key];
 }
 
-Json Json::get(const string & key)
+Json Json::get(const string& key)
 {
     return get(key.c_str());
 }
@@ -447,7 +447,7 @@ void Json::remove(int index)
     m_value.m_array->erase(m_value.m_array->begin() + index);
 }
 
-void Json::remove(const char * key)
+void Json::remove(const char* key)
 {
     if (!is_object())
     {
@@ -462,12 +462,12 @@ void Json::remove(const char * key)
     m_value.m_object->erase(it);
 }
 
-void Json::remove(const string & key)
+void Json::remove(const string& key)
 {
     return remove(key.c_str());
 }
 
-Json & Json::operator[](int index)
+Json& Json::operator[](int index)
 {
     if (!is_array())
     {
@@ -480,7 +480,7 @@ Json & Json::operator[](int index)
     return m_value.m_array->at(index);
 }
 
-Json & Json::operator[](const char * key)
+Json& Json::operator[](const char* key)
 {
     if (!is_object())
     {
@@ -491,7 +491,7 @@ Json & Json::operator[](const char * key)
     return (*m_value.m_object)[key];
 }
 
-Json & Json::operator[](const string & key)
+Json& Json::operator[](const string& key)
 {
     return (*this)[key.c_str()];
 }
@@ -500,12 +500,12 @@ int Json::size() const
 {
     switch (m_type)
     {
-        case JSON_ARRAY:
-            return (int) m_value.m_array->size();
-        case JSON_OBJECT:
-            return (int) m_value.m_object->size();
-        default:
-            break;
+    case JSON_ARRAY:
+        return (int)m_value.m_array->size();
+    case JSON_OBJECT:
+        return (int)m_value.m_object->size();
+    default:
+        break;
     }
     return -1;
 }
@@ -514,71 +514,71 @@ bool Json::empty() const
 {
     switch (m_type)
     {
-        case JSON_NULL:
-            return true;
-        case JSON_ARRAY:
-            return m_value.m_array->empty();
-        case JSON_OBJECT:
-            return m_value.m_object->empty();
-        default:
-            break;
+    case JSON_NULL:
+        return true;
+    case JSON_ARRAY:
+        return m_value.m_array->empty();
+    case JSON_OBJECT:
+        return m_value.m_object->empty();
+    default:
+        break;
     }
     return false;
 }
 
-void Json::copy(const Json & other)
+void Json::copy(const Json& other)
 {
     clear();
     m_type = other.m_type;
     switch (m_type)
     {
-        case JSON_NULL:
-            break;
-        case JSON_BOOL:
-        case JSON_INT:
-        case JSON_DOUBLE:
+    case JSON_NULL:
+        break;
+    case JSON_BOOL:
+    case JSON_INT:
+    case JSON_DOUBLE:
+    {
+        m_value = other.m_value;
+    }
+    break;
+    case JSON_STRING:
+    {
+        if (nullptr != other.m_value.m_string)
         {
-            m_value = other.m_value;
+            m_value.m_string = new string(*other.m_value.m_string);
         }
-            break;
-        case JSON_STRING:
+    }
+    break;
+    case JSON_ARRAY:
+    {
+        if (nullptr != other.m_value.m_array)
         {
-            if (nullptr != other.m_value.m_string)
+            m_value.m_array = new std::vector<Json>();
+            for (auto it = other.m_value.m_array->begin(); it != other.m_value.m_array->end(); ++it)
             {
-                m_value.m_string = new string(*other.m_value.m_string);
+                m_value.m_array->push_back(*it);
             }
         }
-            break;
-        case JSON_ARRAY:
+    }
+    break;
+    case JSON_OBJECT:
+    {
+        if (nullptr != other.m_value.m_object)
         {
-            if (nullptr != other.m_value.m_array)
+            m_value.m_object = new std::map<string, Json>();
+            for (auto it = other.m_value.m_object->begin(); it != other.m_value.m_object->end(); ++it)
             {
-                m_value.m_array = new std::vector<Json>();
-                for (auto it = other.m_value.m_array->begin(); it != other.m_value.m_array->end(); ++it)
-                {
-                    m_value.m_array->push_back(*it);
-                }
+                (*m_value.m_object)[it->first] = it->second;
             }
         }
-            break;
-        case JSON_OBJECT:
-        {
-            if (nullptr != other.m_value.m_object)
-            {
-                m_value.m_object = new std::map<string, Json>();
-                for (auto it = other.m_value.m_object->begin(); it != other.m_value.m_object->end(); ++it)
-                {
-                    (*m_value.m_object)[it->first] = it->second;
-                }
-            }
-        }
-            break;
-        default:
-            break;
+    }
+    break;
+    default:
+        break;
     }
 }
 
-void Json::swap(Json & other)
+void Json::swap(Json& other)
 {
     Type type = m_type;
     Value value = m_value;
@@ -588,7 +588,7 @@ void Json::swap(Json & other)
     other.m_value = value;
 }
 
-void Json::parse(const string & filename)
+void Json::parse(const string& filename)
 {
     clear();
     Parser p;
@@ -596,7 +596,7 @@ void Json::parse(const string & filename)
     *this = p.parse();
 }
 
-void Json::parse(const char * buff, int len)
+void Json::parse(const char* buff, int len)
 {
     clear();
     Parser p;
