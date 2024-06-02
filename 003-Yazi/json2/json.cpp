@@ -83,7 +83,7 @@ Json::Json(Json&& other)
 
 Json::~Json()
 {
-    //    clear();
+    clear();
 }
 
 Json::Type Json::type() const
