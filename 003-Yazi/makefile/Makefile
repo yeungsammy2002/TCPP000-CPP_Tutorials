@@ -538,3 +538,104 @@ clear:
 
 
 # linking dynamic libraries
+CC := g++
+
+SRCS := $(shell find ./* -type f | grep "\.cpp" | grep -v "./main\.cpp")
+$(warning SRCS is $(SRCS))
+
+OBJS := $(patsubst %.cpp, %.o, $(filter %.cpp, $(SRCS)))
+$(warning OBJS is $(OBJS))
+
+CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
+
+LDFLAGS := -L./lib -lmul
+
+INCLUDE := -I. -I./include
+
+MAIN_SRC := main.cpp
+MAIN_OBJ := $(MAIN_SRC:%.cpp=%.o)
+MAIN_EXE := main
+
+target: $(MAIN_EXE)
+
+$(MAIN_EXE): $(OBJS) $(MAIN_OBJ)
+	$(CC) -o $@ $^ $(INCLUDE) $(CFLAGS) $(LDFLAGS)
+
+MUL_SRC := ./lib/mul.cpp
+MUL_OBJ := $(MUL_SRC:%.cpp=%.o)
+MUL_LIB := ./lib/libmul.a
+MUL_DLL := ./lib/libmul.so			# add dynamic library `.so`
+
+static: $(MUL_LIB)
+$(MUL_LIB): $(MUL_OBJ)
+	ar rs $@ $^
+
+shared: $(MUL_DLL)					# target that make dynamic library
+$(MUL_DLL): $(MUL_OBJ)
+	$(CC) -o $@ $^ $(INCLUDE) $(CFLAGS) -fPIC -shared
+
+ %.o: %.cpp
+	$(CC) $(INCLUDE) $(CFLAGS) -c $< -o $@
+
+clear:
+	rm -rf $(OBJS) $(MAIN_OBJ) $(MAIN_EXE)
+
+# before running `make`, you have to:
+# 1.	Copy dynamic library file to `/usr/local/lib` directory. The program will search 
+#		for dynamic library files in this directory when the program start executing, or
+# 2.	The program search for the dynamic library files through the environment variable
+#		For example, running this command `export LD_LIBRARY_PATH=./lib`
+
+# then run "make shared"
+
+# -fPIC -	the option in g++ stands for "Position Independent Code." 
+#			When you compile code with this option, it generates position-independent code, 
+#			which means the generated machine code is not dependent on being located at a 
+#			specific memory address.
+
+#			Position-independent code is particularly useful for shared libraries 
+#			(also known as dynamic libraries or shared objects), 
+#			which can be loaded into memory at any address. Here's why:
+
+#			1.	Address Independence: Position-independent code can be loaded into memory 
+#				at any address without modification. This makes it suitable for shared libraries 
+#				because the operating system loader can place the library in memory wherever it 
+#				finds space, without worrying about conflicts with other libraries or the executable.
+
+#			2.	Code Sharing: Position-independent code allows multiple processes to share the 
+#				same instance of a library in memory. Since the code doesn't rely on fixed memory 
+#				addresses, different processes can use the same shared library code simultaneously 
+#				without interfering with each other.
+
+#			3.	Dynamic Linking: Shared libraries are often dynamically linked, meaning they are 
+#				loaded into memory when the program starts or when they're explicitly required, 
+#				rather than being linked at compile time. Position-independent code facilitates this 
+#				dynamic linking process because it doesn't rely on specific memory addresses.
+
+#			So, when you compile code with g++ using the -fPIC option, you're ensuring that the resulting 
+#			object files can be used to create shared libraries that are suitable for dynamic linking and 
+#			can be loaded into memory at any address by the operating system loader.
+
+# -shared -	The -shared option in g++ is used to create a shared library (also known as a dynamic library 
+#			or shared object). When you compile code with this option, the output is a shared library file 
+#			rather than an executable.
+#			Here's what the -shared option does:
+
+#			1.	Produces a Shared Library: Instead of creating an executable file, g++ generates a shared 
+#				library file. Shared libraries contain code and data that can be loaded into memory and 
+#				used by multiple programs simultaneously. They are particularly useful for code that needs 
+#				to be shared among multiple executables, such as commonly used functions or modules.
+
+#			2.	Dynamic Linking: Shared libraries are dynamically linked at runtime, meaning that the
+#				necessary library code is loaded into memory when the program starts or when it's explicitly
+#				required, rather than being linked at compile time. This allows multiple programs to share 
+#				the same instance of the library in memory, reducing memory usage and facilitating code updates.
+
+#			3.	Symbol Visibility: When creating a shared library, g++ also typically hides internal symbols 
+#				by default, meaning that they're not exposed to external programs linking against the library.
+#				This helps avoid symbol conflicts and keeps the library interface clean. However, you can 
+#				control symbol visibility using additional options like -fvisibility if needed.
+
+#			In summary, when you use the -shared option with g++, you're telling the compiler to generate a 
+#			shared library file instead of an executable, allowing you to create reusable code that can be 
+#			dynamically linked and shared among multiple programs.
