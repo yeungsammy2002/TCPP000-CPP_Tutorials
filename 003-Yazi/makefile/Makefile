@@ -392,17 +392,17 @@ MAIN_EXE := main
 
 target: $(MAIN_EXE)
 
-$(MAIN_EXE): $(OBJS) $(MAIN_OBJ)
+$(MAIN_EXE): $(OBJS) $(MAIN_OBJ)				# here
 	$(CC) -o $@ $^ $(INCLUDE) $(CFLAGS)
 
-%.o: %.cpp
+%.o: %.cpp										# here
 	$(CC) $(INCLUDE) $(CFLAGS) -c $< -o $@
 
 clear:
 	rm -rf $(OBJS) $(MAIN_OBJ) $(MAIN_EXE)
 
-
-# if headers are inside a folder, i.e. include
+ 
+# if headers are inside a folder, i.e. include, you have to add -I./include to INCLUDE variable
 CC := g++
 
 SRCS := $(shell find ./* -type f | grep "\.cpp" | grep -v "./main\.cpp")
@@ -413,7 +413,7 @@ $(warning OBJS is $(OBJS))
 
 CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
-INCLUDE := -I. -I./include
+INCLUDE := -I. -I./include				# here
 
 MAIN_SRC := main.cpp
 MAIN_OBJ := $(MAIN_SRC:%.cpp=%.o)
