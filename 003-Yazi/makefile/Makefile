@@ -469,6 +469,32 @@ clear:
 	rm -rf $(OBJS) $(MAIN_OBJ) $(MAIN_EXE)
 # then "make static"
 
+# `ar` -	is not directly related to g++. `ar` command is used to create, modify, and extract
+#			from archives, typically used for bundling object files into a library.
+#			It is a separate GNU utility used for creating, modifying, and extracting from archives.
+# 			An archive is a collection of files bundled together, often used for libraries.
+# 			Archives created by ar typically have the file extension .a.
+#			When you compile multiple source files into object files (.o files), 
+#			you might want to bundle them together into a static library. 
+#			This is where `ar` comes in. g++ can call ar internally to create these libraries 
+#			when you specify the appropriate options.
+#			In summary, g++ is for compiling C++ code, while ar is for creating and managing archives, 
+#			though they can work together in certain scenarios during the build process.
+
+# `rs`:
+# `r` -		`r` option inserts the specified files into the archive.
+#			If a file with the same name already exists in the archive, it replaces it.
+# `s` -		`s` option is used to update the index of the archive. It's particularly
+#			useful when adding or replacing files in the archive, 
+#			as it ensures that the archive's index (or symbol table) is kept up to date. 
+#			This is important because without the index, 
+#			tools like the linker might not be able to efficiently use the archive.
+
+# When you use ar `rs`, you're essentially updating the archive with the specified files
+# and refreshing its index to reflect any changes. This is commonly used when you're adding
+# or updating object files within a library archive, ensuring that the archive remains consistent 
+# and usable by other tools in the compilation process.
+
 
 # linking static libraries
 CC := g++
@@ -481,9 +507,9 @@ $(warning OBJS is $(OBJS))
 
 CFLAGS := -g -O2 -Wall -Werror -Wno-unused -ldl -std=c++11
 
-LDFLAGS := -L./lib -lmul								# link static library
+LDFLAGS := -L./lib -lmul						# -L./lib specify the static library location is in ./lib
 
-INCLUDE := -I. -I./include
+INCLUDE := -I. -I./include						# -lmul linking ./lib/libmul.a static library
 
 MAIN_SRC := main.cpp
 MAIN_OBJ := $(MAIN_SRC:%.cpp=%.o)
@@ -491,8 +517,8 @@ MAIN_EXE := main
 
 target: $(MAIN_EXE)
 
-$(MAIN_EXE): $(OBJS) $(MAIN_OBJ)
-	$(CC) -o $@ $^ $(INCLUDE) $(CFLAGS) $(LDFLAGS)		# add link command to compile executable command
+$(MAIN_EXE): $(OBJS) $(MAIN_OBJ)						# add link target `$(LDFLAGS)` to compile executable command
+	$(CC) -o $@ $^ $(INCLUDE) $(CFLAGS) $(LDFLAGS)
 
 MUL_SRC := ./lib/mul.cpp
 MUL_OBJ := $(MUL_SRC:%.cpp=%.o)
