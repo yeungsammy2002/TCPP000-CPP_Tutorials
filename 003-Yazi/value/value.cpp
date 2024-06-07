@@ -2,6 +2,10 @@
 
 using namespace demo::utilities;
 
+
+
+
+
 Value::Value() : m_type(V_NULL), m_value("") {}
 
 Value::Value(bool value) : m_type(V_BOOL)
@@ -38,6 +42,10 @@ Value::Value(const Value & value) : m_type(value.m_type)
 {
     m_value = value.m_value;
 }
+
+
+
+
 
 Value & Value::operator=(bool value)
 {
@@ -81,6 +89,17 @@ Value & Value::operator=(const string & value)
     return *this;
 }
 
+Value & Value::operator=(const Value & other)
+{
+    m_type = other.m_type;
+    m_value = other.m_value;
+    return *this;
+}
+
+
+
+
+
 Value::Type Value::type() const
 {
     return m_type;
@@ -89,6 +108,11 @@ Value::Type Value::type() const
 bool Value::is_null() const
 {
     return V_NULL == m_type;
+}
+
+bool Value::is_bool() const
+{
+    return V_BOOL == m_type;
 }
 
 bool Value::is_int() const
@@ -111,6 +135,10 @@ bool Value::is_string() const
     return V_STRING == m_type;
 }
 
+
+
+
+
 bool Value::operator==(const Value & other) const
 {
     if (other.m_type != m_type)
@@ -125,15 +153,20 @@ bool Value::operator!=(const Value & other) const
     return !(other == *this);
 }
 
+
+
+
+
 Value::operator bool()
 {
     return "true" == m_value;
 }
-
 Value::operator bool() const
 {
     return "true" == m_value;
 }
+
+
 
 Value::operator int()
 {
@@ -143,7 +176,6 @@ Value::operator int()
     ss >> value;
     return value;
 }
-
 Value::operator int() const
 {
     std::stringstream ss;
@@ -153,6 +185,8 @@ Value::operator int() const
     return value;
 }
 
+
+
 Value::operator float()
 {
     std::stringstream ss;
@@ -161,7 +195,6 @@ Value::operator float()
     ss >> value;
     return value;
 }
-
 Value::operator float() const
 {
     std::stringstream ss;
@@ -171,6 +204,8 @@ Value::operator float() const
     return value;
 }
 
+
+
 Value::operator double()
 {
     std::stringstream ss;
@@ -179,7 +214,6 @@ Value::operator double()
     ss >> value;
     return value;
 }
-
 Value::operator double() const
 {
     std::stringstream ss;
@@ -189,15 +223,20 @@ Value::operator double() const
     return value;
 }
 
+
+
 Value::operator string()
 {
     return m_value;
 }
-
 Value::operator string() const
 {
     return m_value;
 }
+
+
+
+
 
 void Value::show() const
 {
