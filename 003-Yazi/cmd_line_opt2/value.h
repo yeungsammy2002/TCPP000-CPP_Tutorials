@@ -72,7 +72,6 @@ public:
         return os;
     }
 
-
     void show() const;
 
 private:

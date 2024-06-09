@@ -91,7 +91,7 @@ Value & Value::operator=(const string & value)
 
 Value & Value::operator=(const Value & other)
 {
-    if (&other == this)
+    if (this == &other)
     {
         return *this;
     }
