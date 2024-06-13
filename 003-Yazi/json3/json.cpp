@@ -76,26 +76,6 @@ Json::Json(const string & value) : m_type(JSON_STRING)
 
 Json::Json(const Json & other) : m_type(other.m_type)
 {
-    switch (m_type)
-    {
-        case JSON_STRING:
-        {
-            m_value.m_string = nullptr;
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            m_value.m_array = nullptr;
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            m_value.m_object = nullptr;
-        }
-            break;
-        default:
-            break;
-    }
     copy(other);
 }
 
@@ -119,11 +99,6 @@ Json::~Json()
 
 Json & Json::operator=(const Json & other)
 {
-    if (&other == this)
-    {
-        return *this;
-    }
-    clear();
     copy(other);
     return *this;
 }
@@ -424,105 +399,6 @@ Json::Type Json::type() const
 
 
 
-void Json::copy(const Json & other)
-{
-    m_type = other.m_type;
-    switch (m_type)
-    {
-        case JSON_NULL:
-            break;
-        case JSON_BOOL:
-        case JSON_INT:
-        case JSON_DOUBLE:
-        {
-            m_value = other.m_value;
-        }
-            break;
-        case JSON_STRING:
-        {
-            assert(nullptr == m_value.m_string && "Json object must be clear before copy");
-            m_value.m_string = new string(*other.m_value.m_string);
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            assert(nullptr == m_value.m_array && "Json object must be clear before copy");
-            m_value.m_array = new std::vector<Json>();
-            auto o_begin = other.m_value.m_array->begin();
-            auto o_end = other.m_value.m_array->end();
-            for (auto o_it = o_begin; o_it != o_end; ++o_it)
-            {
-                m_value.m_array->push_back(*o_it);
-            }
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            assert(nullptr == m_value.m_object && "Json object must be clear before copy");
-            m_value.m_object = new std::map<string, Json>();
-            auto o_begin = other.m_value.m_object->begin();
-            auto o_end = other.m_value.m_object->end();
-            for (auto o_it = o_begin; o_it != o_end; ++o_it)
-            {
-                (*m_value.m_object)[o_it->first] = o_it->second;
-            }
-        }
-            break;
-        default:
-            break;
-    }
-}
-
-void Json::move(Json && other)
-{
-    m_type = other.m_type;
-    switch (m_type)
-    {
-        case JSON_NULL:
-            break;
-        case JSON_BOOL:
-        case JSON_INT:
-        case JSON_DOUBLE:
-        {
-            m_value = other.m_value;
-        }
-            break;
-        case JSON_STRING:
-        {
-            assert(nullptr == m_value.m_string && "Json object must be clear before move");
-            m_value.m_string = other.m_value.m_string;
-            other.m_value.m_string = nullptr;
-        }
-            break;
-        case JSON_ARRAY:
-        {
-            assert(nullptr == m_value.m_array && "Json object must be clear before move");
-            m_value.m_array = other.m_value.m_array;
-            other.m_value.m_array = nullptr;
-        }
-            break;
-        case JSON_OBJECT:
-        {
-            assert(nullptr == m_value.m_object && "Json object must be clear before move");
-            m_value.m_object = other.m_value.m_object;
-            other.m_value.m_object = nullptr;
-        }
-            break;
-        default:
-            break;
-    }
-}
-
-void Json::swap(Json & other)
-{
-    Type type = m_type;
-    Value value = m_value;
-    m_type = other.m_type;
-    m_value = other.m_value;
-    other.m_type = type;
-    other.m_value = value;
-}
-
 void Json::clear()
 {
     switch (m_type)
@@ -575,3 +451,79 @@ void Json::clear()
     }
     m_type = JSON_NULL;
 }
+
+
+
+
+
+void Json::copy(const Json & other)
+{
+    if (&other == this)
+    {
+        return;
+    }
+    clear();
+    m_type = other.m_type;
+    switch (m_type)
+    {
+        case JSON_NULL:
+            break;
+        case JSON_BOOL:
+        case JSON_INT:
+        case JSON_DOUBLE:
+        {
+            m_value = other.m_value;
+        }
+            break;
+        case JSON_STRING:
+        {
+            m_value.m_string = new string(*other.m_value.m_string);
+        }
+            break;
+        case JSON_ARRAY:
+        {
+            m_value.m_array = new std::vector<Json>();
+            auto o_begin = other.m_value.m_array->begin();
+            auto o_end = other.m_value.m_array->end();
+            for (auto o_it = o_begin; o_it != o_end; ++o_it)
+            {
+                m_value.m_array->push_back(*o_it);
+            }
+        }
+            break;
+        case JSON_OBJECT:
+        {
+            m_value.m_object = new std::map<string, Json>();
+            auto o_begin = other.m_value.m_object->begin();
+            auto o_end = other.m_value.m_object->end();
+            for (auto o_it = o_begin; o_it != o_end; ++o_it)
+            {
+                (*m_value.m_object)[o_it->first] = o_it->second;
+            }
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+void Json::swap(Json & other)
+{
+    Type type = m_type;
+    Value value = m_value;
+    m_type = other.m_type;
+    m_value = other.m_value;
+    other.m_type = type;
+    other.m_value = value;
+}
+
+void Json::move(Json && other)
+{
+    if (&other == this)
+    {
+        return;
+    }
+    clear();
+    swap(other);
+}
+

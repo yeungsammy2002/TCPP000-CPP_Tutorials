@@ -94,11 +94,13 @@ public:
     typedef std::vector<Json>::iterator iterator;
     iterator begin() { return m_value.m_array->begin(); }
     iterator end() { return m_value.m_array->end(); }
+    
 private:
-    void copy(const Json & other);
-    void move(Json && other);
-    void swap(Json & other);
     void clear();
+    void copy(const Json & other);
+    void swap(Json & other);
+    void move(Json && other);
+
 
 private:
     union Value
