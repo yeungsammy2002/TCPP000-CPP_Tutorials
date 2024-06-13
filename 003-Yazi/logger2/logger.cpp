@@ -84,7 +84,7 @@ void Logger::log(Level level, const char * file, int line, const char * format, 
     std::ostringstream oss;
     std::time_t ticks = std::time(nullptr);
     struct tm time_info = { 0 };
-    localtime_s(&time_info, &ticks);
+    localtime(&time_info, &ticks);
     char timestamp[32] = { 0 };
     std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &time_info);
 
