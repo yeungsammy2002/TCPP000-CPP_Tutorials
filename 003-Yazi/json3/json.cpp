@@ -452,10 +452,6 @@ void Json::clear()
     m_type = JSON_NULL;
 }
 
-
-
-
-
 void Json::copy(const Json & other)
 {
     if (&other == this)
