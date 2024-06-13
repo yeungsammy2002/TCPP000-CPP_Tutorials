@@ -158,7 +158,7 @@ void Logger::rotate()
     sleep(1000);           // avoid file rename on the same second
     std::time_t ticks = time(nullptr);
     struct tm time_info = { 0 };
-    localtime_s(&time_info, &ticks);
+    localtime(&time_info, &ticks);
     char timestamp[32] = { 0 };
     std::strftime(timestamp, sizeof(timestamp), ".%Y-%m-%d_%H-%M-%S", &time_info);
     string filename = m_filename + timestamp;
