@@ -80,7 +80,11 @@ void Option::parse(const int argc, const char * argv[])
                     m_args[opt] = val;
                     ++i;
                 }
+                    break;
                 default:
+                {
+                    throw std::logic_error("option is not registed");
+                }
                     break;
             }
         } else if ("--" == arg.substr(0, 2))
@@ -90,23 +94,27 @@ void Option::parse(const int argc, const char * argv[])
             if (pos != std::string::npos)
             {
                 string opt = str.substr(0, pos);
-                string val = str.substr(pos + 1);
                 switch (type(opt))
                 {
                     case OPT_NO:
                     {
-                        throw std::logic_error("no option argument: " + opt);
+                        throw std::logic_error("no argument option: " + opt);
                     }
                         break;
                     case OPT_OPTIONAL:
                     case OPT_REQUIRED:
                     {
+                        string val = str.substr(pos + 1);
                         m_args[opt] = val;
                     }
+                        break;
                     default:
+                    {
+                        throw std::logic_error("option is not registered");
+                    }
                         break;
                 }
-            } else
+            } else       // (pos == std::string::npos)
             {
                 string opt = str;
                 switch (type(opt))
@@ -131,10 +139,58 @@ void Option::parse(const int argc, const char * argv[])
                         m_args[opt] = val;
                         ++i;
                     }
+                        break;
                     default:
+                    {
+                        throw std::logic_error("option is not registered");
+                    }
                         break;
                 }
             }
         }
+    }
+}
+
+
+
+
+
+bool Option::has(const string & opt) const
+{
+    const auto it = m_opts.find(opt);
+    assert(it != m_opts.end() && "option must be registered");
+    return m_args.end() != m_args.find(opt);
+}
+
+Value Option::get(const string & opt)
+{
+    const auto it = m_opts.find(opt);
+    assert(it != m_opts.end() && "option must be registered");
+    switch (it->second)
+    {
+        case OPT_NO:
+        {
+            return Value(m_args.end() != m_args.find(opt));
+        }
+            break;
+        case OPT_OPTIONAL:
+        case OPT_REQUIRED:
+        {
+            return Value(m_args[opt]);
+        }
+        default:
+            break;
+    }
+}
+
+
+
+
+
+void Option::show() const
+{
+    for (const auto & pair: m_args)
+    {
+        std::cout << pair.first << ":" << pair.second << std::endl;
     }
 }

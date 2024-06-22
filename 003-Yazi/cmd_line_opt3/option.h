@@ -5,6 +5,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#include <utilities/value.h>
+
 using std::string;
 
 namespace demo {
@@ -29,6 +31,11 @@ public:
 
     void parse(const int argc, const char * argv[]);
 
+    bool has(const string & opt) const;
+    Value get(const string & opt);
+
+    void show() const;
+    
 private:
     std::map<string, Type> m_opts;
     std::map<string, string> m_args;
