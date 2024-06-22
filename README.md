@@ -37,7 +37,7 @@ This is a CPP tutorial based upon transcribing many CPP lessons from Youtube, Ud
 #### 8. Reactor
 
 
-### IV. Entension
+### IV. Supplementary
 #### 1. RPC Framework
 #### 2. Web Framework
 #### 3. Coroutine Framework
