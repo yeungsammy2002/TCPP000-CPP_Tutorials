@@ -68,7 +68,7 @@ void Option::parse(const int argc, const char * argv[])
                     break;
                 case OPT_REQUIRED:
                 {
-                    if (i + 1 <= argc)
+                    if (i + 1 >= argc)
                     {
                         throw std::logic_error("option require argument: " + opt);
                     }
@@ -127,7 +127,7 @@ void Option::parse(const int argc, const char * argv[])
                         break;
                     case OPT_REQUIRED:
                     {
-                        if (i + 1 <= argc)
+                        if (i + 1 >= argc)
                         {
                             throw std::logic_error("option require argument: " + opt);
                         }
