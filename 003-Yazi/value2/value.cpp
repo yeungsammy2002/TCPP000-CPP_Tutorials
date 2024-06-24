@@ -61,19 +61,11 @@ Value & Value::operator=(const Value & other)
 
 Value::operator bool() const
 {
-    if (!is_bool())
-    {
-        throw std::logic_error("type is not V_BOOL");
-    }
     return "true" == m_value;
 }
 
 Value::operator int() const
 {
-    if (!is_int())
-    {
-        throw std::logic_error("type is not V_INT");
-    }
     std::stringstream ss;
     int value = 0;
     ss << m_value;
@@ -83,10 +75,6 @@ Value::operator int() const
 
 Value::operator float() const
 {
-    if (!is_float())
-    {
-        throw std::logic_error("type is not V_FLOAT");
-    }
     std::stringstream ss;
     float value = 0.0f;
     ss << m_value;
@@ -96,10 +84,6 @@ Value::operator float() const
 
 Value::operator double() const
 {
-    if (!is_double())
-    {
-        throw std::logic_error("type is not V_DOUBLE");
-    }
     std::stringstream ss;
     double value = 0.0;
     ss << m_value;
@@ -109,10 +93,6 @@ Value::operator double() const
 
 Value::operator string() const
 {
-    if (!is_string())
-    {
-        throw std::logic_error("type is not V_STRING");
-    }
     return m_value;
 }
 
