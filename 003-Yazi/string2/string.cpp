@@ -79,7 +79,7 @@ std::vector <string> String::split(const string & input, const string & separato
         {
             return output;
         }
-        output.push_back(input.substr(last, input.size() - start));
+        output.push_back(input.substr(start, input.size() - start));
     } else if (input.size() != 0)
     {
         output.push_back(input);
