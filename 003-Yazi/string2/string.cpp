@@ -74,8 +74,8 @@ std::vector<string> String::split(const string & input, const string & separator
 
     if (0 != last)
     {
-        const size_t last_ch_idx = input.find_last_of(separator);
-        if (last_ch_idx == input.size() - 1)
+        const size_t last_sp = input.find_last_of(separator);
+        if (last_sp == input.size() - 1)
         {
             return output;
         }
