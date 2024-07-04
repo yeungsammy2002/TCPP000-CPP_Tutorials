@@ -55,31 +55,31 @@ string String::trim(string str, const string & trims)
 
 
 
-std::vector<string> String::split(const string & input, const string & separator)
+std::vector <string> String::split(const string & input, const string & separator)
 {
-    std::vector<string> output;
-    size_t last = 0;
-    size_t index = input.find_first_of(separator, last);
+    std::vector <string> output;
+    size_t start = 0;
+    size_t sp = input.find_first_of(separator, start);
 
-    while (std::string::npos != index)
+    while (std::string::npos != sp)
     {
-        if (last != index)
+        if (start != sp)
         {
-            string str = input.substr(last, index - last);
+            string str = input.substr(start, sp - start);
             output.push_back(str);
         }
-        last = index + 1;
-        index = input.find_first_of(separator, last);
+        start = sp + 1;
+        sp = input.find_first_of(separator, start);
     }
 
-    if (0 != last)
+    if (0 != start)
     {
         const size_t last_sp = input.find_last_of(separator);
         if (last_sp == input.size() - 1)
         {
             return output;
         }
-        output.push_back(input.substr(last, input.size() - last));
+        output.push_back(input.substr(last, input.size() - start));
     } else if (input.size() != 0)
     {
         output.push_back(input);
@@ -88,7 +88,7 @@ std::vector<string> String::split(const string & input, const string & separator
     return output;
 }
 
-std::vector<string> String::split(const string & input, const char separator)
+std::vector <string> String::split(const string & input, const char separator)
 {
     return split(input, string(1, separator));
 }
@@ -97,7 +97,7 @@ std::vector<string> String::split(const string & input, const char separator)
 
 
 
-string String::join(const std::vector<string> & input, const string & separator)
+string String::join(const std::vector <string> & input, const string & separator)
 {
     std::ostringstream oss;
     for (auto it = input.begin(); it != input.end(); ++it)
@@ -111,7 +111,7 @@ string String::join(const std::vector<string> & input, const string & separator)
     return oss.str();
 }
 
-string String::join(const std::vector<string> & input, const char separator)
+string String::join(const std::vector <string> & input, const char separator)
 {
     return join(input, string(1, separator));
 }
