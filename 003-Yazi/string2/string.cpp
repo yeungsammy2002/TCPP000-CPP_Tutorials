@@ -65,8 +65,7 @@ std::vector <string> String::split(const string & input, const string & separato
     {
         if (start != sp)
         {
-            string str = input.substr(start, sp - start);
-            output.push_back(str);
+            output.push_back(input.substr(start, sp - start));
         }
         start = sp + 1;
         sp = input.find_first_of(separator, start);
@@ -150,9 +149,9 @@ string String::capitalize(const string & input)
         return str;
     }
     char ch = input[0];
-    if (islower(ch))
+    if (::islower(ch))
     {
-        ch = (char) toupper(ch);
+        ch = (char) ::toupper(ch);
         std::replace(str.begin(), str.begin() + 1, str[0], ch);     // defined in <algorithm>
     }
     return str;
@@ -160,7 +159,7 @@ string String::capitalize(const string & input)
 
 string String::format(const char * format, ...)
 {
-    string result;
+    std::ostringstream oss;
     va_list arg_ptr;
     va_start(arg_ptr, format);
     const int len = std::vsnprintf(nullptr, 0, format, arg_ptr);
@@ -172,8 +171,8 @@ string String::format(const char * format, ...)
         std::vsnprintf(buf, len + 1, format, arg_ptr);
         va_end(arg_ptr);
         buf[len] = 0;
-        result = buf;
+        oss << buff
         delete[] buf;
     }
-    return result;
+    return oss.str();
 }
