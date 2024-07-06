@@ -171,7 +171,7 @@ string String::format(const char * format, ...)
         std::vsnprintf(buf, len + 1, format, arg_ptr);
         va_end(arg_ptr);
         buf[len] = 0;
-        oss << buff
+        oss << buf;
         delete[] buf;
     }
     return oss.str();
