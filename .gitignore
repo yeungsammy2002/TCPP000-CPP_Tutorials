@@ -1,3 +1,3 @@
-*.idea
+.vscode/
 
-003-Yazi/logger2/.idea/
+003-Yazi/**/.idea/
