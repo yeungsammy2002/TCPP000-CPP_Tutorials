@@ -27,9 +27,11 @@ string String::ltrim(string str, const string & trims)
     const size_t pos = str.find_first_not_of(trims);
     if (pos == std::string::npos)
     {
-        return str;
+        str.clear();
+    } else
+    {
+        str.erase(0, pos);
     }
-    str.erase(0, pos);
     return str;
 }
 
@@ -38,9 +40,11 @@ string String::rtrim(string str, const string & trims)
     const size_t pos = str.find_last_not_of(trims);
     if (pos == std::string::npos)
     {
-        return str;
+        str.clear();
+    } else
+    {
+        str.erase(pos + 1);
     }
-    str.erase(pos + 1);
     return str;
 }
 
