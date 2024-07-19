@@ -59,9 +59,9 @@ string String::trim(string str, const string & trims)
 
 
 
-std::vector<string> String::split(const string & s, const string & separators)
+std::vector <string> String::split(const string & s, const string & separators)
 {
-    std::vector<string> output;
+    std::vector <string> output;
     size_t start = 0;
     size_t sp = s.find_first_of(separators, start);
 
@@ -148,14 +148,13 @@ bool String::has_suffix(const string & input, const string & suffix)
 
 
 
-string String::capitalize(const string & input)
+string String::capitalize(string str)
 {
-    string str = input;
     if (str.empty())
     {
         return str;
     }
-    char ch = input[0];
+    char ch = str[0];
     if (::islower(ch))
     {
         ch = (char) ::toupper(ch);
