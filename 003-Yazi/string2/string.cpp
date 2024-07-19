@@ -59,33 +59,36 @@ string String::trim(string str, const string & trims)
 
 
 
-std::vector <string> String::split(const string & input, const string & separator)
+std::vector<string> String::split(const string & s, const string & separators)
 {
-    std::vector <string> output;
+    std::vector<string> output;
     size_t start = 0;
-    size_t sp = input.find_first_of(separator, start);
+    size_t sp = s.find_first_of(separators, start);
 
-    while (std::string::npos != sp)
+    while (sp != std::string::npos)
     {
-        if (start != sp)
+        if (sp != start)
         {
-            output.push_back(input.substr(start, sp - start));
+            output.push_back(s.substr(start, sp - start));
         }
+
         start = sp + 1;
-        sp = input.find_first_of(separator, start);
+        sp = s.find_first_of(separators, start);
     }
 
-    if (0 != start)
+    if (start == 0)
     {
-        const size_t last_sp = input.find_last_of(separator);
-        if (last_sp == input.size() - 1)
+        if (s.size() != 0)
         {
-            return output;
+            output.push_back(s);
         }
-        output.push_back(input.substr(start, input.size() - start));
-    } else if (input.size() != 0)
+    } else
     {
-        output.push_back(input);
+        sp = s.find_last_of(separators);
+        if (sp != s.size() - 1)
+        {
+            output.push_back(s.substr(start, s.size() - start));
+        }
     }
 
     return output;
