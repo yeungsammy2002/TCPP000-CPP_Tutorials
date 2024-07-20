@@ -32,7 +32,7 @@ public:
     static bool has_prefix(const string & input, const string & prefix);
     static bool has_suffix(const string & input, const string & suffix);
 
-    static string capitalize(const string & input);
+    static string capitalize(string str);
     static string format(const char * format, ...);
 
 };
