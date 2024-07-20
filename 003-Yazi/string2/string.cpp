@@ -78,7 +78,7 @@ std::vector <string> String::split(const string & s, const string & separators)
 
     if (start == 0)
     {
-        if (s.size() != 0)
+        if (s.size() > 0)
         {
             output.push_back(s);
         }
