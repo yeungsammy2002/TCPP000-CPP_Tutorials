@@ -85,7 +85,7 @@ std::vector <string> String::split(const string & s, const string & separators)
     } else
     {
         sp = s.find_last_of(separators);
-        if (sp != s.size() - 1)
+        if (sp < s.size() - 1)
         {
             output.push_back(s.substr(start, s.size() - start));
         }
