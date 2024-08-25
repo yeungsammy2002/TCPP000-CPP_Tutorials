@@ -127,6 +127,10 @@ int main()
 //    std::cout << v15 << std::endl;
 //    std::cout << v15["other"] << std::endl;
 
+    Json v16;
+    v16.parse("./../test.json");
+    std::cout << v16 << std::endl;
+
     return 0;
 }
 
