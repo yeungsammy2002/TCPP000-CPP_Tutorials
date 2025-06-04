@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-
 #include <functional>
 
 using std::string;
@@ -79,12 +78,12 @@ auto lamda1 = [](int num, const string & name) {
 	std::cout << "lamda1: " << num << ", " << name << std::endl;
 	};
 
-using T3 = decltype(lamda1);
-T3 t3 = lamda1;
+using T3 = decltype(lamda1);						// the type of each lamba object is unqiue
+T3 t3 = lamda1;										// `t3` can only initialized by using the original object `lamda1`
 
 using T3_ptr = void(*)(int num, const string &);
-T3_ptr t3_ptr = lamda1;
-
+T3_ptr t3_ptr = lamda1;								// cannot assign address of lambda object to the ptr
+													// i.e. T3_ptr t3_ptr = &lamda1;  -- not legit
 typedef void(*TD3_ptr)(int, const string &);
 TD3_ptr td3_ptr = lamda1;
 
@@ -107,6 +106,9 @@ public:
 	}
 };
 
+// no alias of type of functor is allowed
+// no alias of pointer type which points to functor type is allowed
+
 std::function<void(int)> fb4 = std::bind(AA(), std::placeholders::_1, "leo");
 
 
@@ -127,6 +129,9 @@ public:
 	}
 };
 
+// no alias of type of type conversion operator overloading function is allowed
+// no alias of pointer type which points to type conversion operator overloading function type is allowed
+
 std::function<void(int)> fb5 = std::bind(AAA(), std::placeholders::_1, "boris");
 
 
@@ -146,8 +151,8 @@ public:
 };
 
 using T6_ptr = void(AAAA:: *)(int, const string &);
-T6_ptr t6_ptr = &AAAA::aaaa_show;
-
+T6_ptr t6_ptr = &AAAA::aaaa_show;						// only address of non-static member function is allowed to be assigned
+														// i.e. T6_ptr t6_ptr = AAAA::aaaa_show;  -- not legit
 typedef void(AAAA:: * TD6_ptr)(int, const string &);
 TD6_ptr td6_ptr = &AAAA::aaaa_show;
 
