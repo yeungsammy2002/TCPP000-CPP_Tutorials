@@ -166,6 +166,20 @@ std::function <void(AAAA &, int, const string &)> fn6 = &AAAA::aaaa_show;
 
 
 
+template<typename Fn, typename... Args>
+auto callback(Fn && fn, Args && ...args) ->
+decltype(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...))
+{
+	auto func = std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...);
+	func();
+	return func;
+}
+
+
+
+
+
+
 int main()
 {
 	//t1(8, "chris");
@@ -206,6 +220,9 @@ int main()
 	//(aaaa.*td6_ptr)(888888, "alex");
 	//fb6(888888);
 	//fn6(aaaa, 888888, "alex");
+
+	auto fn = callback(show, 8, "chris");
+	fn();
 
 	return 0;
 }
