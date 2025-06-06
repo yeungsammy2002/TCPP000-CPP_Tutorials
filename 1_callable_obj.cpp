@@ -180,6 +180,40 @@ decltype(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...))
 
 
 
+class Producer_Consumer_Model
+{
+public:
+	template<typename Fn, typename... Args>
+	void callback(Fn && fn, Args && ... args)
+	{
+		m_callback = std::bind(std::forward<Fn>(fn), std::forward<Args>(args)..., std::placeholders::_1);
+		if (m_callback) m_callback(m_message);
+	}
+
+private:
+	std::string m_message = "hello world";
+	std::function<void(const string &)> m_callback;
+};
+
+void show_msg(const string & msg)
+{
+	std::cout << msg << std::endl;
+}
+
+class Msg
+{
+public:
+	void show_msg(const string & msg)
+	{
+		std::cout << msg << std::endl;
+	}
+};
+
+
+
+
+
+
 int main()
 {
 	//t1(8, "chris");
@@ -221,8 +255,13 @@ int main()
 	//fb6(888888);
 	//fn6(aaaa, 888888, "alex");
 
-	auto fn = callback(show, 8, "chris");
-	fn();
+	//auto fn = callback(show, 8, "chris");
+	//fn();
+
+	//Producer_Consumer_Model pcm;
+	//pcm.callback(show_msg);
+	//Msg msg;
+	//pcm.callback(&Msg::show_msg, &msg);
 
 	return 0;
 }
