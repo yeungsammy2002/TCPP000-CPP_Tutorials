@@ -102,8 +102,11 @@ class AA
 public:
 	void operator()(int num, const string & name)
 	{
-		std::cout << "functor: " << num << ", " << name << std::endl;
-	}
+		std::cout << "functor: " << num << ", " << name << ", " << aa << std::endl;		// AA()() can access non-static member
+	}																					// AA()() implies called AA constructor at first
+
+private:
+	int aa = 8;
 };
 
 // no alias of type of functor is allowed
@@ -124,9 +127,13 @@ class AAA
 public:
 	using T5_ptr = void(*)(int, const string &);
 	operator T5_ptr()
-	{
+	{												// AAA()() can access non-static member
+		std::cout << aaa;							// AAA()() implies called AAA constructor at first
 		return show;
 	}
+
+private:
+	int aaa = 88;
 };
 
 // no alias of type of type conversion operator overloading function is allowed
@@ -184,14 +191,18 @@ class Producer_Consumer_Model
 {
 public:
 	template<typename Fn, typename... Args>
-	void callback(Fn && fn, Args && ... args)
+	void bind_callback(Fn && fn, Args && ... args)
 	{
 		m_callback = std::bind(std::forward<Fn>(fn), std::forward<Args>(args)..., std::placeholders::_1);
-		if (m_callback) m_callback(m_message);
+	}
+
+	void callback() 
+	{
+		if(m_callback) m_callback(m_message);
 	}
 
 private:
-	std::string m_message = "hello world";
+	std::string m_message = "producer consumer model";
 	std::function<void(const string &)> m_callback;
 };
 
@@ -259,9 +270,11 @@ int main()
 	//fn();
 
 	//Producer_Consumer_Model pcm;
-	//pcm.callback(show_msg);
+	//pcm.bind_callback(show_msg);
+	//pcm.callback();
 	//Msg msg;
-	//pcm.callback(&Msg::show_msg, &msg);
+	//pcm.bind_callback(&Msg::show_msg, &msg);
+	//pcm.callback();
 
 	return 0;
 }
