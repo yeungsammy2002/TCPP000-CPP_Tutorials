@@ -225,6 +225,49 @@ public:
 
 
 
+// virtual function alternative
+class A
+{
+public:
+	template<typename Fn, typename... Args>
+	void bind_callback(Fn && fn, Args && ... args)
+	{
+		m_callback = std::bind(std::forward<Fn>(fn), std::forward<Args>(args)..., std::placeholders::_1);
+	}
+
+	void show(const string & msg)
+	{
+		if (m_callback)	m_callback(msg);
+	}
+
+private:
+	std::function<void(const string & msg)> m_callback;
+};
+
+
+class AA : public A
+{
+public:
+	void show(const string & msg)
+	{
+		std::cout << "AA: " << msg << std::endl;
+	}
+};
+
+class AB : public A
+{
+public:
+	void show(const string & msg)
+	{
+		std::cout << "AB: " << msg << std::endl;
+	}
+};
+
+
+
+
+
+
 int main()
 {
 	//t1(8, "chris");
@@ -275,6 +318,15 @@ int main()
 	//Msg msg;
 	//pcm.bind_callback(&Msg::show_msg, &msg);
 	//pcm.callback();
+
+	
+	A * ptr = new AA();
+	ptr->bind_callback(&AA::show, static_cast<AA *>(ptr));
+	ptr->show("hello");
+
+	A * ptr2 = new AB();
+	ptr2->bind_callback(&AB::show, static_cast<AB *>(ptr2));
+	ptr2->show("hello");
 
 	return 0;
 }
