@@ -71,3 +71,67 @@ using std::string;
 //
 //	return 0;
 //}
+
+
+// Demo of Producer-Consumer Model concurrency pattern
+// class Producer_Consumer_Model
+// {
+// public:
+// 	void produce(int num)
+// 	{
+// 		std::lock_guard<std::mutex> lock(m_mutex);
+// 		for (int i = 0; i < num; ++i)
+// 		{
+// 			static int n = 1;
+// 			string data = string("message") + std::to_string(n++);
+// 			m_queue.push(data);
+// 		}
+// 		//m_cond.notify_one();							// only one thread get notify
+// 		m_cond.notify_all();							// all thread get notify
+// 	}
+
+// 	void consume()
+// 	{
+// 		while (true)
+// 		{
+// 			std::unique_lock<std::mutex> lock(m_mutex);
+// 			while (m_queue.empty())
+// 			{
+// 				std::cout << "thread " << std::this_thread::get_id() << " waiting for incoming data..." << std::endl;
+// 				m_cond.wait(lock);
+// 			}
+
+// 			string data = m_queue.front();
+// 			m_queue.pop();
+
+// 			std::cout << "thread " << std::this_thread::get_id() << " has incoming data: " << data << std::endl;
+// 			lock.unlock();
+
+// 			std::this_thread::sleep_for(std::chrono::seconds(1));	// assuming processing data
+// 		}
+// 	}
+
+// private:
+// 	std::mutex m_mutex;
+// 	std::condition_variable m_cond;
+// 	std::queue<string> m_queue;							// default underlying container
+// 	//std::queue<string, std::deque<string>> m_queue;	// of std::queue is std::deque
+// };
+
+// int main()
+// {
+// 	Producer_Consumer_Model pcm;
+// 	std::thread consumer1(&Producer_Consumer_Model::consume, &pcm);
+// 	std::thread consumer2(&Producer_Consumer_Model::consume, &pcm);
+// 	std::thread consumer3(&Producer_Consumer_Model::consume, &pcm);
+
+// 	std::this_thread::sleep_for(std::chrono::seconds(3));
+
+// 	pcm.produce(5);
+
+// 	consumer1.join();
+// 	consumer2.join();
+// 	consumer3.join();
+
+// 	return 0;
+// }
